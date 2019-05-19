@@ -1,0 +1,4 @@
+# Ignore any data files
+*.mat
+*.tiff
+*.tif

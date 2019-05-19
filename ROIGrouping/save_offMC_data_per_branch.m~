@@ -1,0 +1,67 @@
+
+
+
+basedir = '~/Documents/FredPF/raw/';
+fname = 'FL_S_170905_10_40_52';
+
+%% Load data
+load([basedir,'Crus1_patches_',fname,'_driftcorrected.mat'])
+
+disp('Data has successfully been loaded.')
+
+%% Save metadata, behavioural data, etc.
+save([basedir,'offMC/',fname,'/',fname,'.mat'],'acquisition_rate','Pixel_size','Axon_dFF','TimeAxon','Axons_coordinates','dlc_whisk_angle','dlc_whisk_time','MI_facepad','Numb_frames','Numb_patches','Numb_trials','Patch_coordinates','pia','SpeedDataMatrix','SpeedTimeMatrix','Whiskers_angle_0','Whiskers_time_0','wheel_MI');
+
+disp('Metadata has successfully been saved.')
+
+%%
+clearvars -except patches acquisition_rate PixelSize fname basedir
+
+[d1,d2,T] = size(patches{1});
+
+darknoise = zeros(1,size(patches,2));
+Y_all = cell(size(patches));
+for p = 1:size(patches,2)
+    p
+    Y = reshape(patches{p},d1*d2,T);
+    % First check that Y doesn't have any significant imaginary parts
+    if imag(sum(sum((Y)))) > 10^-5
+        error
+    end
+    Y = real(Y);
+    % Then check that Y doesn't go out of range of uint16
+    darknoise(p) = min(min(Y));
+    if max(max(Y)) > 65535 || darknoise(p) < 0
+        error
+    end
+    Y_all{p} = uint16(Y);
+end
+
+disp('Conversion of patch data is complete.')
+
+%%
+
+darknoise = uint16(min(darknoise));
+
+for p = 1:size(patches,2)
+    p
+    Y = Y_all{p} - darknoise;
+    save([basedir,'offMC/',fname,'/raw/Patch',sprintf('%03d',p),'.mat'],'Y','d1','d2','acquisition_rate','PixelSize')
+    
+end
+disp('Patch data has been successfully saved.')
+
+%%
+fileID = fopen([basedir,'offMC/',fname,'/raw/exptable.txt'],'w');
+%%
+str = '';
+for i = 1:d1*d2
+    str = [str,'%f '];
+end
+str = [str,'%\n'];
+%%
+for  i = 1:d1*d2
+    fprintf(fileID,[repmat('%f ',1,T) ' \n'],Y(i,:));
+end
+fclose(fileID);
+%[repmat('%s ',n) ' %f \n']
