@@ -2,3 +2,6 @@
 *.mat
 *.tiff
 *.tif
+
+# Ignore anything in Data/ folder
+Data/
