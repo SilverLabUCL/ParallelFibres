@@ -18,7 +18,7 @@ function make_video_dFF(Ain,Y,dims,acq_rate,pathtosave)
     d2 = dims(2);
     T = size(Y,2);
 
-    if nargin < 4 || isempty(pathtosave)
+    if nargin < 5 || isempty(pathtosave)
         save_video = 0;
     else
         save_video = 1;
@@ -54,8 +54,8 @@ function make_video_dFF(Ain,Y,dims,acq_rate,pathtosave)
     set(gca,'FontSize',20)
     set(gca,'YDir','Reverse')
 
-    min_ = prctile(YY(:),10);
-    max_ = prctile(YY(:),99.99);
+    min_ = 100;% prctile(YY(:),10);
+    max_ = 500;%prctile(YY(:),99.99);
     caxis([min_,max_])
     
     %% Plot each frame
