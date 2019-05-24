@@ -19,33 +19,32 @@ datasets = {'FL87_180501_11_03_09',...  1
 dataset_ix = 1;
 
 % Choose patch number
-patch_no = 1;
+patch_no = 2;
 
 fname = datasets{dataset_ix};
 disp(fname)
 
 load([basedir,fname,'/raw/Patch',sprintf('%03d',patch_no),'.mat'])
 
-%fname_fibreangles = ['~/Documents/FredPF/raw/',fname,'/Processed/fibre_angles.mat'];
-fname_fibreangles = ['~/Documents/FredPF/raw/FL87_180501_11_03_09/Processed/fibre_angles.mat'];
+fname_fibreangles = [basedir,'/raw/',fname,'/processed/fibre_direction.mat'];
 
 Y = double(Y);
 
 %% Use CNMF initialization to estimate initial spatial filters
-[Ain,Cn] = detect_ROIs(Y, [d1,d2], 2, 5);
+[Ain,~] = detect_ROIs(Y, [d1,d2], 2, 5);
 
 %% Check neuropil
 [~,dFF_neuropil] = get_neuropil_byhand(Ain,Y,[d1,d2],acquisition_rate);
 
 %% Remove low SNR ROIs
-[Ain,~,~,~] = remove_bad_cells(Ain,Y,[d1,d2],acquisition_rate,6); 
+[Ain,~,~,~] = remove_bad_cells(Ain,Y,[d1,d2],acquisition_rate,3.4); 
 
 
 %% Trim ROIs to remove 
 Ain = trim_ROIs(Ain,[d1,d2]);
 
 %% Remove low SNR ROIs again
-[Ain,SNR,A_bad,~] = remove_bad_cells(Ain,Y,[d1,d2],acquisition_rate,6); 
+[Ain,SNR,A_bad,SNR_bad] = remove_bad_cells(Ain,Y,[d1,d2],acquisition_rate,5); 
 
 %% Calculate dFF
 dFF = get_dFF(Ain,Y,acquisition_rate);

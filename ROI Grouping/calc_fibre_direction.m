@@ -121,7 +121,7 @@ if strcmp(x,'y') || strcmp(x,'Y')
     save(fmatname,'vector_mean','angle_std','angle')
 end
 
-%% Collate results - after all datasets are finished
+%% Collate results - Do this only after all datasets are finished
 
 angle_all = [];
 
@@ -137,3 +137,4 @@ for dataset_ix = 1:8
 
 end
 
+std(rad2deg(angle_all))

@@ -23,6 +23,8 @@ if nargin < 5 || isempty(thresh)
     thresh = 1;
 end
 
+min_Cn = .83;
+
 %% Load size parameters
 
 T = size(Y,2);
@@ -36,24 +38,8 @@ end
 % Make sure win_pix is an integer
 win_pix = round(win_pix);
 
-%%
-% Gaussian filter within local window
-psf = fspecial('gaussian',win_pix, filter_pix);
-
-% Tensor (d1 x d2 x T) of each frame spacially smoothed by Gaussian filter
-HY = imfilter(reshape(Y, d1,d2,[]), psf, 'replicate');
-HY = reshape(HY, d1*d2, []);
-
-% Remove median from each pixel, removes background
-HY = bsxfun(@minus, HY, median(HY, 2));
-
-% Calculate PNR (peak to noise ratio), proxy for SNR 
-HY_max = max(HY, [], 2);
-Ysig = GetSn(HY);
-%PNR = reshape(HY_max./Ysig, d1, d2);
-
-% Correlation image
-Cn = correlation_image(HY, [1,2], d1,d2);
+%% Spatially filtered data
+[HY,Cn] = get_spat_filtered_data(Y,[d1,d2],filter_pix,win_pix);
 
 %% Look for local maxima
 
@@ -80,6 +66,7 @@ v_search(ind_search) = 0;
 %%
 tmp_d = max(3, round(win_pix/4));
 v_max = ordfilt2(v_search, tmp_d^2, true(tmp_d));
+v_max(v_max < min_Cn) = 0;
 ind_localmax = find(and(v_search(:)==v_max(:), v_max(:)>0));
 [r_peak, c_peak] = ind2sub([d1,d2],ind_localmax);
 
@@ -153,8 +140,8 @@ for mcell = 1:length(ind_localmax)
     [nr, nc] = size(cind);
     ind_nhood = sub2ind([d1, d2], rind(:), cind(:));
     HY_box = HY(ind_nhood, :);      % extract temporal component from HY_box
-    Y_box = Y(ind_nhood, :);    % extract spatial component from Y_box
-    ind_ctr = sub2ind([nr, nc], r-rsub(1)+1, c-csub(1)+1);   % subscripts of the center
+    Y_box = Y(ind_nhood, :);    
+    %ind_ctr = sub2ind([nr, nc], r-rsub(1)+1, c-csub(1)+1);   % subscripts of the center
 
     % Linear regression to guess spatial filter
     ai = (y0*y0')\(y0*HY_box');
@@ -183,7 +170,7 @@ Ain = Ain(:, 1:k);
 center = center(1:k,:);
 %% Threshold filters
 if thresh
-    Ain = threshold_filters(Ain,[d1,d2],.9);
+    Ain = threshold_filters(Ain,[d1,d2]);
 end
 %%
 

@@ -48,8 +48,9 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
         rho_min = 0.5;
     end
     
+    % Default angle taken from distribution of firbres from z stacks
     if nargin < 7 || isempty(angle_std)
-        angle_std = 10;
+        angle_std = 13.45; 
     end
 
     % for estimated parameters

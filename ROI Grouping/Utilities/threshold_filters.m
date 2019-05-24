@@ -12,7 +12,7 @@
 function A_thresh = threshold_filters(Ain,dims,thr)
 
 if nargin < 3 || isempty(thr)
-    thr = 0.9;
+    thr = 0.8;
 end
 
 d1 = dims(1);
