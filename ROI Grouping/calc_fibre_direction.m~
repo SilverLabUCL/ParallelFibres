@@ -39,7 +39,7 @@ Cn = correlation_image(Y, [1,2], d1,d2); clear Y
 
 %% Load coordinates (New formatting for saving coordinates)
 
-coords = csvread([basedir,fname,'/Zstack Images/Axon_Results.csv'],1,1);
+coords = csvread([basedir,'Zstack Images/Axon_Results.csv'],1,1);
 coords = coords(:,5:6);
 
 init_coords = coords(1:2:end,:);
@@ -114,26 +114,10 @@ x = -180:1:180;
 hold on, plot(x,normpdf(x,0,angle_std)*numel(angle)*10,'b','LineWidth',2)
 
 %% Save data
-fmatname = strcat(basedir,fname,'/processed/fibre_direction.mat');
+fmatname = strcat(basedir,'Processed/P_angle_given_S.mat');
 
 x = input('Enter Y if you want to save.   ','s');
 if strcmp(x,'y') || strcmp(x,'Y')
-    save(fmatname,'vector_mean','angle_std','angle')
-end
-
-%% Collate results - after all datasets are finished
-
-angle_all = [];
-
-for dataset_ix = 1:8
-    
-    fname = datasets{dataset_ix};
-    disp(fname)
-
-    load([basedir,fname,'/processed/fibre_direction.mat'],'angle','angle_std')
-    disp(angle_std)
-    
-    angle_all = [angle_all; angle];
-
+    save(fmatname,'vector_mean','angle_std')
 end
 

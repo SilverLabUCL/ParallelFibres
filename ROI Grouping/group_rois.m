@@ -5,7 +5,7 @@ clear all; clc
 addpath('From CNMF_E/')
 addpath('Utilities/')
 
-basedir = '~/Documents/FredPF/raw/offMC/';
+basedir = '~/Documents/ParallelFibres/Data/';
 datasets = {'FL87_180501_11_03_09',...  1
             'FL87_180501_10_47_25',...  2
             'FL87_180501_10_36_14',...  3 
@@ -16,10 +16,10 @@ datasets = {'FL87_180501_11_03_09',...  1
             'FL45_170125_14_47_04'}; %  8
 
 % Choose dataset
-dataset_ix = 4;
+dataset_ix = 1;
 
 % Choose patch number
-patch_no = 16;
+patch_no = 1;
 
 fname = datasets{dataset_ix};
 disp(fname)
@@ -32,10 +32,10 @@ fname_fibreangles = ['~/Documents/FredPF/raw/FL87_180501_11_03_09/Processed/fibr
 Y = double(Y);
 
 %% Use CNMF initialization to estimate initial spatial filters
-[Ain,Cn] = detect_ROIs(Y, [d1,d2], 1, 5);
+[Ain,Cn] = detect_ROIs(Y, [d1,d2], 2, 5);
 
 %% Check neuropil
-[~,dFF_neuropil2] = get_neuropil_byhand(Ain,Y,[d1,d2],acquisition_rate);
+[~,dFF_neuropil] = get_neuropil_byhand(Ain,Y,[d1,d2],acquisition_rate);
 
 %% Remove low SNR ROIs
 [Ain,~,~,~] = remove_bad_cells(Ain,Y,[d1,d2],acquisition_rate,6); 
@@ -50,7 +50,7 @@ Ain = trim_ROIs(Ain,[d1,d2]);
 %% Calculate dFF
 dFF = get_dFF(Ain,Y,acquisition_rate);
 
-%% Plot all dFF
+% Plot all dFF
 figure, hold on
 for k = 1:size(dFF,1)
     plot((1:size(dFF,2))/acquisition_rate,dFF(k,:)+k)
