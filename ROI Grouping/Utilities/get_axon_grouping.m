@@ -318,7 +318,8 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
 
     %% Now reorder axons so that all the loners are 1st
 
-    ix_axons_to_rois_new = cell(size(ix_axons_to_rois));
+    num_axons = length(ix_axons_to_rois);
+    ix_axons_to_rois_new = cell(1,num_axons);
     ix_loners = cell(1); i = 1; j = 1;
     for axon = 1:num_axons
         if numel(ix_axons_to_rois{axon}) == 1

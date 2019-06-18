@@ -23,6 +23,16 @@ if nargin < 5 || isempty(thresh)
     thresh = 1;
 end
 
+if nargin < 4 || isempty(win_pix)
+    win_pix = 5;
+end
+
+if nargin < 3 || isempty(filter_pix)
+    filter_pix = 2;
+end
+
+% Minimum correlation of Cn (after filtering)
+% Based on bimodal distribution determined from calc_distrib_Cn.m
 min_Cn = .83;
 
 %% Load size parameters
