@@ -8,15 +8,15 @@ addpath('Utilities/')
 basedir = '~/Documents/ParallelFibres/Data/';
 datasets = {'FL87_180501_11_03_09',...  1
             'FL87_180501_10_47_25',...  2
-            'FL87_180501_10_36_14',...  3 
+            'FL87_180501_10_36_14',...  3
             'FL87_180220_10_38_55',...  4
             'FL77_180213_10_46_41',...  5
             'FL_S_170906_11_26_25',...  6
-            'FL_S_170905_10_40_52',...  7            
+            'FL_S_170905_10_40_52',...  7
             'FL45_170125_14_47_04'}; %  8
 
 % Choose dataset
-dataset_ix = 7;
+dataset_ix = 1;
 
 % Choose patch number
 patch_no = 1;
@@ -31,12 +31,16 @@ fname_SNR = [basedir,fname,'/processed/SNR.mat'];
 
 Y = double(Y);
 
+Cn = correlation_image(Y, [1,2], d1,d2);
+figure, imagesc(Cn)
+
 %% Use CNMF initialization to estimate initial spatial filters
+
 [Ain,~] = detect_ROIs(Y, [d1,d2]);
 
 %% Remove low SNR ROIs
-load(fname_SNR,'SNR_thresh');
 
+load(fname_SNR,'SNR_thresh');
 [Ain,~,~,~] = remove_bad_cells(Ain,Y,[d1,d2],acquisition_rate,SNR_thresh); 
 
 %% Trim ROIs to remove 
@@ -65,10 +69,10 @@ load(fname_fibreangles,'vector_mean');
 dFF_axons = get_dFF(Ain_axons,Y,acquisition_rate);
 
 %% Plot results
-Cn = correlation_image(Y, [1,2], d1,d2);
 figure, plot_grouped_rois(Ain_axons,Cn,ix_axons_to_rois,.95,true)
 
 figure, plot_loners(Ain_axons,Cn,ix_axons_to_rois,.95,true)
+
 
 %% Save video if want to check motion correction
 

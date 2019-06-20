@@ -24,14 +24,14 @@ d2 = dims(2);
 r = sqrt(mean(sum(Ain,1))/pi);
 [xx, yy] = meshgrid(1:d2, 1:d1);
 
-% Plot correlation image of raw data
-figure, plot_contours(Ain,Cn,.9);
-colormap(gray);% caxis(median(Cn(:))+[-1,1]*std(Cn(:)))
-set(gca, 'xtick', []); set(gca, 'ytick', []);
-set(gca,'FontSize',18)
-axis tight; axis equal;
-
 if manual == 1
+    % Plot correlation image of raw data
+    figure, plot_contours(Ain,Cn,.9);
+    colormap(gray);% caxis(median(Cn(:))+[-1,1]*std(Cn(:)))
+    set(gca, 'xtick', []); set(gca, 'ytick', []);
+    set(gca,'FontSize',18)
+    axis tight; axis equal;
+
     % Choose neuropil centers and make fake ROIs
     title('Click centers to calculate neuropil.');
     xlabel('Press enter to stop.', 'color', 'r');

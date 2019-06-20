@@ -14,7 +14,6 @@
 
 function [Ain,Cn] = detect_ROIs(Y, dims, filter_pix, win_pix, thresh, manual)
 
-
 if nargin < 6 || isempty(manual)
     manual = 0;
 end
@@ -182,10 +181,10 @@ center = center(1:k,:);
 if thresh
     Ain = threshold_filters(Ain,[d1,d2]);
 end
-%%
 
-figure 
-plot_contours(Ain,Cn,.8,true,[],[],2);
-colormap('gray')
-set(gca, 'xtick', []); set(gca, 'ytick', []); 
-axis tight; axis equal;
+% %% Plot results
+% figure 
+% plot_contours(Ain,Cn,.8,true,[],[],2);
+% colormap('gray')
+% set(gca, 'xtick', []); set(gca, 'ytick', []); 
+% axis tight; axis equal;

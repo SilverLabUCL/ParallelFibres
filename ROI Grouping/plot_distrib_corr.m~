@@ -16,46 +16,64 @@ datasets = {'FL87_180501_11_03_09',...  1
             'FL_S_170905_10_40_52',...  7            
             'FL45_170125_14_47_04'}; %  8
 
-SNR_all = cell(8,1);
-SNR_np_all = cell(8,1);
+C_intra_patch = cell(8,1);
+C_inter_patch = cell(8,1);
 
 %%
-for dataset_ix = 1:8
+for dataset_ix = 1%:8
     fname = datasets{dataset_ix};
+    fname_SNR = [basedir,fname,'/processed/SNR.mat'];
+
     disp(fname)
 
     load([basedir,fname,'/',fname,'.mat'],'Numb_patches')
-    SNR = cell(Numb_patches,1);
-    SNR_np = cell(Numb_patches,1);
-
+    load(fname_SNR,'SNR_thresh');
+    
+    dFF = cell(Numb_patches,1);
+    
     for patch_no = 1:Numb_patches
         patch_no
-        
-        % Load data
+
+        % Load data 
         load([basedir,fname,'/raw/Patch',sprintf('%03d',patch_no),'.mat'])
         Y = double(Y);
 
         % Use CNMF initialization to estimate initial spatial filters
         [Ain,Cn] = detect_ROIs(Y, [d1,d2]); 
         
-        % Get SNR for all ROIs
-        [~,SNR{patch_no},~,~] = remove_bad_cells(Ain,Y,[d1,d2],acquisition_rate,0); 
+        % Remove low SNR ROIs and trim
+        [Ain,~,~,~] = remove_bad_cells(Ain,Y,[d1,d2],acquisition_rate,SNR_thresh); 
+        Ain = trim_ROIs(Ain,[d1,d2]);
+        [Ain,~,~,~] = remove_bad_cells(Ain,Y,[d1,d2],acquisition_rate,SNR_thresh); 
+
+        % Calculate dFF
+        dFF{patch_no} = get_dFF(Ain,Y,acquisition_rate);
         
-        % Calculate fake ROIs
-        A_neuropil = get_neuropil_filters(Ain,Cn,[d1,d2]);
-        
-        % Get SNR for fake ROIs
-        [~,SNR_np{patch_no},~,~] = remove_bad_cells(A_neuropil,Y,[d1,d2],acquisition_rate,0); 
-        
+        % Get correlation within patch
+        C = corrcoef(dFF{patch_no}');
+        C = C(triu(true(size(C)),1));
+         
+        % Save to correlations within each patch
+        C_intra_patch{dataset_ix} = [C_intra_patch{dataset_ix}; C];
     end
-    SNR_all{dataset_ix} = SNR;
-    SNR_np_all{dataset_ix} = SNR_np;
+    
+    % Compute cross correlations between patches
+    for patch_no1 = 1:Numb_patches
+        for patch_no2 = (patch_no1+1):Numb_patches
+            
+            % Get correlation between patches
+            C = corr(dFF{patch_no1}',dFF{patch_no2}');    
+            
+            % Save to correlations between patches
+            C_inter_patch{dataset_ix} = [C_inter_patch{dataset_ix}; C(:)];
+        end
+    end
 end
 
 %%  Plot distributions and calculate thresholds, and save data
 
 dbin = .5;
-bins = 0:dbin:30;
+bins = -1:dbin:30;
 bin_c = bins(1:end-1) + dbin/2;
 
 SNR_thresh = zeros(8,1);
@@ -68,13 +86,13 @@ for dataset_ix = 1:8
     SNR_neuropil = SNR_np_all{dataset_ix};
     
     figure, hold on,
-    histogram(vertcat(SNR{:}),bins,'Normalization','probability');
-    histogram(vertcat(SNR_neuropil{:}),bins,'Normalization','probability');
+    histogram(C_intra_patch{dataset_ix},bins,'Normalization','probability');
+    histogram(C_inter_patch{dataset_ix},bins,'Normalization','probability');
     set(gca,'FontSize',18), xlabel('SNR'), ylabel('probability')
         
     title(fname,'Interpreter','None')
     
     SNR_thresh = prctile(vertcat(SNR_neuropil{:}),95);
     
-    save([basedir,fname,'/processed/SNR.mat'],'SNR_thresh','SNR','SNR_neuropil');
+   % save([basedir,fname,'/processed/SNR.mat'],'SNR_thresh','SNR','SNR_neuropil');
 end

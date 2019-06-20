@@ -35,9 +35,8 @@ for i = 1:size(Ain,2)
     A_thresh(ix,i) = 1;
 end
 
-%% Plot thresholded 
-
-figure, imagesc(reshape(sum(A_thresh,2),d1,d2))
-set(gca, 'xtick', []); set(gca, 'ytick', []); 
-axis tight; axis equal;
-caxis([0,3])
+% %% Plot results
+% figure, imagesc(reshape(sum(A_thresh,2),d1,d2))
+% set(gca, 'xtick', []); set(gca, 'ytick', []); 
+% axis tight; axis equal;
+% caxis([0,3])

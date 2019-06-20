@@ -26,16 +26,16 @@ end
 if isrow(yy)
     yy = yy';
 end
-
+%%
 T  = size(xx,1);
 
-%% Use linear regression on xx to predict yy
+% Use linear regression on xx to predict yy
 x = [xx,ones(T,1)];
 y = yy;
 
 % w is weighting factor, piecewise linear from 20th to 90th percentiles
-min_ = GetSn(y)*2;%prctile(y,20);
-max_ = GetSn(y)*5;%prctile(y,80);
+min_ = prctile(y,20);
+max_ = prctile(y,80);
 w = y; w(w > max_) = max_; w(w<min_) = min_;
 w = (w-min_)/(max_-min_);
 

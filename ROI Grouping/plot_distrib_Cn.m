@@ -35,9 +35,9 @@ for dataset_ix = 1:8
 
         [~,Cn_temp] = get_spat_filtered_data(Y,[d1,d2],5,2);
 
-         Cn_temp_all= [Cn_temp_all; Cn_temp(:)];
+        Cn_temp_all= [Cn_temp_all; Cn_temp(:)];
 
-         patch_no = patch_no + 1;
+        patch_no = patch_no + 1;
 
     end
     figure, histogram(Cn_temp_all), 

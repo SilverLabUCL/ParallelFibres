@@ -14,13 +14,13 @@
 %    A_bad            New spatial filters matrix of BAD ROIs
 %    SNR_bad          Vector of SNR for BAD ROIs
 
-function [A_good,SNR_good,A_bad,SNR_bad] = remove_bad_cells(Ain,Y,dims,acq_rate,min_pnr,plot_me)
+function [A_good,SNR_good,A_bad,SNR_bad] = remove_bad_cells(Ain,Y,dims,acq_rate,min_pnr,manual)
 
 if nargin < 5 || isempty(min_pnr)
     min_pnr = 6;
 end
-if nargin < 6 || isempty(plot_me)
-    plot_me = 0;
+if nargin < 6 || isempty(manual)
+    manual = 0;
 end
 
 d1 = dims(1);
@@ -41,7 +41,7 @@ Cn = correlation_image(Y, [1,2], d1,d2);
 SNR = zeros(size(Ain,2),1); 
 goodrois = zeros(size(Ain,2),1); 
 
-if plot_me == 1
+if manual == 1
     figure, hold on
 end
 
@@ -62,7 +62,7 @@ for k = 1:size(Ain,2)
     end
     
     % In case of manual mode
-    if plot_me
+    if manual
         % Plot spatial filter on top of correlation image
         subplot(2,1,1), imagesc(Cn);
         caxis(median(Cn(:))+[-1,5]*std(Cn(:)))
@@ -114,10 +114,10 @@ SNR_good = SNR(goodrois==1);
 
 A_bad = Ain(:,goodrois==0);
 SNR_bad = SNR(goodrois==0);
-
-%% Plot results 
-
-figure, imagesc(reshape(sum(A_good,2),d1,d2))
-set(gca, 'xtick', []); set(gca, 'ytick', []); 
-axis tight; axis equal;
-caxis([0,3])
+ 
+% %% Plot results 
+% 
+% figure, imagesc(reshape(sum(A_good,2),d1,d2))
+% set(gca, 'xtick', []); set(gca, 'ytick', []); 
+% axis tight; axis equal;
+% caxis([0,3])

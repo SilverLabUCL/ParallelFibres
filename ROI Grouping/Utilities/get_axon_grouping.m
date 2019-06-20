@@ -13,7 +13,7 @@
 %    fibre_vec        Vector of overall fibre direction (est. from z stack)
 %    angle_std        Standard deviation of angle from overall fibre direction (default 10 degrees)
 %    rho_min          Minimum correlation between ROIs
-%    rho_std_max      Max standard deviation of correlation between ROIs
+%    var_ratio_max      Max standard deviation of correlation between ROIs
 %    pix_defl_max     Maximum pixel deflection from existing fibre  
 %                      (for grouping 3rd+ ROI onto already regrouped fibre) 
 %    manual_check     Set to 1 if want to check all cases, 0 if completely automated, 
@@ -29,8 +29,10 @@
 %                        ix_axons_to_rois are opposite transformations
 % 
 
-function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,acq_rate,um_per_pix,fibre_vec,angle_std,rho_min,rho_std_max,pix_defl_max,manual_check)
+function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,acq_rate,um_per_pix,fibre_vec,angle_std,rho_min,var_ratio_max,pix_defl_max,manual_check)
     %% Default values and load parameters
+    
+    close all
     
     if nargin < 11 || isempty(manual_check)
         manual_check = 0;
@@ -40,8 +42,8 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
         pix_defl_max = 2;
     end
     
-    if nargin < 9 || isempty(rho_std_max)
-        rho_std_max = 0.25;
+    if nargin < 9 || isempty(var_ratio_max)
+        var_ratio_max = 1.8;
     end
     
     if nargin < 8 || isempty(rho_min)
@@ -109,7 +111,7 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
     %% Go through correlated ROIs for grouping
 
     if manual_check
-        figure, 
+        figure(1), 
     end
     
     % While there are correlated axons (above min correlation), try merging 
@@ -190,14 +192,12 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
 
         % If merge_rois = 1 based on correlations and spatial location,
         % check that error for large events is lower than baseline error 
-        if 1 %merge_rois
+        if merge_rois
             
-            % Get distribution of correlations
-            C_hist = get_corr_dist(dFF_axons(axon_1,:),dFF_axons(axon_2,:),acq_rate);
+            var_ratio = get_var_ratio(dFF_axons(axon_1,:),dFF_axons(axon_2,:),manual_check);
             
-            % If standard deviation of correlations is large, don't group
-            % them anyway
-            if nanstd(C_hist) >= rho_std_max
+            % If var_ratio is too high, don't group them anyway
+            if var_ratio >= var_ratio_max
                 merge_rois = 0;
             end
         
@@ -207,36 +207,34 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
                 % plot it if option chosen to manually check merging
                 % should be changed in the future so that red (blue) trace has 
                 % red (blue) spatial field contour
-                subplot(2,5,1:4), plot_contours(A_merged,Cn,0.9,false,[],[],2); colormap(gray), hold on
+                figure(1), subplot(2,1,1), hold off
+                plot_contours(A_merged,Cn,0.9,false,[],[],2); 
+                colormap(gray), hold on
+                
                 % plot axon 1 ROI centres in red
                 for roi = ix_axons_to_rois{axon_1}
                     c = regionprops(reshape(Ain(:,roi),d1,d2),'centroid'); c = c.Centroid; 
                     plot(c(1),c(2),'*r')
                 end
+                
                 % plot axon 2 ROI centres in red
                 for roi = ix_axons_to_rois{axon_2}
                     c = regionprops(reshape(Ain(:,roi),d1,d2),'centroid'); c = c.Centroid; 
                     plot(c(1),c(2),'*b')
                 end
+                
                 % plot vector connecting
                 plot(pts(:,1),pts(:,2),':w')
+                
                 % plot traces
-                subplot(2,5,6:9), hold off, plot((1:T)/acq_rate, dFF_axons(axon_1,:),'r'), 
+                subplot(2,1,2), hold off, plot((1:T)/acq_rate, dFF_axons(axon_1,:),'r'), 
                 hold on, plot((1:T)/acq_rate, 1+dFF_axons(axon_2,:),'b'), xlim([0,T/acq_rate])
 
                 rho = corrcoef(dFF_axons(axon_1,:),dFF_axons(axon_2,:)); 
                 rho = rho(1,2);
                 
                 title(num2str(rho)), set(gca, 'FontSize',15), ylim([-.5,3])
-                subplot(2,5,5), plot(dFF_axons(axon_1,:),dFF_axons(axon_2,:),'.k')
-                hold on, plot([-.5,2],[-.5,2],'k'), hold off, 
-                set(gca,'FontSize',15)
-                axis tight, axis equal, axis([-.5,2,-.5,2])
                 
-                subplot(2,5,10), histogram(C_hist), xlim([-.4,1])
-                title(['M: ', num2str(mean(C_hist)),' S: ', num2str(nanstd(C_hist))])
-                set(gca, 'FontSize',15)
-
                 % Ask for input
                 if merge_rois == 1
                     x = input('ROIs will be merged. Enter R to override: ','s');
