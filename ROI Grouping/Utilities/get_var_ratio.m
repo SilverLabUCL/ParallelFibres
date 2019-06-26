@@ -19,10 +19,17 @@
 %    var_ratio         Ratio of variance of projected data, to variance of
 %                       projected baseline data
 
-function var_ratio = get_var_ratio(xx,yy,manual)
+function var_ratio = get_var_ratio(dFF1,dFF2,manual)
 
 if nargin < 3 || isempty(manual)
     manual = 0;
+end
+
+%% Choose higher variance ROI as regressor - improves fit
+if var(dFF1) > var(dFF2)
+    xx = dFF1; yy = dFF2;
+else
+    xx = dFF2; yy = dFF1;
 end
 
 % Turn into column if it isn't already a column
@@ -38,7 +45,7 @@ X = [xx,yy];
 
 % Fit 2 Gaussians to capture the baseline data + events
 options = statset('MaxIter',1000); % Increase number of EM iterations
-gmfit = fitgmdist(X,2,'CovarianceType','full','SharedCovariance',false,'Options',options);
+gmfit = fitgmdist(X,2,'CovarianceType','diagonal','SharedCovariance',false,'Options',options);
 
 % Identify baseline distribution
 test = (gmfit.mu(2,:) > gmfit.mu(1,:)) ;
@@ -51,6 +58,8 @@ elseif test(1) == 0 && test(2) == 0
 else % If no real baseline for both ROIs
     error
 end
+
+S_bl = diag(S_bl);
 
 % Find scaling vector u via regression coefficients
 x = [xx,ones(size(xx))];

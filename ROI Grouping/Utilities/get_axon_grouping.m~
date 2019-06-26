@@ -39,11 +39,11 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
     end
     
     if nargin < 10 || isempty(pix_defl_max)
-        pix_defl_max = 1;
+        pix_defl_max = 2;
     end
     
     if nargin < 9 || isempty(var_ratio_max)
-        var_ratio_max = 1.5;
+        var_ratio_max = 1.8;
     end
     
     if nargin < 8 || isempty(rho_min)
@@ -63,6 +63,7 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
     d2 = dims(2);
 
     %% First, calculate average dFF per ROI and correlations 
+    
     
     dFF = get_dFF(Ain,Y,acq_rate);
     Cn = correlation_image(Y, [1,2], d1,d2);
@@ -137,26 +138,23 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
         % Vector to project onto to get distances of boutons
         vorth = [-vector_axon(2),vector_axon(1)];
         
-        % Get distances of boutons to axon
-        dist = zeros(numel(ix_axons_to_rois{axon_1}) + numel(ix_axons_to_rois{axon_2}),1);
-        ix = 1;
-        for roi = [ix_axons_to_rois{axon_1}, ix_axons_to_rois{axon_2}]
-            c = regionprops(reshape(Ain(:,roi),d1,d2),'centroid'); c = c.Centroid; 
-            dist(ix) = abs((c-[x_int,0])*vorth') * um_per_pix;
-            ix = ix+1;
+        % 
+        dist = zeros(numel(ix_axons_to_rois{axon_1}) + numel(ix_axons_to_rois{axon_2}),1];
+        for roi = [ix_axons_to_rois{axon_1}; ix_axons_to_rois{axon_2}]
+            c = regionprops(reshape(Ain_axons(:,axon_1),d1,d2),'centroid'); 
+            c = c.Centroid;
+            dist(roi) = abs((c-[x_int,0])*vorth') * um_per_pix;
         end
         
         % Group if angle is within 95% of angle distribution
-        if ang < 2*angle_std && sum(dist < pix_defl_max) == numel(dist)
+        if ang < 2*angle_std && sum(dist < pix_defl_max)
             merge_rois = 1;
         end
         
         if manual_check && merge_rois
             disp(' ')
             disp(['Angle between putative axon and overall axon: ',num2str(ang),' deg.'])
-            for ix = 1:numel(dist)
-                disp(['Distance of ROI from axon: ',num2str(dist(ix)),' um.'])
-            end
+            disp(['Distance of : ',num2str(dist(roi)),' um.'])
         end
         
 %         % Calculate spatial information and use this to determine whether

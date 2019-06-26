@@ -16,10 +16,10 @@ datasets = {'FL87_180501_11_03_09',...  1
             'FL45_170125_14_47_04'}; %  8
 
 % Choose dataset
-dataset_ix = 8;
+dataset_ix = 1;
 
 % Choose patch number
-patch_no = 3;
+patch_no = 5;
 
 fname = datasets{dataset_ix};
 disp(fname)
@@ -36,9 +36,11 @@ Cn = correlation_image(Y, [1,2], d1,d2);
 figure, imagesc(Cn)
 
 %% Use CNMF initialization to estimate initial spatial filters
+
 [Ain,~] = detect_ROIs(Y, [d1,d2]);
 
 %% Remove low SNR ROIs
+
 load(fname_SNR,'SNR_thresh');
 [Ain,~,~,~] = remove_bad_cells(Ain,Y,[d1,d2],acquisition_rate,SNR_thresh); 
 
@@ -59,20 +61,22 @@ end
 
 %% Group axons
 load(fname_fibreangles,'vector_mean');
-load(fname_corr,'C_inter');
-rho_min = prctile(C_inter,95);
+load(fname_corr,'vector_mean');
 
 %get_axon_grouping(Ain,Y,dims,acq_rate,um_per_pix,fibre_vec,...
-%   angle_std,rho_min,var_ratio_max,pix_defl_max,manual_check)
+%  angle_std,rho_min,var_ratio_max,pix_defl_max,manual_check)
 
 [Ain_axons,ix_axons_to_rois,axon_ids_new] = ...
     get_axon_grouping(Ain,Y,[d1,d2],acquisition_rate,Pixel_size,vector_mean,...
-    [],rho_min,[],[],1);
+    [],[],[],[],1);
 
 dFF_axons = get_dFF(Ain_axons,Y,acquisition_rate);
 
 %% Plot results
-plot_grouped_rois(Ain_axons,Cn,dFF,ix_axons_to_rois,acquisition_rate);
+figure, plot_grouped_rois(Ain_axons,Cn,ix_axons_to_rois,.95,true)
+
+figure, plot_loners(Ain_axons,Cn,ix_axons_to_rois,.95,true)
+
 
 %% Save video if want to check motion correction
 

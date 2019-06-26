@@ -45,7 +45,7 @@ function plot_grouped_rois(Ain_axons,Cn,dFF,ix_axons_to_rois,acquisition_rate,th
     % dFF of grouped ROIs
     figure(4), hold on
     count_fig4 = 0;
-
+    
     for ax = 1:size(Ain_axons,2)
         % Get spatial filter
         A_temp = full(reshape(Ain_axons(:,ax),d1,d2));
@@ -70,7 +70,7 @@ function plot_grouped_rois(Ain_axons,Cn,dFF,ix_axons_to_rois,acquisition_rate,th
             figure(2), 
             for roi = ix_axons_to_rois{ax}
                 plot((1:size(dFF,2))/acquisition_rate,dFF(roi,:)+count_fig2,'Color',cmap(ax,:));
-                count_fig2 = count_fig2+1.2;
+                count_fig2 = count_fig2 + mean(dFF(roi,:)) * 3 + .5;
             end
             if display_numbers
                 text(-10,count_fig2 -.5,num2str(ax),'color','k','fontsize',10,'fontweight','bold');
@@ -84,7 +84,7 @@ function plot_grouped_rois(Ain_axons,Cn,dFF,ix_axons_to_rois,acquisition_rate,th
             % plot dFF in fig 2
             roi = ix_axons_to_rois{ax};
             figure(4), plot((1:size(dFF,2))/acquisition_rate,dFF(roi,:)+count_fig4,'Color',cmap(ax,:));
-            count_fig4 = count_fig4+1.2;
+            count_fig4 = count_fig4 + mean(dFF(roi,:)) * 3 + .5;
             if display_numbers
                 text(-10,count_fig4 -.5,num2str(ax),'color','k','fontsize',10,'fontweight','bold');
             end
@@ -104,18 +104,22 @@ function plot_grouped_rois(Ain_axons,Cn,dFF,ix_axons_to_rois,acquisition_rate,th
     end
     
     figure(1), set(gca,'YDir','reverse')
+    title('Map of grouped ROIs')
     
     figure(2),
     axis([-20,(T/acquisition_rate)+10,-1,count_fig2+1])
     set(gca,'YTick',0:1); set(gca,'YTickLabel',[])
     set(gca,'FontSize',14)
+    title('DFF (grouped ROIs)')
     
     figure(3), set(gca,'YDir','reverse')
+    title('Map of loner ROIs')
     
     figure(4), 
     axis([-20,(T/acquisition_rate)+10,-1,count_fig4+1])
     set(gca,'YTick',0:1); set(gca,'YTickLabel',[])
     set(gca,'FontSize',14)
+    title('DFF (loner ROIs)')
     
     % Save dFF to easily check them in future
     if ~isempty(basedir)

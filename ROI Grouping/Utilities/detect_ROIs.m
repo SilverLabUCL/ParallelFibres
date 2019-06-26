@@ -63,14 +63,11 @@ ind_search = false(d1*d2,1);
 pixel_v = (ii*10+jj)*(1e-15);
 v_search = v_search+pixel_v; 
 
-% To display when manually looking for seed points
-v_search_display = v_search;
-
 % ignore pixels with small correlations or low peak-noise-ratio
 min_pixel = 8;
 min_v_search = median(v_search(:));
 ind_search(v_search<min_v_search) = true; 
-v_search(ind_search) = 0;
+v_search(ind_search) = min_v_search;
 
 %%
 tmp_d = max(3, round(win_pix/4));
@@ -88,9 +85,9 @@ c_peak = c_peak(ix);
 % Plot and hand select more
 if manual
     figure('papersize',[d2,d1]/40); init_fig;
-    imagesc(v_search_display), colormap(gray)
+    imagesc(v_search), colormap(gray)
     hold on, plot(c_peak,r_peak,'.r')
-    caxis(median(v_search_display(:))+[-1,2]*std(v_search_display(:)))
+%    caxis(median(v_search(:))+[-1,2]*std(v_search(:)))
 
     set(gca, 'xtick', []);
     set(gca, 'ytick', []);
@@ -106,7 +103,7 @@ if manual
     end
 end
 % Sort according to v_search
-[~, ind_sort] = sort(v_search_display(ind_localmax), 'descend');
+[~, ind_sort] = sort(v_search(ind_localmax), 'descend');
 ind_localmax = ind_localmax(ind_sort);
 
 %% Initialize components

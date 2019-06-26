@@ -16,7 +16,7 @@ datasets = {'FL87_180501_11_03_09',...  1
             'FL45_170125_14_47_04'}; %  8
 
 % Choose dataset
-dataset_ix = 1;
+dataset_ix = 7;
 fname = datasets{dataset_ix};
 disp(fname)
 
@@ -28,12 +28,14 @@ load(fname_SNR,'SNR_thresh');
 
 load([basedir,fname,'/',fname,'.mat'],'Numb_patches')
 
-Ain_axons_all = [];
-dFF_axons_all = [];
+dFF_rois_all = cell(Numb_patches,1);
+dFF_axons_all = cell(Numb_patches,1);
+ix_axons_to_rois_all = cell(Numb_patches,1);
 
-%% Choose patch number
+% Choose patch number
 for patch_no = 1:Numb_patches
-    %%
+    %
+    disp(patch_no)
     load([basedir,fname,'/raw/Patch',sprintf('%03d',patch_no),'.mat'])
     Y = double(Y);
     Cn = correlation_image(Y, [1,2], d1,d2);
@@ -59,13 +61,14 @@ for patch_no = 1:Numb_patches
         plot((1:size(dFF,2))/acquisition_rate,dFF(k,:)+k)
     end
 
-    % Group axons
+%    % Group axons
     [Ain_axons,ix_axons_to_rois,axon_ids] = ...
         get_axon_grouping(Ain,Y,[d1,d2],acquisition_rate,Pixel_size,vector_mean);
-%%
+%
     % Plot results
     plot_grouped_rois(Ain_axons,Cn,dFF,ix_axons_to_rois,acquisition_rate,[],[],[basedir,fname],patch_no);%,thr,display_numbers,basedir)
 
+    disp('Press enter to accept')
     pause
     
     % Save figures in png
@@ -74,25 +77,18 @@ for patch_no = 1:Numb_patches
         figure(3), saveas(gcf,[basedir,fname,'/figs/spatial_loners_Patch',sprintf('%03d',patch_no),'.png']);
         figure(4), saveas(gcf,[basedir,fname,'/figs/dFF_loners_Patch',sprintf('%03d',patch_no),'.png']);
     
-    % Save patchwise results
+    % Save results
     Ain_rois = Ain; dFF_rois = dFF;
     dFF_axons = get_dFF(Ain_axons,Y,acquisition_rate);
-    save([basedir,fname,'/processed/GroupedData_Patch',sprintf('%03d',patch_no),'.mat'],'Cn','dFF_axons','Ain_axons','dFF_rois','Ain_rois','ix_axons_to_rois','axon_ids');
+    save([basedir,fname,'/processed/GroupedData_Patch',sprintf('%03d',patch_no),'.mat'],'Cn','dFF_axons','Ain_axons','dFF_rois','Ain_rois','ix_axons_to_rois','axon_ids','acquisition_rate');
     
-    dFF_axons_all = [dFF_axons_all; dFF_axons];
-    Ain_axons_all = [Ain_Axons_all,Ain_axons];
-
+    close all
+    
+    % To save all data later
     
 end
 
 
-% Save all data
-dFF = dFF_axons_all;
-Ain = Ain_axons_all;
-save([basedir,fname,'/processed/GroupedData.mat'],'Cn','dFF_axons','Ain_axons','dFF_rois','Ain_rois','ix_axons_to_rois','axon_ids');
-    
-    
-    
-    
-
-
+%%
+save([basedir,fname,'/processed/GroupedData_AllPatches.mat'],...
+    'Cn','dFF_axons','Ain_axons','dFF_rois','Ain_rois','ix_axons_to_rois','axon_ids','acquisition_rate');
