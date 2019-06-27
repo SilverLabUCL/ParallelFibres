@@ -28,11 +28,16 @@ load(fname_SNR,'SNR_thresh');
 
 fname_corr = [basedir,fname,'/processed/corr_histograms.mat'];
 load(fname_corr,'C_inter');
-rho_min = prctile(C_inter,95);
-    
+rho_min = prctile(C_inter,95)
 
 load([basedir,fname,'/',fname,'.mat'],'Numb_patches')
 
+% smoothing window
+if ismember(dataset_ix,[4,5,6,7])
+    smooth_win_s = 0.35;
+else
+    smooth_win_s = [];
+end
 
 Cn_all = cell(Numb_patches,1);
 dFF_axons_all = cell(Numb_patches,1);
@@ -42,8 +47,9 @@ Ain_rois_all = cell(Numb_patches,1);
 ix_axons_to_rois_all = cell(Numb_patches,1);
 axon_ids_all = cell(Numb_patches,1);
 
-% Choose patch number
+%% Choose patch number
 for patch_no = 1:Numb_patches
+    
     %
     disp([num2str(patch_no),' / ',num2str(Numb_patches)])
     load([basedir,fname,'/raw/Patch',sprintf('%03d',patch_no),'.mat'])
@@ -63,8 +69,8 @@ for patch_no = 1:Numb_patches
     % Remove low SNR ROIs again
     [Ain,SNR,A_bad,SNR_bad] = remove_bad_cells(Ain,Y,[d1,d2],acquisition_rate,SNR_thresh); 
 
-    % Calculate dFF
-    dFF = get_dFF(Ain,Y,acquisition_rate);
+    %% Calculate dFF
+    dFF = get_dFF(Ain,Y,acquisition_rate,smooth_win_s);
 
     % Plot all dFF
     figure, hold on
@@ -77,7 +83,7 @@ for patch_no = 1:Numb_patches
 
     % Group axons
     [Ain_axons,ix_axons_to_rois,axon_ids] = ...
-        get_axon_grouping(Ain,Y,[d1,d2],acquisition_rate,Pixel_size,vector_mean,[],rho_min,[],[],1);
+        get_axon_grouping(Ain,Y,[d1,d2],acquisition_rate,smooth_win_s,Pixel_size,vector_mean,[],rho_min,[],[],1);
 
     % Plot results
     plot_grouped_rois(Ain_axons,Cn,dFF,ix_axons_to_rois,acquisition_rate,[],[],[basedir,fname],patch_no);%,thr,display_numbers,basedir)
@@ -94,7 +100,7 @@ for patch_no = 1:Numb_patches
         
     % Save results
     Ain_rois = Ain; dFF_rois = dFF;
-    dFF_axons = get_dFF(Ain_axons,Y,acquisition_rate);
+    dFF_axons = get_dFF(Ain_axons,Y,acquisition_rate,smooth_win_s);
     save([basedir,fname,'/processed/GroupedData_Patch',sprintf('%03d',patch_no),'.mat'],'Cn','dFF_axons','Ain_axons','dFF_rois','Ain_rois','ix_axons_to_rois','axon_ids','acquisition_rate');
     
     % To save all data later

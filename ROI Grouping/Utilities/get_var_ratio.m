@@ -65,10 +65,16 @@ S_bl = diag(S_bl);
 x = [xx,ones(size(xx))];
 b = (x'*x)\(x'*yy);
 u = [1;b(1)]; u = u/norm(u);
+u0 = u;
+
+
+% Find minimum
+f = @(uu)var(X*[-uu(2);uu(1)]/norm(uu));
+u = fminsearch(f,u0);
 
 % Orthogonal vector to u
 % This is the vector we will project onto
-v = [-u(2);u(1)]; v = v/norm(v);
+v = [-u(2);u(1)];
 
 % Ratio of variances
 num = var(X*v); % variance of 
@@ -103,7 +109,7 @@ if manual
     plot(m_bl(1)+[0,u(1)],m_bl(2)+[0,u(2)],'k','LineWidth',3)
     plot(m_bl(1)+[0,v(1)],m_bl(2)+[0,v(2)],'r','LineWidth',3)
     
-    title(var_ratio), axis tight equal
+    title(var_ratio), axis equal
     set(gca,'FontSize',18)
 end
 

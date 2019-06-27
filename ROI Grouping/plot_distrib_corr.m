@@ -29,6 +29,13 @@ for dataset_ix = 1:8
     load([basedir,fname,'/',fname,'.mat'],'Numb_patches')
     load(fname_SNR,'SNR_thresh');
     
+    % smoothing window
+    if ismember(dataset_ix,[4,5,6,7])
+        smooth_win_s = 0.35;
+    else
+        smooth_win_s = [];
+    end
+    
     dFF = cell(Numb_patches,1);
     
     for patch_no = 1:Numb_patches
@@ -47,7 +54,7 @@ for dataset_ix = 1:8
         [Ain,~,~,~] = remove_bad_cells(Ain,Y,[d1,d2],acquisition_rate,SNR_thresh); 
 
         % Calculate dFF
-        dFF{patch_no} = get_dFF(Ain,Y,acquisition_rate);
+        dFF{patch_no} = get_dFF(Ain,Y,acquisition_rate,smooth_win_s);
         
         % Get correlation within patch
         C = corrcoef(dFF{patch_no}');
@@ -94,5 +101,5 @@ for dataset_ix = 1:8
         
     title(fname,'Interpreter','None')
     
-   save([basedir,fname,'/processed/corr_histograms.mat'],'C_intra','C_inter');
+    %save([basedir,fname,'/processed/corr_histograms.mat'],'C_intra','C_inter');
 end

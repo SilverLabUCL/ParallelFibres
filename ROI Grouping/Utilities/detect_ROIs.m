@@ -67,13 +67,13 @@ v_search = v_search+pixel_v;
 min_pixel = 8;
 min_v_search = median(v_search(:));
 ind_search(v_search<min_v_search) = true; 
-v_search(ind_search) = min_v_search;
+v_search(ind_search) = min_v_search * (1-10e-10);
 
 %%
 tmp_d = max(3, round(win_pix/4));
 v_max = ordfilt2(v_search, tmp_d^2, true(tmp_d));
 v_max(v_max < min_Cn) = 0;
-ind_localmax = find(and(v_search(:)==v_max(:), v_max(:)>0));
+ind_localmax = find(and(v_search(:)==v_max(:), v_max(:)>min_v_search));
 [r_peak, c_peak] = ind2sub([d1,d2],ind_localmax);
 
 % Remove points on the boundary

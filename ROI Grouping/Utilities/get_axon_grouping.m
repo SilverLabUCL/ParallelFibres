@@ -29,29 +29,29 @@
 %                        ix_axons_to_rois are opposite transformations
 % 
 
-function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,acq_rate,um_per_pix,fibre_vec,angle_std,rho_min,var_ratio_max,pix_defl_max,manual_check)
+function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,acq_rate,smooth_win_s,um_per_pix,fibre_vec,angle_std,rho_min,var_ratio_max,pix_defl_max,manual_check)
     %% Default values and load parameters
     
     close all
     
-    if nargin < 11 || isempty(manual_check)
+    if nargin < 12 || isempty(manual_check)
         manual_check = 0;
     end
     
-    if nargin < 10 || isempty(pix_defl_max)
+    if nargin < 11 || isempty(pix_defl_max)
         pix_defl_max = 1;
     end
     
-    if nargin < 9 || isempty(var_ratio_max)
+    if nargin < 10 || isempty(var_ratio_max)
         var_ratio_max = 1.5;
     end
     
-    if nargin < 8 || isempty(rho_min)
+    if nargin < 9 || isempty(rho_min)
         rho_min = 0.5;
     end
     
     % Default angle taken from distribution of firbres from z stacks
-    if nargin < 7 || isempty(angle_std)
+    if nargin < 8 || isempty(angle_std)
         angle_std = 13.45; 
     end
 
@@ -64,7 +64,7 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
 
     %% First, calculate average dFF per ROI and correlations 
     
-    dFF = get_dFF(Ain,Y,acq_rate);
+    dFF = get_dFF(Ain,Y,acq_rate,smooth_win_s);
     Cn = correlation_image(Y, [1,2], d1,d2);
 
     % Calculate correlations (initialisation)
@@ -86,7 +86,7 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
     %% Reorder rois so that loner axons are at the top
     temp = [ix_loners,ix_notloners];
     dFF_axons = dFF(temp,:);
-    dFF_smooth_axons = dFF(temp,:);
+    %dFF_smooth_axons = dFF(temp,:);
     Ain_axons = Ain(:,temp);
 
     % indices for grouping
@@ -97,7 +97,7 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
     end
 
     % Calculate correlations
-    C = get_corrs(dFF_smooth_axons,rho_min);
+    C = get_corrs(dFF_axons,rho_min);
     
     % Reference matrix to determine if have already checked if those rois are
     % on same axon. 1 indicates already checked, 0 otherwise. Value of 1
@@ -112,6 +112,10 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
     if manual_check
         figure(1), 
     end
+    
+    count_merge = 0;
+    count_FA = 0;
+    count_MISS = 0;
     
     % While there are correlated axons (above min correlation), try merging 
     while max(C(:)) > 0
@@ -151,7 +155,7 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
             merge_rois = 1;
         end
         
-        if manual_check && merge_rois
+        if manual_check
             disp(' ')
             disp(['Angle between putative axon and overall axon: ',num2str(ang),' deg.'])
             for ix = 1:numel(dist)
@@ -225,7 +229,7 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
 
         % If merge_rois = 1 based on correlations and spatial location,
         % check that error for large events is lower than baseline error 
-        if merge_rois
+        if merge_rois || manual_check
             
             var_ratio = get_var_ratio(dFF_axons(axon_1,:),dFF_axons(axon_2,:),manual_check);
             
@@ -261,23 +265,27 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
                 
                 % plot traces
                 subplot(2,1,2), hold off, plot((1:T)/acq_rate, dFF_axons(axon_1,:),'r'), 
-                hold on, plot((1:T)/acq_rate, 1+dFF_axons(axon_2,:),'b'), xlim([0,T/acq_rate])
+                hold on, plot((1:T)/acq_rate, mean(dFF_axons(axon_1,:)) * 3 + .5 + dFF_axons(axon_2,:),'b'), xlim([0,T/acq_rate])
 
                 rho = corrcoef(dFF_axons(axon_1,:),dFF_axons(axon_2,:)); 
                 rho = rho(1,2);
                 
-                title(num2str(rho)), set(gca, 'FontSize',15), ylim([-.5,3])
+                title(num2str(rho)), set(gca, 'FontSize',15), temp = mean(dFF_axons(axon_1,:))*3 + mean(dFF_axons(axon_2,:)) * 3 +3; ylim([-.5,temp])%ylim([-.5,mean(dFF_axons(axon_1,:))*3 + mean(dFF_axons(axon_2,:)) * 3 +3 ])
                 
                 % Ask for input
                 if merge_rois == 1
                     x = input('ROIs will be merged. Enter R to override: ','s');
                     if  strcmp(x,'r') || strcmp(x,'R')
                         merge_rois = 0;
+                        count_FA = count_FA + 1;
                     end
                 elseif merge_rois == 0
+                    set(gca,'Color',[1,.8,.8])
+                    title(num2str(rho),'Color','r')
                     x = input('ROIs will NOT be merged. Enter M to override: ','s');
                     if  strcmp(x,'r') || strcmp(x,'R')
                         merge_rois = 1;
+                        count_MISS = count_MISS + 1;
                     end
                 end
             end
@@ -285,6 +293,8 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
 
         % If still decide to merge ROIs
         if merge_rois
+            
+            count_merge = count_merge + 1;
 
             % Merge spatial fields for the two axons
             Ain_axons_new = Ain_axons;
@@ -306,20 +316,20 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
 
             % calculate dFF for new axons            
             dFF_axons_new = dFF_axons;
-            dFF_axons_new(axon_1,:) = get_dFF(A_merged,Y,acq_rate);
+            dFF_axons_new(axon_1,:) = get_dFF(A_merged,Y,acq_rate,smooth_win_s);
             dFF_axons_new(axon_2,:) = [];
             
-            dFF_smooth_axons_new = dFF_axons_new;
+            %dFF_smooth_axons_new = dFF_axons_new;
 
             % recompute correlations
-            C = get_corrs(dFF_smooth_axons_new,rho_min);
+            C = get_corrs(dFF_axons_new,rho_min);
 
             % update everything
             Ain_axons = Ain_axons_new;
             ix_axons_to_rois = ix_axons_to_rois_new;
             axon_ids = axon_ids_new;
             dFF_axons = dFF_axons_new;
-            dFF_smooth_axons= dFF_smooth_axons_new;
+            %dFF_smooth_axons= dFF_smooth_axons_new;
         else
             % Merge has been rejected despite high correlations. This means the
             % rois or axons are too far apart. Flag that this has arleady been
@@ -379,4 +389,7 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
 ix_axons_to_rois = ix_axons_to_rois_new;
 axon_ids = axon_ids_new;
 
+disp(['Number of merges:',num2str(count_merge)])
+disp(['Number of false alarms:',num2str(count_FA)])
+disp(['Number of misses:',num2str(count_MISS)])
 

@@ -9,7 +9,12 @@
 %    A_neuropil       Spatial mask for hand drawn neuropil region
 %    dFF_neuropil     Neuropil dFF
 
-function [A_neuropil,dFF] = get_neuropil_byhand(Ain,Y,dims,acq_rate)
+function [A_neuropil,dFF] = get_neuropil_byhand(Ain,Y,dims,acq_rate,smooth_win_s)
+
+
+if nargin < 5 || isempty(smooth_win_s)
+    smooth_win_s = 0.2;
+end
 
 d1 = dims(1);
 d2 = dims(2);
@@ -31,7 +36,7 @@ A_neuropil = poly2mask(x(:,1),x(:,2),d1,d2);
 A_neuropil = A_neuropil(:);
 
 % Get dFF of neuropil (unsmoothed)
-dFF = get_dFF(A_neuropil,Y);
+dFF = get_dFF(A_neuropil,Y,smooth_win_s);
 
 % Estimate SNR
 SNR =  max(medfilt1(dFF,round(.2*acq_rate)))/GetSn(dFF);

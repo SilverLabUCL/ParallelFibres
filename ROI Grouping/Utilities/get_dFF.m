@@ -5,23 +5,12 @@
 %    Y                Raw fluorescence matrix (num pixels x num timepoints)
 %    acq_rate         Acquisition rate (Hz) (optional)
 %    smooth_win_s     Smoothing window (s) (optional)
-%    avg_first        Determines whether dFF is calculated by first
-%                     calculating dFF per pixel then averaging (if =0) or
-%                     by averaging Y for relevant pixels then calculating
-%                     dFF (if =1). In practice, gives almost exactly same
-%                     results up to scaling and offset, but avg=1 gives
-%                     better estimate of F0 for noisy data. (optional)
 %
 % Output:
 %    dFF              Matrix of dFF (num ROIs x num timepoints)
 
 
-function dFF = get_dFF(Ain,Y,acq_rate,smooth_win_s,avg_first)
-
-% Automatically set avg_first to 0
-if nargin < 5 || isempty(avg_first)
-    avg_first = 1; 
-end
+function dFF = get_dFF(Ain,Y,acq_rate,smooth_win_s)
 
 % Default smoothing for gcamp6f timescale
 if nargin < 4 || isempty(smooth_win_s)
@@ -51,33 +40,12 @@ if sum(sum(Ain ~=1 & Ain ~= 0))
     error('Spatial matrices must be threshoded to calculate dFF');
 end
 
-%% Calculate dFF for each pixel - if avg_first = 0
-
-if avg_first == 0
-    dFF_pix = zeros(size(Y));
-
-    for pix = 1:size(Y,1)
-        if sum(Ain(pix,:))>0 
-            F = Y(pix,:);
-            F0 = prctile(F,10);
-            dFF_pix(pix,:) = (F-F0)/F0;
-        end
-    end
-end
-
 %% Calculate dFF
 
 dFF = zeros(N_ROIs,T);
 
 for k = 1:N_ROIs
     
-    if avg_first == 0
-        
-        % Average dFF over all pizels within that ROI
-        dFF(k,:) = Ain(:,k)'*dFF_pix/sum(Ain(:,k));
-    
-    elseif avg_first == 1
-
         % Average F over all pixels within that ROI
         F = mean(Y(Ain(:,k)==1,:),1);
 
@@ -85,11 +53,13 @@ for k = 1:N_ROIs
         F0 = prctile(F,10);
         dFF(k,:) = (F - F0)/F0;
         
-    end
     
     % Smooth dFF 
     if ~isempty(smooth_win_s)
-        dFF(k,:) = smoothdata(dFF(k,:),'gaussian', smooth_bins);
+        % Asymmetric Gaussian filter
+        % Have to double smoothing window because asymmetric Gaussian only
+        % uses one side
+        dFF(k,:) = smoothdata(dFF(k,:),'gaussian', [2*smooth_bins 0]);
     end
     
 end
