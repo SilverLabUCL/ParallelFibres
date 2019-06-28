@@ -94,12 +94,14 @@ for dataset_ix = 1:8
     C_intra = C_intra_patch{dataset_ix};
     C_inter = C_inter_patch{dataset_ix};
     
+    [dataset_ix,prctile(C_inter,95)]
+    
     figure, hold on,
     histogram(C_intra,bins,'Normalization','probability');
     histogram(C_inter,bins,'Normalization','probability');
-    set(gca,'FontSize',18), xlabel('SNR'), ylabel('probability')
+    set(gca,'FontSize',18), xlabel('Correlation'), ylabel('probability')
         
     title(fname,'Interpreter','None')
     
-    %save([basedir,fname,'/processed/corr_histograms.mat'],'C_intra','C_inter');
+    save([basedir,fname,'/processed/corr_histograms.mat'],'C_intra','C_inter');
 end

@@ -13,7 +13,7 @@
 
 function [Ain_new,dFF_new] = delete_ROIs_manually(Ain,dFF,acquisition_rate)
     
-close all
+    close all
     [N,T] = size(dFF);
     
     ROIs_to_delete = [];

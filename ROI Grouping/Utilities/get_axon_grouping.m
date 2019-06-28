@@ -1,7 +1,11 @@
 %
 % This function performs the main axon regrouping based on:
-%   (1) low-frequency correlations, and 
-%   (2) fibre direction
+%   (1) Functional activity
+%        - cross correlation 
+%        - deviation of large events vs baseline activity
+%   (2) Spatial information
+%        - fibre direction
+%        - distance of boutons from putative axon
 %
 %
 % Input:
@@ -79,9 +83,9 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
     ix_notloners = setdiff(1:N_ROIs,ix_loners);
     
     % Index for axons, starting with loners
-    axon_ids = zeros(1,N_ROIs);
-    axon_ids(ix_loners) = 1:numel(ix_loners);
-    axon_ids(ix_notloners) = (1+numel(ix_loners)):N_ROIs;
+    %axon_ids = zeros(1,N_ROIs);
+    %axon_ids(ix_loners) = 1:numel(ix_loners);
+    %axon_ids(ix_notloners) = (1+numel(ix_loners)):N_ROIs;
 
     %% Reorder rois so that loner axons are at the top
     temp = [ix_loners,ix_notloners];
@@ -113,6 +117,9 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
         figure(1), 
     end
     
+    % Count how many merges (count_merge), and how many automatic merges 
+    % are manually prevented (count_FA), and how many automatic non-merges
+    % are manually forced (count_MISS)
     count_merge = 0;
     count_FA = 0;
     count_MISS = 0;
@@ -294,8 +301,9 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
         % If still decide to merge ROIs
         if merge_rois
             
+            % Update count
             count_merge = count_merge + 1;
-
+            
             % Merge spatial fields for the two axons
             Ain_axons_new = Ain_axons;
             Ain_axons_new(:,axon_1) = A_merged;
@@ -308,11 +316,11 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
             num_axons = length(ix_axons_to_rois_new);
 
             % update axon ids for the rois
-            axon_ids_new = zeros(1,N_ROIs);
-            for axon = 1:num_axons
-                rois = ix_axons_to_rois_new{axon};
-                axon_ids_new(rois) = axon;
-            end
+            %axon_ids_new = zeros(1,N_ROIs);
+            %for axon = 1:num_axons
+            %    rois = ix_axons_to_rois_new{axon};
+            %    axon_ids_new(rois) = axon;
+            %end
 
             % calculate dFF for new axons            
             dFF_axons_new = dFF_axons;
@@ -327,7 +335,7 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
             % update everything
             Ain_axons = Ain_axons_new;
             ix_axons_to_rois = ix_axons_to_rois_new;
-            axon_ids = axon_ids_new;
+            %axon_ids = axon_ids_new;
             dFF_axons = dFF_axons_new;
             %dFF_smooth_axons= dFF_smooth_axons_new;
         else
@@ -387,7 +395,7 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
     end
 
 ix_axons_to_rois = ix_axons_to_rois_new;
-axon_ids = axon_ids_new;
+%axon_ids = axon_ids_new;
 
 disp(['Number of merges:',num2str(count_merge)])
 disp(['Number of false alarms:',num2str(count_FA)])
