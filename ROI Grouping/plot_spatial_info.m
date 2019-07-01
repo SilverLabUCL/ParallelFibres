@@ -2,14 +2,13 @@
 % a sanity check to compare with existing literature on parallel fibre
 % bouton information (Pichitpornchai et al., 1994; Shepherd et al., 2002)
 
-%% First plot distribution of varicosity sizes 
-%(before rejecting on basis of SNR etc)
-
 clear all; clc
 addpath('From CNMF_E/')
 addpath('Utilities/')
 
-basedir = '~/Documents/ParallelFibres/Data/';
+%basedir = '~/Documents/ParallelFibres/Data/';
+basedir = 'C:\Users\SilverLab\Documents\Alex\ParallelFibres\Data\';
+
 datasets = {'FL87_180501_11_03_09',...  1
             'FL87_180501_10_47_25',...  2
             'FL87_180501_10_36_14',...  3 
@@ -19,25 +18,40 @@ datasets = {'FL87_180501_11_03_09',...  1
             'FL_S_170905_10_40_52',...  7            
             'FL45_170125_14_47_04'}; %  8
 
-% Choose dataset
-dataset_ix = 1;
+d_all = cell(8,1);
 
-% Choose patch number
-patch_no = 1;
 
-fname = datasets{dataset_ix};
-disp(fname)
-
-while exist([basedir,fname,'/raw/Patch',sprintf('%03d',patch_no),'.mat'],'file') == 2
+figure, hold on, plot(1:9,'k')
+for dataset_ix = 1:8
     
-    load([basedir,fname,'/raw/Patch',sprintf('%03d',patch_no),'.mat'])
+    fname = datasets{dataset_ix};
+    
+    load([basedir,fname,'/processed/',fname,'_GroupedData.mat'],'Ain_rois','Cn','ix_axons_to_rois');
+    
+    load([basedir,fname,'/raw/Patch001.mat'],'d1','d2','Pixel_size')
+    
+    Numb_patches = size(Cn,1);
 
-    Y = double(Y);
-
-    [Ain,Cn] = detect_ROIs(Y, [d1,d2], 2, 5, 0); close; close;
-
+    d = [];
+    for patch_no = 1:Numb_patches
+        temp = get_interbouton_dist(Ain_rois{patch_no},[d1,d2],ix_axons_to_rois{patch_no},Pixel_size);
+        d = [d; temp];
+    end
+    
+    d_all{dataset_ix} = d;
+    
+    [dataset_ix, mean(d), std(d)]
+    plot(mean(d),std(d),'o','MarkerEdgeColor','k','MarkerFaceColor','w')
 end
-    
-%%
-d = get_interbouton_dist(Ain,[d1,d2],ix_axons_to_rois,Pixel_size);
-[mean(d),std(d)]
+set(gca,'FontSize',15)
+xlabel('Mean distance (\mu m)')
+ylabel('Standard deviation (\mu m)')
+saveas(gcf,[basedir,'/figs/intervaricosity_distances_mean_std.png']);
+
+figure, histogram(vertcat(d_all{:}))
+set(gca,'FontSize',15)
+xlabel('Intervaricosity distance (\mu m)')
+ylabel('Number')
+saveas(gcf,[basedir,'/figs/intervaricosity_distances_histogram.png']);
+
+[mean(vertcat(d_all{:})), std(vertcat(d_all{:}))]

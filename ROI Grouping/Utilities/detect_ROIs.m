@@ -84,8 +84,7 @@ function [Ain,Cn] = detect_ROIs(Y, dims, filter_pix, win_pix, thresh, manual)
 
     % Plot and hand select more
     if manual
-        figure('papersize',[d2,d1]/40); init_fig;
-        imagesc(v_search), colormap(gray)
+        figure, imagesc(v_search), colormap(gray)
         hold on, plot(c_peak,r_peak,'.r')
     %    caxis(median(v_search(:))+[-1,2]*std(v_search(:)))
 

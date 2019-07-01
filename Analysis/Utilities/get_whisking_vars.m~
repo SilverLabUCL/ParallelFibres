@@ -1,6 +1,6 @@
-% Extract whisking variables from raw angle information
 
-function [whisk_angle_filt,whisk_set_point,whisk_amp,whisk_phase] = get_whisking_vars(dlc_whisk_angle,dlc_whisk_time)
+
+function [whisk_angle_filt,whisk_set_point,whisk_angle_bp,] = get_whisking_vars(dlc_whisk_angle,dlc_whisk_time)
 
     % Convert to rad and set so protraction is positive
     dlc_whisk_angle = pi - deg2rad(dlc_whisk_angle);
@@ -22,13 +22,11 @@ function [whisk_angle_filt,whisk_set_point,whisk_amp,whisk_phase] = get_whisking
     whisk_angle_filt = whisk_angle_filt(end:-1:1);
 
     % To get set point, median filter by 500 ms
-    whisk_set_point = smoothdata(whisk_angle_filt,'movmedian',round(0.5* fs));
+    whisk_set_point = smoothdata(whisk_angle_filt,'movmedian',round(0.7* fs));
+    figure, plot(dlc_whisk_time,whisk_set_point,'r')
 
     % To get whisking amplitude and phase,
     fc2 = 30; fc1 = 8;
     [b,a] = butter(4,[fc1,fc2]/(fs/2));
     whisk_angle_bp = hilbert(filter(b,a,dlc_whisk_angle));
-    
-    whisk_phase = angle(whisk_angle_bp);
-    whisk_amp = abs(whisk_angle_bp);
 

@@ -290,7 +290,7 @@ function [Ain_new,ix_axons_to_rois,axon_ids_new] = get_axon_grouping(Ain,Y,dims,
                     set(gca,'Color',[1,.8,.8])
                     title(num2str(rho),'Color','r')
                     x = input('ROIs will NOT be merged. Enter M to override: ','s');
-                    if  strcmp(x,'r') || strcmp(x,'R')
+                    if  strcmp(x,'m') || strcmp(x,'M')
                         merge_rois = 1;
                         count_MISS = count_MISS + 1;
                     end
