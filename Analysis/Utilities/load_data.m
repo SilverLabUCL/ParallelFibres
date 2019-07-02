@@ -9,7 +9,7 @@
 %    Ain          
 %    dFF          
 
-function [dFF_all,acquisition_rate] = load_data(dataset_ix)
+function [dFF_all,acquisition_rate] = load_data(dataset_ix,grouped)
 
     basedir = '~/Documents/ParallelFibres/Data/';
 
@@ -30,19 +30,26 @@ function [dFF_all,acquisition_rate] = load_data(dataset_ix)
     Numb_patches = size(Ain_axons,1);
     T = size(dFF_axons{1},2);
 
-    % Get total number of axons after grouping
-    Num_axons = 0;
-    for patch_no = 1:Numb_patches
-        Num_axons = Num_axons + size(Ain_axons{patch_no},2);
+    if grouped
+        dFF_all = vertcat(dFF_axons{:});
+    elseif ~grouped
+        dFF_all = vertcat(dFF_rois{:});
     end
     
-    % Add all axons to list of dFF
-    dFF_all = zeros(Num_axons,T);
-    count = 1;
-    for patch_no = 1:Numb_patches
-        dFF_all(count:count + size(dFF_axons{patch_no},1) - 1,:) ...
-            = dFF_axons{patch_no};
-        count = count + size(dFF_axons{patch_no},1);
-    end
+%     
+%     % Get total number of axons after grouping
+%     Num_axons = 0;
+%     for patch_no = 1:Numb_patches
+%         Num_axons = Num_axons + size(Ain_axons{patch_no},2);
+%     end
+%     
+%     % Add all axons to list of dFF
+%     dFF_all = zeros(Num_axons,T);
+%     count = 1;
+%     for patch_no = 1:Numb_patches
+%         dFF_all(count:count + size(dFF_axons{patch_no},1) - 1,:) ...
+%             = dFF_axons{patch_no};
+%         count = count + size(dFF_axons{patch_no},1);
+%     end
     
 

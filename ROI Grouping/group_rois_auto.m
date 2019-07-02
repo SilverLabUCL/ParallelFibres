@@ -93,7 +93,7 @@ for patch_no = 1:Numb_patches
         get_axon_grouping(Ain,Y,[d1,d2],acquisition_rate,smooth_win_s,Pixel_size,vector_mean,[],rho_min,[],[],1);
 
     % Plot results
-    plot_grouped_rois(Ain_axons,Cn,dFF,ix_axons_to_rois,acquisition_rate,[],[],[basedir,fname],patch_no);%,thr,display_numbers,basedir)
+    plot_grouped_rois(Ain_axons,Cn,dFF,ix_axons_to_rois,acquisition_rate,[],[],[],patch_no);%,thr,display_numbers,basedir)
 
     disp('Press enter to accept')
     pause

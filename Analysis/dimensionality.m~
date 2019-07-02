@@ -14,7 +14,7 @@ datasets = {'FL87_180501_11_03_09',...  1
             'FL_S_170905_10_40_52',...  7
             'FL45_170125_14_47_04'}; %  8
 
-N_sub = 400;
+N_sub = 350;
 
 varmax = nan(8,1);
 dimmax = nan(8,1);
@@ -38,7 +38,7 @@ for dataset_ix = 1:8
         % Calculate dimensionality
         [varexp{dataset_ix},dimmax(dataset_ix),varmax(dataset_ix)] = get_dim(dFF,N_sub,N_sub);
 
-        %clear dFF
+        clear dFF
 
         % Redo - ungrouped
         % Load data
@@ -53,6 +53,8 @@ for dataset_ix = 1:8
 end
 
 toc
+
+%% Save data if desired
 
 save([basedir,'/dimensionality_N',num2str(N_sub)],'varmax','dimmax','varexp','varmax_rois','dimmax_rois','varexp_rois')
 
@@ -91,19 +93,12 @@ set(gca,'FontSize',18)
 
 %% Extrapolate extrapolation
 
-N_sub = 150:50:700;
+N_sub_list = 150:50:700;
 
-for k = 1:length(N_sub)
+for = N
     
-    load([basedir,'/dimensionality_N',num2str(N_sub(k))])
+    load([basedir,'/dimensionality_N',num2str(N_sub))
     
-    ix = find(~isnan(varmax)); slope = (varmax(ix)'*varmax(ix))\(varmax(ix)'*dimmax(ix));
-    disp('Axons:')
-    [N_sub(k), slope, slope/N_sub(k)]
-    
-    ix = find(~isnan(varmax_rois)); slope = (varmax_rois(ix)'*varmax_rois(ix))\(varmax_rois(ix)'*dimmax_rois(ix));
-    disp('ROIs:')
-    [N_sub(k), slope, slope/N_sub(k)]
 end
 
 %% Calculate dimensionality and iterate over all 
