@@ -8,6 +8,7 @@ define_dirs;
 [C_spd, C_ang, C_wsp, C_amp] = deal(cell(8,1)); 
 [p_spd, p_ang, p_wsp, p_amp] = deal(cell(8,1)); 
 
+tic
 for dataset_ix =  1:8
     
     % Load data
@@ -35,6 +36,7 @@ for dataset_ix =  1:8
         p_amp{dataset_ix}(n) = p(4);
         
     end
+    toc
     
 end
 

@@ -6,7 +6,7 @@ clear all; clc
 % Common code to define base directory and datasets
 define_dirs;
 
-N_sub = 700;
+N_sub = 600;
 
 varmax = nan(8,1);
 dimmax = nan(8,1);
@@ -112,58 +112,45 @@ for k = 1:length(N_sub)
 end
 
 %% Calculate dimensionality and iterate over all 
-% 
-% %% Following fragments of code are for modelling what happens with code .. 
-% 
-% T = 10000;
-% N = 150;
-% D = 40;
-% 
-% V_true = randn(D,T);
-% 
-% S_vec = rand(D,1)*10;%zeros(D,1);
-% %for i = 1:D
-% %    S_vec(i) = i;
-% %end
-% S_true = diag(sort(S_vec,'descend'));
-% 
-% SV_true = S_true*V_true;
-% 
-% U_true = randn(N,D);
-% U_true = orth(U_true);
-% %%
-% noise = .01;
-% 
-% F = U_true*SV_true + noise*randn(150,10000);
-% 
-% 
-% %%
-% D_max = 50; k_max = 1;
-% varexp = zeros(k_max,D_max);
-% for k = 1:k_max
-%    
-%     ix_x = sort(randsample(N,round(.8*N)));
-%     ix_y = setdiff(1:N,ix_x)';
-% 
-%     Neuron_x = F(ix_x,:);
-% 
-%     Neuron_y = F(ix_y,:);
-% 
-%     [ num_dim, Test_t, y_est, res, U_x, U_y ] = peer_predict_dim( Neuron_x, Neuron_y, 1:round(.8*T), 1:D_max);
-%     varexp(k,:) = mean(res,1);
-% end
-% 
-% figure(1), hold on
-% plot(num_dim,mean(varexp,1),'k')
-% [maxval,argmax]=max(mean(varexp,1))
-% %hold on
-% 
-% z = [z; argmax, maxval];
-% %%
-% 
-% k = find(z(:,2)<.5);
-% z_ = z(k,:);
-% 
-% k_rnd = randsample(length(k),5);
-% z_ = z_(k_rnd,:);
+
+%% Following fragments of code are for modelling what happens with code .. 
+
+T = 10000;
+N_sub = 300;
+D = 6;
+
+V_true = randn(D,T);
+V_true = orth(V_true')';
+
+S_vec = rand(D,1)*10;
+S_true = diag(sort(S_vec,'descend'));
+
+SV_true = S_true*V_true;
+
+U_true = randn(N,D);
+U_true = orth(U_true);
+%%
+dimmax = [];
+varmax = [];
+for noise = linspace(.005,.05,10)
+    noise
+    F = U_true*SV_true + noise*randn(N,T);
+    [~,dimmax_,varmax_] = get_dim(F,N_sub,N_sub);
+    dimmax=[dimmax,dimmax_];
+    varmax=[varmax,varmax_];
+end
+%%
+figure(1), hold on
+plot(num_dim,mean(varexp,1),'k')
+[maxval,argmax]=max(mean(varexp,1))
+%hold on
+
+z = [z; argmax, maxval];
+%%
+
+k = find(z(:,2)<.5);
+z_ = z(k,:);
+
+k_rnd = randsample(length(k),5);
+z_ = z_(k_rnd,:);
 
