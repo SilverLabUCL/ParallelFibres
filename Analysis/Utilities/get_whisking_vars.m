@@ -1,7 +1,25 @@
-% Extract whisking variables from raw angle information
+% Load DLC whisking angle and extract whisking variables
+%
+%
+% Required input:
+%    dataset_ix   Dataset number (1-8)
+% 
+% Output:
+%    dlc_whisk_time      time for whisking data
+%    whisk_angle_filt    filtered whisking angle
+%    whisk_set_point     whisker set point
+%    whisk_amp           Whisking amplitude
+%    whisk_phase  
 
-function [whisk_angle_filt,whisk_set_point,whisk_amp,whisk_phase] = get_whisking_vars(dlc_whisk_angle,dlc_whisk_time)
 
+function [dlc_whisk_time,whisk_angle_filt,whisk_set_point,whisk_amp,whisk_phase] = get_whisking_vars(dataset_ix)
+
+    define_dirs;
+    
+    % Load DLC wihsking info
+    fname = datasets{dataset_ix};
+    load([basedir,fname,'/',fname,'.mat'],'dlc_whisk_angle','dlc_whisk_time')
+    
     % Convert to rad and set so protraction is positive
     dlc_whisk_angle = pi - deg2rad(dlc_whisk_angle);
 
@@ -31,4 +49,6 @@ function [whisk_angle_filt,whisk_set_point,whisk_amp,whisk_phase] = get_whisking
     
     whisk_phase = angle(whisk_angle_bp);
     whisk_amp = abs(whisk_angle_bp);
+    
+    dlc_whisk_time = dlc_whisk_time / 1000;
 

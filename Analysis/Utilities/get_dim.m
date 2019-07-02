@@ -16,12 +16,15 @@
 %    dimmax    Maximum inferred dimensionality (considering the SNR) 
 %    varmax    Maximum variance explained
 
-function [varexp,dimmax,varmax] = get_dim(dFF,N_sub,D_max,frac_T_train,frac_N_train)
+function [varexp,dimmax,varmax] = get_dim(dFF,N_sub,D_max,acquisition_rate,frac_T_train,frac_N_train)
     
-    if nargin < 4 || isempty(frac_T_train)
+    if nargin < 4 
+        acquisition_rate = [];
+    end
+    if nargin < 5 || isempty(frac_T_train)
         frac_T_train = 0.8;
     end
-    if nargin < 5 || isempty(frac_N_train)
+    if nargin < 6 || isempty(frac_N_train)
         frac_N_train = 0.8;
     end
     
@@ -43,7 +46,13 @@ function [varexp,dimmax,varmax] = get_dim(dFF,N_sub,D_max,frac_T_train,frac_N_tr
     
     % Number random repeats, including both subsampling population &
     % subsampling time. 
-    N_reps = 50;
+    N_reps = 10;
+    
+    if ~isempty(acquisition_rate)
+        disp('Block shuffle')
+    else
+        disp('Random')        
+    end
     
     %%
     varexp = zeros(N_reps,D_max);
@@ -57,10 +66,13 @@ function [varexp,dimmax,varmax] = get_dim(dFF,N_sub,D_max,frac_T_train,frac_N_tr
         dFF_sub = dFF(randsample(N,N_sub),:);
         
         % For training indices use block shuffled time points (1s default)
-        %train_ixs = block_shuffle_time(T,acquisition_rate);
-        %train_ixs = train_ixs(1:round(frac_T_train*T));
-        
-        train_ixs = randsample(T,frac_T_train*T);
+        % if no acquisition rate, randomly shuffle
+        if ~isempty(acquisition_rate)
+            train_ixs = block_shuffle_time(T,acquisition_rate);
+            train_ixs = train_ixs(1:round(frac_T_train*T)); 
+        else
+            train_ixs = randsample(T,frac_T_train*T);           
+        end
         
         % Randomly sample training population
         ix_x = sort(randsample(N_sub,round(frac_N_train*N_sub)));

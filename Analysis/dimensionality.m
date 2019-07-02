@@ -2,19 +2,11 @@
 
 
 clear all; clc
-basedir = '~/Documents/ParallelFibres/Data/processed';
-addpath('Utilities/')
 
-datasets = {'FL87_180501_11_03_09',...  1
-            'FL87_180501_10_47_25',...  2
-            'FL87_180501_10_36_14',...  3
-            'FL87_180220_10_38_55',...  4
-            'FL77_180213_10_46_41',...  5
-            'FL_S_170906_11_26_25',...  6
-            'FL_S_170905_10_40_52',...  7
-            'FL45_170125_14_47_04'}; %  8
+% Common code to define base directory and datasets
+define_dirs;
 
-N_sub = 400;
+N_sub = 700;
 
 varmax = nan(8,1);
 dimmax = nan(8,1);
@@ -28,24 +20,24 @@ tic
 
 for dataset_ix = 1:8
     
-    dataset_ix
+    dataset_ix, toc
     
     % Load data
-    [dFF,acquisition_rate] = load_data(dataset_ix,1);
+    [dFF,~,acquisition_rate] = load_data(dataset_ix,1);
 
     if size(dFF,1) > N_sub
 
         % Calculate dimensionality
-        [varexp{dataset_ix},dimmax(dataset_ix),varmax(dataset_ix)] = get_dim(dFF,N_sub,N_sub);
+        [varexp{dataset_ix},dimmax(dataset_ix),varmax(dataset_ix)] = get_dim(dFF,N_sub,N_sub,acquisition_rate);
 
         %clear dFF
 
         % Redo - ungrouped
         % Load data
-        [dFF,acquisition_rate] = load_data(dataset_ix,0);
+        [dFF,~,acquisition_rate] = load_data(dataset_ix,0);
 
         % Calculate dimensionality
-        [varexp_rois{dataset_ix},dimmax_rois(dataset_ix),varmax_rois(dataset_ix)] = get_dim(dFF,N_sub,N_sub);
+        [varexp_rois{dataset_ix},dimmax_rois(dataset_ix),varmax_rois(dataset_ix)] = get_dim(dFF,N_sub,N_sub,acquisition_rate);
         
     end
 
@@ -54,7 +46,7 @@ end
 
 toc
 
-save([basedir,'/dimensionality_N',num2str(N_sub)],'varmax','dimmax','varexp','varmax_rois','dimmax_rois','varexp_rois')
+save([basedir,'processed/dimensionality_N',num2str(N_sub)],'varmax','dimmax','varexp','varmax_rois','dimmax_rois','varexp_rois')
 
 %% Plot var explained vs. number components
 
@@ -73,8 +65,21 @@ for dataset_ix = 1:8
 end
 xlabel('Number of components')
 ylabel('Variance explained (cross-val)')
+
 %% Extrapolate to maximum dimensionality
 
+varmax = []; dimmax = [];
+for dataset_ix = 1:8
+    if ~isempty(varexp{dataset_ix})
+    for k = 1:10
+        [varmax_,dimmax_] = max(varexp{dataset_ix}(k,:));
+        varmax= [varmax;varmax_];
+        dimmax = [dimmax;dimmax_];
+    end
+    end
+end
+
+%%
 ix = find(~isnan(varmax));
 
 figure, plot(varmax,dimmax,'ok','MarkerFaceColor','w','LineWidth',2)
@@ -83,7 +88,7 @@ xlabel('Variance explained')
 ylabel('Number of components')
 set(gca,'FontSize',18)
 
-figure, plot(varmax_rois,dimmax_rois,'ok','MarkerFaceColor','w','LineWidth',2)
+figure, plot(varmax_rois,dimmax_rois,'or','MarkerFaceColor','w','LineWidth',2)
 hold on, plot([0,1],[0,1]*(varmax_rois(ix)'*varmax_rois(ix))\(varmax_rois(ix)'*dimmax_rois(ix)),'k')
 xlabel('Variance explained')
 ylabel('Number of components')
@@ -95,7 +100,7 @@ N_sub = 150:50:700;
 
 for k = 1:length(N_sub)
     
-    load([basedir,'/dimensionality_N',num2str(N_sub(k))])
+    load([basedir,'processed/dimensionality_N',num2str(N_sub(k))])
     
     ix = find(~isnan(varmax)); slope = (varmax(ix)'*varmax(ix))\(varmax(ix)'*dimmax(ix));
     disp('Axons:')
