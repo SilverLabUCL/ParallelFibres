@@ -48,7 +48,7 @@ bins = linspace(-1,1,60);
 bins_c = bins(2:end)-mean(diff(bins))/2;
 
 % Plot whisker set point
-for k = 1:4
+for k = 3%1:4
     switch k
         case 1
             C_temp = C_spd; p_temp = p_spd; title_name = 'speed';
@@ -80,11 +80,10 @@ end
 clear all; clc
 
 define_dirs;
-        
-[C_spd, C_ang, C_wsp, C_amp] = deal(cell(8,1)); 
-[p_spd, p_ang, p_wsp, p_amp] = deal(cell(8,1)); 
 
-tic
+[SNR, C_spd_lag, C_ang_lag, C_wsp_lag, C_amp_lag, lags] = deal(cell(8,1));
+[C_spd_lag_std, C_ang_lag_std, C_wsp_lag_std, C_amp_lag_std] = deal(cell(8,1));
+
 for dataset_ix =  1:8
     
     % Load data
@@ -94,117 +93,75 @@ for dataset_ix =  1:8
     % Load behavioural data
     [whisk_angle,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
     
-    [C_spd{dataset_ix}, C_ang{dataset_ix}, C_wsp{dataset_ix}, C_amp{dataset_ix}] = deal(nan(N,1)); 
-    [p_spd{dataset_ix}, p_ang{dataset_ix}, p_wsp{dataset_ix}, p_amp{dataset_ix}] = deal(nan(N,1)); 
-
-    for n = 1:N
-        
-        [C,p] = corr_sig(dFF(n,:),[speed,whisk_angle,whisk_set_point,whisk_amp],acquisition_rate);
-        
-        C_spd{dataset_ix}(n) = C(1);
-        C_ang{dataset_ix}(n) = C(2);
-        C_wsp{dataset_ix}(n) = C(3);
-        C_amp{dataset_ix}(n) = C(4);
-
-        p_spd{dataset_ix}(n) = p(1);
-        p_ang{dataset_ix}(n) = p(2);
-        p_wsp{dataset_ix}(n) = p(3);
-        p_amp{dataset_ix}(n) = p(4);
-        
-    end
-    toc
+    [~,lags_temp] = corr_lag_trial(dFF(1,:),whisk_angle,time);
     
+    lags{dataset_ix} = lags_temp / acquisition_rate;
+    
+    [C_spd_lag{dataset_ix}, C_ang_lag{dataset_ix}, C_wsp_lag{dataset_ix}, C_amp_lag{dataset_ix}...
+        C_spd_lag_std{dataset_ix}, C_ang_lag_std{dataset_ix}, C_wsp_lag_std{dataset_ix}, C_amp_lag_std{dataset_ix}]...
+        = deal(nan(N,length(lags_temp))); 
+    
+    % Get SNR for all ROIS
+    SNR{dataset_ix} = nan(N,1);
+    for n = 1:N
+        SNR{dataset_ix}(n) = max(medfilt1(dFF(n,:),round(.2*acquisition_rate)))/GetSn(dFF(n,:));
+        
+        C_temp = corr_lag_trial(dFF(n,:),whisk_angle,time);
+        C_ang_lag{dataset_ix}(n,:) = mean(C_temp,2);
+        C_ang_lag_std{dataset_ix}(n,:) = std(C_temp,[],2);
+        
+        C_temp = corr_lag_trial(dFF(n,:),whisk_set_point,time);
+        C_wsp_lag{dataset_ix}(n,:) = mean(C_temp,2);
+        C_wsp_lag_std{dataset_ix}(n,:) = std(C_temp,[],2);
+        
+        C_temp = corr_lag_trial(dFF(n,:),whisk_amp,time);
+        C_amp_lag{dataset_ix}(n,:) = mean(C_temp,2);
+        C_amp_lag_std{dataset_ix}(n,:) = std(C_temp,[],2);
+        
+        C_temp = corr_lag_trial(dFF(n,:),speed,time);
+        C_spd_lag{dataset_ix}(n,:) = mean(C_temp,2);
+        C_spd_lag_std{dataset_ix}(n,:) = std(C_temp,[],2);
+    end
 end
 
-save([basedir,'processed/corr_axons_behav.mat'],'C_spd','p_spd','C_ang','p_ang','C_wsp','p_wsp','C_amp','p_amp')
+%% SNR distribution is the same
 
+load([basedir,'processed/corr_axons_behav.mat'])
+bins = linspace(0,150,60);
+bins_c = bins(2:end)-mean(diff(bins))/2;
 
+% Plot whisker set point
+SNR_all = vertcat(SNR{:});
+p_all = vertcat(p_wsp{:});
 
-%% With lag, no shuffle
+SNR_pass_shuff = SNR_all(p_all < 0.05);
+SNR_fail_shuff = SNR_all(p_all >= 0.05);
 
-C_mi_max = [];
+h_pass = histcounts(SNR_pass_shuff,bins);
+h_fail = histcounts(SNR_fail_shuff,bins);
 
-for dataset_ix =  1:7
-    dataset_ix
-    load(strcat('for_Alex/',dataset_ixs_Crus1_patches{dataset_ix})) % 1,2,4,5,6
+figure, bar(bins_c,h_fail,'FaceColor',[.6,.8,1],'EdgeColor','w')
+figure, bar(bins_c,h_pass,'FaceColor','b','EdgeColor','w')
+set(gca,'FontSize',18)
 
-    if dataset_ix ~=2
-        load(strcat('correct_baseline_',int2str(dataset_ix),'.mat'))
-    end
+%% Get histogram of lags at maximum correlations
 
-    [T,N] = size(Axon_dFF);
-    
-    Axon_dFF_ = zeros(size(Axon_dFF));
-    Axon_dFF_s_ = zeros(size(Axon_dFF));
-    for k = 1:size(Axon_dFF,2)
-        t= TimeAxon(:,k);
-        if dataset_ix ~=2
-            Axon_dFF_(:,k) = Axon_dFF(:,k)-(f.a*exp(f.b*t)+f.c*exp(f.d*t));
-        else
-            Axon_dFF_(:,k) = Axon_dFF(:,k);
-        end
-        Axon_dFF_s_(:,k) = smoothdata(Axon_dFF_(:,k),'gaussian',round(200*acquisition_rate/1000));
-    end
-    Axon_dFF =Axon_dFF_;
-    Axon_dFF_smooth =Axon_dFF_s_;
-    clear Axon_dFF_
-    clear Axon_dFF_s_
-
-    dt_MI = mean(diff(MI_facepad(:,2)));
-    MI_smooth = smoothdata(MI_facepad(:,1),'gaussian',round(200/dt_MI));
-    MI_interp = interp1(MI_facepad(:,2),MI_smooth,TimeAxon(:,end));
-
-    dt_speed = mean(diff(SpeedTimeMatrix));
-    Speed_smooth = smoothdata(SpeedDataMatrix,'gaussian',round(200/dt_speed));
-    Speed_interp = interp1(SpeedTimeMatrix,Speed_smooth,TimeAxon(:,end));
-
-
-    x = diff(mean(TimeAxon,2)); trial_switch = find(abs(x-median(x))>.01);
-    if numel(trial_switch)~=29
-        error
-    end
-    
-    
-    
-    C_mi = zeros(N, 2*(T/30)-1); C_speed = zeros(N, 2*(T/30)-1);
-    
-    for n = 1:N
-        temp_mi = zeros(30,2*(T/30)-1);
-        temp_speed = zeros(30,2*(T/30)-1);
-        
-        for tr = 1:30
-            if tr==1
-                ix_trial = 1:trial_switch(1);
-            elseif tr == 30
-                ix_trial = trial_switch(end)+1:T;
+[lags_up, C_max_up, lags_down, C_max_down] = deal([]);
+for dataset_ix =  1:8
+    for n = 1:size(C_wsp_lag{dataset_ix},1)
+        % Only consider significant
+        if p_wsp{dataset_ix}(n) < .05
+            [amax,bmax] = max(C_wsp_lag{dataset_ix}(n,:));
+            [amin,bmin] = min(C_wsp_lag{dataset_ix}(n,:));
+            if abs(lags{dataset_ix}(bmax)) < abs(lags{dataset_ix}(bmin))
+                lags_up = [lags_up; lags{dataset_ix}(bmax)];
+                C_max_up = [C_max_up; amax];
             else
-                ix_trial = trial_switch(tr-1)+1:trial_switch(tr);
-            end
-            [temp_mi(tr,:), lag] = xcov(MI_interp(ix_trial),Axon_dFF_smooth(ix_trial,n),'coeff');
-            [temp_speed(tr,:), lag_speed] = xcov(Speed_interp(ix_trial),Axon_dFF_smooth(ix_trial,n),'coeff');
-            if norm(lag-lag_speed)~=0
-                error
-            end
-        end
-
-        C_mi(n,:) = mean(temp_mi,1);
-
-        C_speed(n,:) = mean(temp_speed,1);
-        
-        [max_val,b] = max(abs(C_mi(n,:)));
-        if max_val > 3*std(C_mi(n,:)) %abs(lag(b))/acquisition_rate < 1 & max_val > 3*std(C_mi(n,:))
-            C_mi_max = [C_mi_max; (lag(b) + rand - 0.5 )/acquisition_rate, C_mi(n,b)];
-            if max_val > 4*std(C_mi(n,:)) & abs(lag(b))/acquisition_rate > .1 & max_val > .4%.8 & C_mi(n,b)<0
-                error
+                lags_down = [lags_down; lags{dataset_ix}(bmin)];
+                C_max_down = [C_max_down; amin];
             end
         end
     end
-    
-    %figure, plot(lag/acquisition_rate,C_mi)
-    %xlabel('Lag (s)'); ylabel('Correlation with WMI')
-    %title(dataset_ix)
-    
-    
 end
 
-%figure, histogram(C_all)
+figure, histogram([lags_up;lags_down]*1000,-200:15:200,'Normalization','probability')

@@ -1,6 +1,5 @@
 % Correlation with significance test (two tailed)
 
-
 function [C,p] = corr_sig(x,y,acquisition_rate)
 
     % Convert to columns
@@ -20,7 +19,7 @@ function [C,p] = corr_sig(x,y,acquisition_rate)
     % True correlation
     C = corr(x,y);
 
-    % Get shuffle distribution
+    % Get shuffle distribution (null distribution)
     num_reps = 1000;
     C_shuff = nan(num_reps,size(y,2));
     for rep = 1:num_reps
@@ -28,4 +27,5 @@ function [C,p] = corr_sig(x,y,acquisition_rate)
         C_shuff(rep,:) = corr(x,y(T_shuffled,:));
     end
     
+    % Calculate two-tailed p value
     p = sum(C_shuff > abs(C) |  C_shuff < -abs(C))/num_reps;
