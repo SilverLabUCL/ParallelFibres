@@ -44,7 +44,7 @@ save([basedir,'processed/corr_axons_behav.mat'],'C_spd','p_spd','C_ang','p_ang',
 
 %% Plot histograms of correlations for all neurons
 
-bins = linspace(-1,1,30);
+bins = linspace(-1,1,60);
 bins_c = bins(2:end)-mean(diff(bins))/2;
 
 % Plot whisker set point
@@ -75,7 +75,50 @@ for k = 1:4
     title(title_name)
 end
 
-%% Plot dFF
+%% Correlation - different time lags
+
+clear all; clc
+
+define_dirs;
+        
+[C_spd, C_ang, C_wsp, C_amp] = deal(cell(8,1)); 
+[p_spd, p_ang, p_wsp, p_amp] = deal(cell(8,1)); 
+
+tic
+for dataset_ix =  1:8
+    
+    % Load data
+    [dFF,time,acquisition_rate] = load_data(dataset_ix);
+    N = size(dFF,1);
+    
+    % Load behavioural data
+    [whisk_angle,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
+    
+    [C_spd{dataset_ix}, C_ang{dataset_ix}, C_wsp{dataset_ix}, C_amp{dataset_ix}] = deal(nan(N,1)); 
+    [p_spd{dataset_ix}, p_ang{dataset_ix}, p_wsp{dataset_ix}, p_amp{dataset_ix}] = deal(nan(N,1)); 
+
+    for n = 1:N
+        
+        [C,p] = corr_sig(dFF(n,:),[speed,whisk_angle,whisk_set_point,whisk_amp],acquisition_rate);
+        
+        C_spd{dataset_ix}(n) = C(1);
+        C_ang{dataset_ix}(n) = C(2);
+        C_wsp{dataset_ix}(n) = C(3);
+        C_amp{dataset_ix}(n) = C(4);
+
+        p_spd{dataset_ix}(n) = p(1);
+        p_ang{dataset_ix}(n) = p(2);
+        p_wsp{dataset_ix}(n) = p(3);
+        p_amp{dataset_ix}(n) = p(4);
+        
+    end
+    toc
+    
+end
+
+save([basedir,'processed/corr_axons_behav.mat'],'C_spd','p_spd','C_ang','p_ang','C_wsp','p_wsp','C_amp','p_amp')
+
+
 
 %% With lag, no shuffle
 

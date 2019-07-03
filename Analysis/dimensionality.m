@@ -6,7 +6,7 @@ clear all; clc
 % Common code to define base directory and datasets
 define_dirs;
 
-N_sub = 600;
+N_sub = 550;
 
 varmax = nan(8,1);
 dimmax = nan(8,1);
@@ -27,16 +27,13 @@ for dataset_ix = 1:8
 
     if size(dFF,1) > N_sub
 
-        % Calculate dimensionality
+        % Calculate dimensionality for grouped axons
         [varexp{dataset_ix},dimmax(dataset_ix),varmax(dataset_ix)] = get_dim(dFF,N_sub,N_sub,acquisition_rate);
 
         %clear dFF
 
-        % Redo - ungrouped
-        % Load data
+        % Calculate dimensionality for ungrouped ROIs
         [dFF,~,acquisition_rate] = load_data(dataset_ix,0);
-
-        % Calculate dimensionality
         [varexp_rois{dataset_ix},dimmax_rois(dataset_ix),varmax_rois(dataset_ix)] = get_dim(dFF,N_sub,N_sub,acquisition_rate);
         
     end
@@ -98,59 +95,77 @@ set(gca,'FontSize',18)
 
 N_sub = 150:50:700;
 
+slope = zeros(size(N_sub));
+slope_rois = zeros(size(N_sub));
 for k = 1:length(N_sub)
     
     load([basedir,'processed/dimensionality_N',num2str(N_sub(k))])
     
-    ix = find(~isnan(varmax)); slope = (varmax(ix)'*varmax(ix))\(varmax(ix)'*dimmax(ix));
-    disp('Axons:')
-    [N_sub(k), slope, slope/N_sub(k)]
+    ix = find(~isnan(varmax)); 
+    slope(k) = (varmax(ix)'*varmax(ix))\(varmax(ix)'*dimmax(ix));
+
     
-    ix = find(~isnan(varmax_rois)); slope = (varmax_rois(ix)'*varmax_rois(ix))\(varmax_rois(ix)'*dimmax_rois(ix));
-    disp('ROIs:')
-    [N_sub(k), slope, slope/N_sub(k)]
+    ix = find(~isnan(varmax_rois)); 
+    slope_rois(k) = (varmax_rois(ix)'*varmax_rois(ix))\(varmax_rois(ix)'*dimmax_rois(ix));
 end
 
-%% Calculate dimensionality and iterate over all 
+figure, bar(N_sub',[slope./N_sub; slope_rois./N_sub]','k')
 
 %% Following fragments of code are for modelling what happens with code .. 
 
-T = 10000;
-N_sub = 300;
-D = 6;
+T = 5000;
+N = 300;
+D = 60;
 
-V_true = randn(D,T);
-V_true = orth(V_true')';
+varexp = cell(25,5);
+dimmax = nan(25,5);
+varmax = nan(25,5);
 
-S_vec = rand(D,1)*10;
-S_true = diag(sort(S_vec,'descend'));
+tic
 
-SV_true = S_true*V_true;
+for it = 1:25
+    [it,toc]
+    V_true = randn(D,T);
+    V_true = orth(V_true')';
 
-U_true = randn(N,D);
-U_true = orth(U_true);
-%%
-dimmax = [];
-varmax = [];
-for noise = linspace(.005,.05,10)
-    noise
-    F = U_true*SV_true + noise*randn(N,T);
-    [~,dimmax_,varmax_] = get_dim(F,N_sub,N_sub);
-    dimmax=[dimmax,dimmax_];
-    varmax=[varmax,varmax_];
+    S_vec = exprnd(10,D,1);
+    S_true = diag(sort(S_vec,'descend'));
+
+    SV_true = S_true*V_true;
+
+    U_true = randn(N,D);
+    U_true = orth(U_true);
+
+    noise_ix = 1;
+    for noise =  logspace(log10(.02),log10(.2),15)%logspace(log10(.005),log10(.15),5)
+        
+        F = U_true*SV_true + noise*randn(N,T);
+        [varexp{it,noise_ix},dimmax(it,noise_ix),varmax(it,noise_ix)] = get_dim(F,N,N);
+        noise_ix = noise_ix+1;
+
+    end
 end
 %%
-figure(1), hold on
-plot(num_dim,mean(varexp,1),'k')
-[maxval,argmax]=max(mean(varexp,1))
-%hold on
+save([basedir,'processed/dimensionality_sim'],'varmax','dimmax','varexp','notes')
 
-z = [z; argmax, maxval];
-%%
+%% Plot
 
-k = find(z(:,2)<.5);
-z_ = z(k,:);
 
-k_rnd = randsample(length(k),5);
-z_ = z_(k_rnd,:);
+varmax = []; dimmax = [];
+for it = 1:25
+    for noise_ix = 1:15
+        for k = 1:10
+            [varmax_,dimmax_] = max(varexp{it,noise_ix}(k,:));
+            varmax= [varmax;varmax_];
+            dimmax = [dimmax;dimmax_];
+        end
+    end
+end
+
+ix = find(~isnan(varmax));
+
+figure, plot(varmax,dimmax,'ok','MarkerFaceColor','w','LineWidth',2)
+xlabel('Variance explained')
+ylabel('Number of components')
+set(gca,'FontSize',18)
 
