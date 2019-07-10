@@ -6,7 +6,7 @@ clear all; clc
 % Common code to define base directory and datasets
 define_dirs;
 
-N_sub = 550;
+N_sub = 300;
 
 varmax = nan(8,1);
 dimmax = nan(8,1);
@@ -47,47 +47,69 @@ save([basedir,'processed/dimensionality_N',num2str(N_sub)],'varmax','dimmax','va
 
 %% Plot var explained vs. number components
 
+load([basedir,'processed/dimensionality_N300'])
+
 figure, hold on
 for dataset_ix = 1:8
     dim_tested = find(~isnan(sum(varexp{dataset_ix},1)));
     plot_error_snake(dim_tested,varexp{dataset_ix}(:,dim_tested),[0,0,0])
 end
+plot(dimmax,varmax+.03,'vk','MarkerFaceColor','k')
 xlabel('Number of components')
 ylabel('Variance explained (cross-val)')
+ylim([0,.7])
 
 figure, hold on
 for dataset_ix = 1:8
     dim_tested = find(~isnan(sum(varexp_rois{dataset_ix},1)));
     plot_error_snake(dim_tested,varexp_rois{dataset_ix}(:,dim_tested),[1,0,0])
 end
+plot(dimmax_rois,varmax_rois+.03,'vk','MarkerFaceColor','k')
 xlabel('Number of components')
 ylabel('Variance explained (cross-val)')
+ylim([0,.7])
 
 %% Extrapolate to maximum dimensionality
 
-varmax = []; dimmax = [];
+varmax_all = []; dimmax_all = [];
 for dataset_ix = 1:8
     if ~isempty(varexp{dataset_ix})
     for k = 1:10
         [varmax_,dimmax_] = max(varexp{dataset_ix}(k,:));
-        varmax= [varmax;varmax_];
-        dimmax = [dimmax;dimmax_];
+        varmax_all = [varmax_all; varmax_];
+        dimmax_all = [dimmax_all; dimmax_];
     end
     end
 end
 
-%%
-ix = find(~isnan(varmax));
+varmax_rois_all = []; dimmax_rois_all = [];
+for dataset_ix = 1:8
+    if ~isempty(varexp_rois{dataset_ix})
+    for k = 1:10
+        [varmax_,dimmax_] = max(varexp_rois{dataset_ix}(k,:));
+        varmax_rois_all = [varmax_rois_all; varmax_];
+        dimmax_rois_all = [dimmax_rois_all; dimmax_];
+    end
+    end
+end
 
-figure, plot(varmax,dimmax,'ok','MarkerFaceColor','w','LineWidth',2)
-hold on, plot([0,1],[0,1]*(varmax(ix)'*varmax(ix))\(varmax(ix)'*dimmax(ix)),'k')
-xlabel('Variance explained')
+figure, 
+ix = find(~isnan(varmax_all));
+plot(varmax_all,dimmax_all,'vk','MarkerFaceColor',[.6,.6,.6],'MarkerEdgeColor',[.6,.6,.6])
+hold on, plot([0,1],[0,1]*(varmax_all(ix)'*varmax_all(ix))\(varmax_all(ix)'*dimmax_all(ix)),'k')
+ix = find(~isnan(varmax));
+plot(varmax,dimmax,'vk','MarkerFaceColor','k')
+xlabel('Max variance explained')
 ylabel('Number of components')
 set(gca,'FontSize',18)
 
-figure, plot(varmax_rois,dimmax_rois,'or','MarkerFaceColor','w','LineWidth',2)
-hold on, plot([0,1],[0,1]*(varmax_rois(ix)'*varmax_rois(ix))\(varmax_rois(ix)'*dimmax_rois(ix)),'k')
-xlabel('Variance explained')
+figure,
+ix = find(~isnan(varmax_rois_all));
+plot(varmax_rois_all,dimmax_rois_all,'vr','MarkerFaceColor',[1,.6,.6],'MarkerEdgeColor',[1,.6,.6]);
+hold on, plot([0,1],[0,1]*(varmax_rois_all(ix)'*varmax_rois_all(ix))\(varmax_rois_all(ix)'*dimmax_rois_all(ix)),'k')
+ix = find(~isnan(varmax_rois));
+plot(varmax_rois,dimmax_rois,'vr','MarkerFaceColor','r')
+xlabel('Max variance explained')
 ylabel('Number of components')
 set(gca,'FontSize',18)
 
@@ -109,8 +131,11 @@ for k = 1:length(N_sub)
     slope_rois(k) = (varmax_rois(ix)'*varmax_rois(ix))\(varmax_rois(ix)'*dimmax_rois(ix));
 end
 
-figure, bar(N_sub',[slope./N_sub; slope_rois./N_sub]','k')
-
+figure, bar(N_sub',slope./N_sub,'FaceColor','k','EdgeColor','k','LineWidth',2)
+set(gca, 'FontSize',18)
+xtickangle(45), xlim([100,750])
+xlabel('Population size (N)')
+ylabel('Dimensionaity / N')
 %% Following fragments of code are for modelling what happens with code .. 
 
 T = 5000;
@@ -150,7 +175,6 @@ save([basedir,'processed/dimensionality_sim'],'varmax','dimmax','varexp','notes'
 
 %% Plot
 
-
 varmax = []; dimmax = [];
 for it = 1:25
     for noise_ix = 1:15
@@ -164,7 +188,7 @@ end
 
 ix = find(~isnan(varmax));
 
-figure, plot(varmax,dimmax,'ok','MarkerFaceColor','w','LineWidth',2)
+figure, plot(varmax,dimmax,'v','MarkerEdgeColor','k','MarkerFaceColor','w','LineWidth',1.2)
 xlabel('Variance explained')
 ylabel('Number of components')
 set(gca,'FontSize',18)

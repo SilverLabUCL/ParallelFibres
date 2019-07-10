@@ -55,7 +55,7 @@ function [varexp,dimmax,varmax] = get_dim(dFF,N_sub,D_max,acquisition_rate,frac_
     end
     
     %%
-    varexp = zeros(N_reps,D_max);
+    varexp = nan(N_reps,D_max);
 
     for k = 1:N_reps
         if mod(k/N_reps*10,1) == 0

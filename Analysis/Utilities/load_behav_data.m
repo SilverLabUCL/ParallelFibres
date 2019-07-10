@@ -50,7 +50,7 @@ function [whisk_angle,whisk_set_point,whisk_amp,Speed_smooth,whisk_time,Speed_ti
     
     Speed_time = wheel_MI(:,2) / 1000;
     dt_speed = mean(diff(Speed_time));
-    Speed_smooth = smoothdata(wheel_MI(:,1),'gaussian',[round(.2/dt_speed) 0] *2);
+    Speed_smooth = smoothdata(wheel_MI(:,1),'gaussian',[round(smooth_win_s/dt_speed) 0] *2);
     
     % Interpolate all data to 
     if ~isempty(time)

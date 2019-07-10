@@ -16,7 +16,7 @@ datasets = {'FL87_180501_11_03_09',...  1
             'FL45_170125_14_47_04'}; %  8
 
 % Choose dataset
-dataset_ix = 4;
+dataset_ix = 3;
 
 % Choose patch number
 patch_no = 3;
