@@ -2,15 +2,13 @@
 %
 %
 % Required input:
-%    dataset_ix   Dataset number (1-8)
-%    time at which to interpolate
+%    dataset_ix     Dataset number (1-8)
+%    time           Time for interpolation (leave blank if just want to load)
+%    smooth_win_s   Smoothing window
 % 
 % Output:
-%    dlc_whisk_time      time for whisking data
-%    whisk_angle_filt    filtered whisking angle
-%    whisk_set_point     whisker set point
-%    whisk_amp           Whisking amplitude
-%    whisk_phase  
+%    Pupil_smooth    Smoothed pupil size
+%    Pupil_time      Native (non-interpolated) time
 
 function [Pupil_smooth,Pupil_time] = load_pupil(dataset_ix,time,smooth_win_s)
 
@@ -32,7 +30,7 @@ function [Pupil_smooth,Pupil_time] = load_pupil(dataset_ix,time,smooth_win_s)
     try
         load([basedir,fname,'/',fname,'_Pupil.mat']);
 
-        Pupil_time = Pupil(:,1) / 1000;
+        Pupil_time = Pupil(:,1) / 1000; % Convert to s
         dt = mean(diff(Pupil_time));
         Pupil_smooth = smoothdata(Pupil(:,2),'gaussian',[round(.2/dt) 0] *2);
 

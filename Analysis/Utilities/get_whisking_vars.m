@@ -18,7 +18,6 @@ function [dlc_whisk_time,whisk_angle_filt,whisk_set_point,whisk_amp,whisk_phase]
     
     % Load DLC wihsking info
     fname = datasets{dataset_ix};
-    disp(fname)
     load([basedir,fname,'/',fname,'.mat'],'dlc_whisk_angle','dlc_whisk_time')
     
     % Convert to rad and set so protraction is positive

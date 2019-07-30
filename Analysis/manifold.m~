@@ -206,7 +206,7 @@ hold on, plot(zscore(score(:,3))+9)
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Plot PC 1 vs coding dimension - summary plots
+% Plot figures of PC 1 vs coding dimension
 
 ang_cd_pc1 = zeros(7,1);
 rho_cd_pc1 = zeros(7,1);
@@ -222,6 +222,9 @@ for dataset_ix = 1:7
     % Swap sign if negatively correlated with set point
     if corr(whisk_set_point,score(:,1)) < 0
         coeff(:,1) = - coeff(:,1);
+        C_wsp(dataset_ix) = -temp;
+    else
+        C_wsp(dataset_ix) = temp;
     end
     
     pc1 = coeff(:,1);
@@ -235,43 +238,18 @@ for dataset_ix = 1:7
     ang_cd_pc1(dataset_ix) = subspace(pc1,cd);
     rho_cd_pc1(dataset_ix) = corr(pc1,cd);
 end
-
+%%
 figure, plot(ones(7,1),rho_cd_pc1,'ok','MarkerFaceColor','w','MarkerSize',10,'LineWidth',1.5)
 ylabel('Correlation'), ylim([0,1])
-set(gca,'FontSize',15,'XTick',[],'Box','off')
+set(gca,'FontSize',18,'XTick',[],'Box','off')
 signrank(rho_cd_pc1 - 1.5)
 
 figure, plot(ones(7,1),ang_cd_pc1,'ok','MarkerFaceColor','w','MarkerSize',10,'LineWidth',1.5)
 ylabel('Angle (rad.)'), ylim([0,1.5])
-set(gca,'FontSize',15,'XTick',[],'Box','off')
+set(gca,'FontSize',18,'XTick',[],'Box','off')
 signrank(ang_cd_pc1 - 1.5)
 
-%% Plot figures of PC 1 vs coding dimension - example dataset
+figure, plot(cd,'r','LineWidth',1.5)
+hold on, plot(pc1,'b','LineWidth',1.5)
 
-dataset_ix = 6; % set to 'worst' example (lowest corr)
-
-[dFF,time,acquisition_rate] = load_data(dataset_ix);
-[whisk_angle,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
-pupil = load_pupil(dataset_ix,time);
-
-% Get score
-[coeff, score] = pca(dFF');
-
-% Swap sign if negatively correlated with set point
-if corr(whisk_set_point,score(:,1)) < 0
-    coeff(:,1) = - coeff(:,1);
-else
-end
-
-pc1 = coeff(:,1);
-[A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,1);
-cd = get_coding_dimension(dFF,A,QW);
-
-figure, plot(cd,'r','LineWidth',2)
-hold on, plot(pc1,':b','LineWidth',2)
-xlim([1,size(dFF,1)])
-set(gca,'FontSize',15,'Box','off')
-xlabel('Axon Number')
-ylabel('Coefficient')
-
-corr(cd,pc1)
+figure, plot(cd,pc1,'v','MarkerFaceColor','k')

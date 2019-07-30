@@ -141,18 +141,17 @@ set(gca,'FontSize',15)
 figure, plot(time, whisk_set_point,'k','LineWidth',1.5)
 set(gca,'FontSize',15)
 
-[~, I] = sort(lags_up{dataset_ix});
+[lags_up_sorted, I] = sort(lags_up{dataset_ix});
 ix_up = ix_up(I);
-[~, I] = sort(lags_down{dataset_ix});
+[lags_down_sorted, I] = sort(lags_down{dataset_ix});
 ix_down = ix_down(I);
 
 %% Plot avg over onset times
 
+%t_onset = [149,315,407,475,544,702,784,995,1097,1366,1534,1614,1672,1714,1906,2029,2248,2337,2473,2596,2712,2898,3021,3087,3155,3206,3272,3400,3557,3717,3978,4079,4186,4305,4407,4530,4679,4799,4969,5218,5444]; %d1
 t_onset = [220,325,471,588,749,1129,1399,1552,1706,1828,1922,2204,2485,2693,2648,3142,3262,3361,3468,3673,3808,3945,4025,4210,4362,4483,4647,4866,5021,5176,5290]; % d2
 
-%[~, t_onset] = get_onsets(whisk_amp,acquisition_rate);
-
-%t_onset = t_onset(5:8);
+t_onset = t_onset(16:31);
 
 t_before = round(2 * acquisition_rate);
 t_after = round(2 * acquisition_rate);

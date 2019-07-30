@@ -1,4 +1,13 @@
 % Get time lagged correlations with trial structure
+%
+% Required input:
+%    x      Activity of thing to correlate (usually ROI)
+%    y      Activity of other thing to correlate (usually behav.)
+%    time   Time
+% 
+% Output:
+%    C      Matrix of time-lagged correlations, each column is a trial
+%    lags   Time lags, in s
 
 function [C,lags] = corr_lag_trial(x,y,time)
 
@@ -16,11 +25,12 @@ function [C,lags] = corr_lag_trial(x,y,time)
     T = size(x,1);
     acq_rate_est = length(time) / (time(end)-time(1));
     
+    % Find times at which there is a new trial
     trial_change_ix = find(diff(time) > (mode(diff(time))+2*std(diff(time))));
     trial_length = trial_change_ix(1);
     num_trials = length(trial_change_ix)+1;
     
-    % True correlation
+    % Get time_lagged correlation for each trial
     C = nan(2*trial_length-1,num_trials);
     for trial = 1:num_trials
         if trial == 1
