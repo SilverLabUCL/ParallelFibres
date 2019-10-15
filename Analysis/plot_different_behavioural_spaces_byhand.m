@@ -1,5 +1,6 @@
-% This script
-
+% This script needs to be cleaned up
+% This script reproduces Supplementary Figure X
+% For this script, behavioural labels were chosen for 2 datasets by hand
 
 clear all; clc
 dataset_ix = 5; % set to either 5 or 6
@@ -20,7 +21,7 @@ end
 if dataset_ix == 5
     A = [180,454;906,1306;1394,1763;7339,7782;9099,9119];
     SW = [1958,2031;3171,3336;3391,3461;3626,3704;4006,4078;4222,4290;4351,4399;4690,4762;4932,5010;5164,5227;5242,5295;5526,5581;5745,5824;5942,5999;6148,6237;6322,6376;6564,6612;6829,6917;7190,7249;7957,8030;8078,8124;8222,8264;8326,8369;8509,8557;8612,8659;8847,8901];
-elseif dataset_ix == 6;
+elseif dataset_ix == 6
     A = [528,777;3765,4195];
     SW = [49,102;170,214;367,398;481,507;6234,6251;...
     2830,2856;2789,2816;253,289;6633,6653;4871,4900;2554,2569;248,296;975,989;996,1011;...
@@ -29,6 +30,7 @@ elseif dataset_ix == 6;
 end
 
 %% Load data
+
 [dFF,time,acquisition_rate] = load_data(dataset_ix);
 [whisk_angle,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
 pupil = load_pupil(dataset_ix,time);
@@ -36,10 +38,10 @@ pupil = load_pupil(dataset_ix,time);
 % Get score
 [coeff, score] = pca(dFF');
 
-% Smooth for ease of viewing
-score(:,1) = smooth(score(:,1),round(.25 * acquisition_rate));
-score(:,2) = smooth(score(:,2),round(.25 * acquisition_rate));
-score(:,3) = smooth(score(:,3),round(.25 * acquisition_rate));
+% Smooth by 250 ms for clarity
+score(:,1) = smoothdata(score(:,1),'gaussian',round(.25 * acquisition_rate));
+score(:,2) = smoothdata(score(:,2),'gaussian',round(.25 * acquisition_rate));
+score(:,3) = smoothdata(score(:,3),'gaussian',round(.25 * acquisition_rate));
 
 smooth_win = round(acquisition_rate * .5);
 

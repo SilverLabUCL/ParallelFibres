@@ -45,7 +45,7 @@ for dataset_ix =  1:8
     
 end
 
-save([basedir,'processed/corr_axons_behav.mat'],'C_spd','p_spd','C_ang','p_ang','C_wsp','p_wsp','C_amp','p_amp')
+save([basedir,'processed/corr_axons_behav.mat'],'C_spd','p_spd','C_ang','C_pup','p_ang','C_wsp','p_wsp','C_amp','p_amp','p_pup')
 
 %% This section calculates lagged correlations, but without shuffle test
 % Also calculates SNR 
