@@ -76,7 +76,7 @@ time_rois_all = cell(Numb_patches,1);
 time_axons_all = cell(Numb_patches,1);
 
 %% Choose patch number
-for patch_no = 10:Numb_patches
+for patch_no = 2:Numb_patches
     
     %
     disp([num2str(patch_no),' / ',num2str(Numb_patches)])
@@ -94,8 +94,7 @@ for patch_no = 10:Numb_patches
     [Ain,~,~,~] = remove_bad_cells(Ain,Y,[d1,d2],acquisition_rate,SNR_thresh); 
 
     % Trim ROIs to remove 
-    Ain = trim_ROIs(Ain,[d1,d2
-        ]);
+    Ain = trim_ROIs(Ain,[d1,d2]);
 
     % Remove low SNR ROIs again
     [Ain,SNR,A_bad,SNR_bad] = remove_bad_cells(Ain,Y,[d1,d2],acquisition_rate,SNR_thresh); 
@@ -123,11 +122,47 @@ for patch_no = 10:Numb_patches
     % Group axons
     [Ain_axons,ix_axons_to_rois,axon_ids] = ...
         get_axon_grouping(Ain,Y,[d1,d2],acquisition_rate,smooth_win_s,Pixel_size,vector_mean,[],rho_min,[],[],1);
+
+    % Plot results
+    plot_grouped_rois(Ain_axons,Cn,dFF,ix_axons_to_rois,acquisition_rate,[],[],[],patch_no);%,thr,display_numbers,basedir)
+
+    % Loop for adding manually
+    in = [];
+    while ~(strcmp(in,'A') || strcmp(in,'a') || strcmp(in,'M') || strcmp(in,'m'))
+        in = input('Enter A to accept grouping or M to merge a pair by hand: ','s');
+    end    
+    stop = 0;
+    while strcmp(in,'m') || strcmp(in,'M')
+        stop = 0;
+        N_axons = size(Ain_axons,2);
+        while stop == 0
+            ax_1 = str2num(input('Enter Axon 1 ID#: ','s'));
+            ax_2 = str2num(input('Enter Axon 2 ID#: ','s'));
+            if numel(ax_1) == 1 && numel(ax_2)==1
+                if (ax_1 < N_axons && ax_2 < N_axons && ax_1 > 0 && ax_2 > 0 )
+                    stop = 1;
+                    % sort so ax_1 is smaller
+                    temp = sort([ax_1,ax_2]);
+                    ax_1 = temp(1); ax_2 = temp(2);
+                end
+            end
+        end
+        % Merge two axons together
+        Ain_axons(:,N_axons+1) = Ain_axons(:,ax_1) + Ain_axons(:,ax_2);
+        Ain_axons(:,[ax_1,ax_2]) = [];
+        ix_axons_to_rois{N_axons+1} = [ax_1,ax_2];
+        ix_axons_to_rois{ax_2} = []; 
         
-    plot_grouped_rois(Ain_axons,Cn,dFF,ix_axons_to_rois,acquisition_rate);
-    disp('Press enter to continue')
-    pause
-    
+        
+        % Plot new
+        plot_grouped_rois(Ain_axons,Cn,dFF,ix_axons_to_rois,acquisition_rate,[],[],[],patch_no);
+        
+        in = [];
+        while ~(strcmp(in,'A') || strcmp(in,'a') || strcmp(in,'M') || strcmp(in,'m'))
+            in = input('Enter A to accept grouping or M to merge a pair by hand: ','s');
+        end
+    end
+        
     % Save figures in png
         figure(1), saveas(gcf,[basedir,fname,'/figs/spatial_grouped_Patch',sprintf('%03d',patch_no),'.png']);
         figure(2), saveas(gcf,[basedir,fname,'/figs/dFF_grouped_Patch',sprintf('%03d',patch_no),'.png']);

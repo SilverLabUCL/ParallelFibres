@@ -365,7 +365,7 @@ function [Ain_axons,ix_axons_to_rois,axon_ids] = get_axon_grouping(Ain,Y,dims,ac
        
     end
 
-    %% Now reorder axons so that all the loners are last
+    %% Now reorder axons so that all the loners are 1st
     % After reordering have to recompute axon_ids, Ain_Axons
 
     num_axons = length(ix_axons_to_rois);
@@ -389,18 +389,15 @@ function [Ain_axons,ix_axons_to_rois,axon_ids] = get_axon_grouping(Ain,Y,dims,ac
     end
 
     Ain_axons_new = zeros(size(Ain_axons));
-    dFF_axons_new = zeros(size(dFF_axons));
     for axon = 1:num_axons
         for roi = ix_axons_to_rois_new{axon}    
             Ain_axons_new(:,axon) = Ain_axons_new(:,axon) + Ain(:,roi);
         end
-        dFF_axons_new(axon,:) = mean(dFF(ix_axons_to_rois_new{axon},:),1);
     end
 
     ix_axons_to_rois = ix_axons_to_rois_new;
     axon_ids = axon_ids_new;
     Ain_axons = Ain_axons_new;
-    dFF_axons = dFF_axons_new;
 
     disp(['Number of merges:',num2str(count_merge)])
     disp(['Number of false alarms:',num2str(count_FA)])
@@ -457,7 +454,7 @@ function [Ain_axons,ix_axons_to_rois,axon_ids] = get_axon_grouping(Ain,Y,dims,ac
             end
             
             
-            get_var_ratio(dFF_axons(axon_1,:),dFF_axons(axon_2,:),manual_check);
+            var_ratio = get_var_ratio(dFF_axons(axon_1,:),dFF_axons(axon_2,:),manual_check);
             
             
             % plot it if option chosen to manually check merging
@@ -474,6 +471,7 @@ function [Ain_axons,ix_axons_to_rois,axon_ids] = get_axon_grouping(Ain,Y,dims,ac
                 end
                 
                 % plot axon 2 ROI centres in red
+                ix_axons_to_rois{axon_2}
                 for roi = ix_axons_to_rois{axon_2}
                     c = regionprops(reshape(Ain(:,roi),d1,d2),'centroid'); c = c.Centroid; 
                     plot(c(1),c(2),'*b')
@@ -500,19 +498,13 @@ function [Ain_axons,ix_axons_to_rois,axon_ids] = get_axon_grouping(Ain,Y,dims,ac
                 Ain_axons_new(:,num_axons+1) = A_merged;
                 Ain_axons_new(:,[axon_1,axon_2]) = [];
                 Ain_axons = Ain_axons_new;
-                
-                % Update dFF
-                dFF_axons_new = dFF_axons;
-                dFF_axons_new(num_axons+1,:) = get_dFF(A_merged,Y,acq_rate,smooth_win_s);
-                dFF_axons_new([axon_1,axon_2],:) = [];
-                dFF_axons = dFF_axons_new;
-                
+
                 % Update axon identities
                 ix_axons_to_rois_new = ix_axons_to_rois;
                 ix_axons_to_rois_new{num_axons+1} = [ix_axons_to_rois{axon_1},ix_axons_to_rois{axon_2}];
                 ix_axons_to_rois_new([axon_1,axon_2]) = []; % delete that cell element
                 ix_axons_to_rois = ix_axons_to_rois_new;
-                
+
                 num_axons = length(ix_axons_to_rois);
 
                 % Update axon_ids

@@ -1,7 +1,7 @@
 % Originally from CNMF_E code
 % Updated by NACG (2019) to add variable colours
 
-function plot_grouped_rois(Ain_axons,Cn,dFF,ix_axons_to_rois,acquisition_rate,thr,display_numbers,basedir,patch_no)
+function plot_grouped_rois(Ain_axons,Cn,dFF,ix_axons_to_rois,acquisition_rate,thr,display_numbers)
 
     if nargin < 6 || isempty(thr)
         thr = 0.95;
@@ -9,10 +9,6 @@ function plot_grouped_rois(Ain_axons,Cn,dFF,ix_axons_to_rois,acquisition_rate,th
     
     if nargin < 7 || isempty(display_numbers)
         display_numbers = 1;
-    end
-
-    if nargin < 8 
-        basedir = [];
     end
 
     [d1,d2] = size(Cn);
@@ -120,12 +116,6 @@ function plot_grouped_rois(Ain_axons,Cn,dFF,ix_axons_to_rois,acquisition_rate,th
     set(gca,'YTick',0:1); set(gca,'YTickLabel',[])
     set(gca,'FontSize',14)
     title('DFF (loner ROIs)')
-    
-    % Save dFF to easily check them in future
-    if ~isempty(basedir)
-        figure(2), savefig([basedir,'/figs/dFF_grouped_Patch',sprintf('%03d',patch_no),'.fig']);
-        figure(4), savefig([basedir,'/figs/dFF_loners_Patch',sprintf('%03d',patch_no),'.fig']);
-    end
     
 end
 

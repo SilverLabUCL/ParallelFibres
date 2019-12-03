@@ -8,18 +8,27 @@ addpath('Utilities/')
 basedir = '~/Documents/ParallelFibres/Data/';
 datasets = {'FL87_180501_11_03_09',...  1
             'FL87_180501_10_47_25',...  2
-            'FL87_180501_10_36_14',...  3
+            'FL87_180501_10_36_14',...  3 
             'FL87_180220_10_38_55',...  4
             'FL77_180213_10_46_41',...  5
             'FL_S_170906_11_26_25',...  6
-            'FL_S_170905_10_40_52',...  7
-            'FL45_170125_14_47_04'}; %  8
+            'FL_S_170905_10_40_52',...  7            
+            'FL45_170125_14_47_04',...  8
+             ...%%
+             'FL95_180425_10_53_40',... 9*
+             'FL87_180413_11_00_55',... 10
+             'FL104_180725_10_42_37',... 11 *
+             'FL87_180117_11_23_20',... 12 *
+             'FL106_180807_10_52_25',... 13 *
+             'FL_S_171109_14_54_34',... 14
+             'FL_S_171109_15_19_52',... 15
+             };
 
 % Choose dataset
-dataset_ix = 3;
+dataset_ix = 4;
 
 % Choose patch number
-patch_no = 3;
+patch_no = 1;
 
 if ismember(dataset_ix,[4,5,6,7])
     smooth_win_s = 0.35;
@@ -35,6 +44,11 @@ load([basedir,fname,'/raw/Patch',sprintf('%03d',patch_no),'.mat'])
 fname_fibreangles = [basedir,fname,'/processed/fibre_direction.mat'];
 fname_SNR = [basedir,fname,'/processed/SNR.mat'];
 fname_corr = [basedir,fname,'/processed/corr_histograms.mat'];
+
+
+
+load(fname_SNR,'SNR_thresh');
+SNR_thresh
 
 %%
 Y = double(Y);

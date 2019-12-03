@@ -131,11 +131,11 @@ for k = 1:length(N_sub)
     slope_rois(k) = (varmax_rois(ix)'*varmax_rois(ix))\(varmax_rois(ix)'*dimmax_rois(ix));
 end
 
-figure, bar(N_sub',slope./N_sub,'FaceColor','k','EdgeColor','k','LineWidth',2)
+figure, bar(N_sub',N_sub./slope,'FaceColor','k','EdgeColor','k','LineWidth',2)
 set(gca, 'FontSize',18)
 xtickangle(45), xlim([100,750])
-xlabel('Population size (N)')
-ylabel('Dimensionaity / N')
+xlabel('Number of neurons')
+ylabel('Neurons per dimension')
 %% Following fragments of code are for modelling what happens with code .. 
 
 T = 5000;

@@ -1,4 +1,5 @@
 %% Plot histogram of correlation image value for each pixel,
+% DELETE
 % to determine threshold 'min_Cn' for ROI detection
 
 clear all; clc
