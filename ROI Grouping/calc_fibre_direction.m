@@ -40,7 +40,7 @@ datasets = {'FL87_180501_11_03_09',...  1
 		    % 'FL92_180228_11_18_24'
 
 % Choose dataset
-dataset_ix = 18;
+dataset_ix = 17;
 
 % Choose patch number - just to plot Cn for reference
 patch_no = 1;

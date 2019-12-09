@@ -29,13 +29,17 @@ function [dFF_all,time,acquisition_rate,distances] = load_data(dataset_ix,groupe
     load([basedir,fname,'/processed/',fname,'_GroupedData.mat'])
     
     if grouped
+        % Concatenate 
         dFF_all = vertcat(dFF_axons{:});
+        time = mean(vertcat(time_axons{:}))/1000;
     elseif ~grouped
         dFF_all = vertcat(dFF_rois{:});
+        time = mean(vertcat(time_axons{:}))/1000;
     end
     
-    load([basedir,fname,'/',fname,'.mat'],'TimeAxon');
-    time = mean(TimeAxon,2) / 1000;
+    % Old time code - delete
+    %load([basedir,fname,'/',fname,'.mat'],'TimeAxon');
+    %time = mean(TimeAxon,2) / 1000;
     
     % Calculate distances
     distances = [];

@@ -311,7 +311,7 @@ p = sum(L_shuff < L)/num_reps
 
 %% Plot 3d manifold
 
-dataset_ix = 4;
+dataset_ix = 17;
 
 [dFF,time,acquisition_rate] = load_data(dataset_ix);
 [whisk_angle,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
@@ -330,6 +330,7 @@ for k = 1:length(score)-1
         c = 1;
     end
     c=c*[1,0,1]+(1-c)*[0,1,1];
+    
     plot3(score(k:k+1,1),score(k:k+1,2),score(k:k+1,3),'-','Color',c)
 end
 view(-53,-52)

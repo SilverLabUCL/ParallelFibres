@@ -31,7 +31,7 @@ datasets = {'FL87_180501_11_03_09',...  1
 		    % 'FL92_180228_11_18_24'
 
 % Choose dataset
-dataset_ix = 13;
+dataset_ix = 17;
 fname = datasets{dataset_ix};
 disp(fname)
 
@@ -76,7 +76,7 @@ time_rois_all = cell(Numb_patches,1);
 time_axons_all = cell(Numb_patches,1);
 
 %% Choose patch number
-for patch_no = 10:Numb_patches
+for patch_no = 1:Numb_patches
     
     %
     disp([num2str(patch_no),' / ',num2str(Numb_patches)])
@@ -89,6 +89,7 @@ for patch_no = 10:Numb_patches
     % Use CNMF initialization to estimate initial spatial filters
     [Ain,~] = detect_ROIs(Y, [d1,d2], [],[],[],1);
     close all
+    
 
     % Remove low SNR ROIs
     [Ain,~,~,~] = remove_bad_cells(Ain,Y,[d1,d2],acquisition_rate,SNR_thresh); 
