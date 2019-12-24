@@ -8,10 +8,10 @@
 %    plot_me              Optional flag to plot results from definition of A vs QW
 %
 % Output:
-%    A        Matrix defining periods of active running + whisking
+%    A        Matrix defining indices of active running + whisking
 %             1st column start times, 2nd column end times (indices, not
 %             real time)
-%    QW       Corresponding matrix for QW periods
+%    QW       Corresponding indices for QW periods
 
 function [A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,plot_me)
     
@@ -28,13 +28,13 @@ function [A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,plot_me)
     x = whisk_amp;
     x = smoothdata(x,'movmedian',smooth_win);
     x = x - mode(round(x,4));
-    x = x / std(x);
+    x = x / nanstd(x);
 
     % Running information based on wheel MI
     y = abs(diff(speed));
     y = smoothdata(y,'movmedian',smooth_win);
     y = y - mode(round(y,4));
-    y = y / std(y);
+    y = y / nanstd(y);
 
     % Make vectors equal length since speed is based on diff
     x = x(1:end-1);
@@ -55,7 +55,7 @@ function [A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,plot_me)
         ix_end = [ix_end;length(x)];
     end
 
-    % Criteria 2: Delete any that are < 1 s long
+    % Criteria 2: Delete any that are < 3 s long
     A = [ix_start, ix_end];
     for k = 1:size(A,1)
         if A(k,2) - A(k,1) < 3* acquisition_rate
@@ -80,7 +80,6 @@ function [A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,plot_me)
         ix_end = [ix_end;length(x)];
     end
 
-    % Criteria 2: Delete any that are < 1 s long
     QW = [ix_start, ix_end];
     QW = QW(~isnan(sum(QW,2)),:);
 
@@ -89,18 +88,20 @@ function [A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,plot_me)
         figure,
         subplot(2,1,1), plot((1:length(x))/acquisition_rate,x,'k','LineWidth',1.5), 
         hold on, ylabel('Whisk'), set(gca,'FontSize',15)
-        subplot(2,1,2), plot((1:length(y))/acquisition_rate,y+5,'k','LineWidth',1.5), hold on
+        xlim([0,length(speed)/acquisition_rate])
+        subplot(2,1,2), plot((1:length(y))/acquisition_rate,y,'k','LineWidth',1.5), hold on
         hold on, ylabel('Loc'), set(gca,'FontSize',15)
+        xlim([0,length(speed)/acquisition_rate])
         xlabel('Time (s)')
 
         for k = 1:size(A,1)
             ix = A(k,1):A(k,2);
             subplot(2,1,1), plot(ix/acquisition_rate,x(ix),'Color',[1,0,1],'LineWidth',1.5)
-            subplot(2,1,2), plot(ix/acquisition_rate,y(ix)+5,'Color',[1,0,1],'LineWidth',1.5)
+            subplot(2,1,2), plot(ix/acquisition_rate,y(ix),'Color',[1,0,1],'LineWidth',1.5)
         end
         for k = 1:size(QW,1)
             ix = QW(k,1):QW(k,2);
             subplot(2,1,1), plot(ix/acquisition_rate,x(ix),'Color',[0,1,1],'LineWidth',1.5)
-            subplot(2,1,2), plot(ix/acquisition_rate,y(ix)+5,'Color',[0,1,1],'LineWidth',1.5)
+            subplot(2,1,2), plot(ix/acquisition_rate,y(ix),'Color',[0,1,1],'LineWidth',1.5)
         end
     end

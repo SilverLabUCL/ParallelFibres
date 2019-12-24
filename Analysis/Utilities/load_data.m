@@ -31,10 +31,10 @@ function [dFF_all,time,acquisition_rate,distances] = load_data(dataset_ix,groupe
     if grouped
         % Concatenate 
         dFF_all = vertcat(dFF_axons{:});
-        time = mean(vertcat(time_axons{:}))/1000;
+        time = mean(vertcat(time_axons{:}))'/1000;
     elseif ~grouped
         dFF_all = vertcat(dFF_rois{:});
-        time = mean(vertcat(time_axons{:}))/1000;
+        time = mean(vertcat(time_axons{:}))'/1000;
     end
     
     % Old time code - delete

@@ -5,41 +5,112 @@ clear all; clc
 
 define_dirs;
 
-%% Plot PC 1 vs coding dimension - summary plots
-% Fig 3B
+%% Show that distance within is 
 
-ang_cd_pc1 = zeros(7,1);
-rho_cd_pc1 = zeros(7,1);
+angle_A_QW = nan(17,1);
+angle_shuff = nan(17,1);
 
-for dataset_ix = 16%[1:7,9,16,17]
+dist = @(x,y) sqrt(sum((x-y).^2));
+
+pval_1 = nan(17,1);
+pval_2 = nan(17,1);
+pval_3 = nan(17,1);
+
+norm_dist_in_A = nan(17,1);
+norm_dist_in_QW = nan(17,1);
+norm_dist_A_QW = nan(17,1);
+
+figure, hold on
+for dataset_ix = [1:6,9,16,17]
     [dFF,time,acquisition_rate] = load_data(dataset_ix);
     [whisk_angle,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
     pupil = load_pupil(dataset_ix,time);
 
     % Get score
-    [coeff, score] = pca(dFF');
-
-    % Swap sign if negatively correlated with set point
-    if corr(whisk_set_point,score(:,1)) < 0
-        coeff(:,1) = - coeff(:,1);
-        score(:,1) = - score(:,1);
+    [~,T] = size(dFF);
+    
+    [A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate);
+    
+    dFF_A = [];
+    for k = 1:length(A)
+        ix = A(k,1):A(k,2);
+        dFF_A = [dFF_A, dFF(:,ix)];
     end
-        
-    pc1 = coeff(:,1);
-    [A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,1);
-    cd = get_coding_dimension(dFF,A,QW);
     
-    figure, plot(pc1'*(dFF - mean(dFF,2)))
-    hold on, plot(cd'*(dFF - mean(dFF,2)))
+    dFF_QW = [];
+    for k = 1:length(QW)
+        ix = QW(k,1):QW(k,2);
+        dFF_QW = [dFF_QW, dFF(:,ix)];
+    end
+    
+    T_A = size(dFF_A,2);
+    dist_in_A = nan(T_A,1); ix = 1;
+    for t1 = 1:T_A
+        for t2 = t1:T_A
+            dist_in_A(ix) = dist(dFF_A(:,t1),dFF_A(:,t2));
+            ix = ix+1;
+        end
+    end
+    
+    T_QW = size(dFF_QW,2);
+    dist_in_QW = nan(T_QW,1); ix = 1;
+    for t1 = 1:T_QW
+        for t2 = t1:T_QW
+            dist_in_QW(ix) = dist(dFF_QW(:,t1),dFF_QW(:,t2));
+            ix = ix+1;
+        end
+    end
+
+    
+    dist_A_QW = nan(T_QW,1); ix = 1;
+    for t1 = 1:T_A
+        for t2 = 1:T_QW
+            dist_A_QW(ix) = dist(dFF_A(:,t1),dFF_QW(:,t2));
+            ix = ix+1;
+        end
+    end
+    
+    pval_3(dataset_ix) = ranksum((dist_in_A),(dist_in_QW));
+    pval_1(dataset_ix) = ranksum((dist_in_A),(dist_A_QW));
+    pval_2(dataset_ix) = ranksum((dist_in_QW),(dist_A_QW));
     
     
-%    if round(norm(coeff(:,1)),10) ~= 1 || round(norm(cd),10) ~=1
-%        error
-%    end
+    norm_dist_in_A(dataset_ix) = nanmean(dist_in_A)/nanmean(dist_in_QW);
+    norm_dist_in_QW(dataset_ix) = nanmean(dist_in_QW)/nanmean(dist_in_QW);
+    norm_dist_A_QW(dataset_ix) = nanmean(dist_A_QW)/nanmean(dist_in_QW);
     
-%    ang_cd_pc1(dataset_ix) = subspace(pc1,cd);
-%    rho_cd_pc1(dataset_ix) = corr(pc1,cd);
+    plot([0,1,2],[norm_dist_in_QW(dataset_ix),norm_dist_in_A(dataset_ix),norm_dist_A_QW(dataset_ix)],'Color',[.8,.8,.8],'LineWidth',2)
+    
+    plot(0,norm_dist_in_QW(dataset_ix),'oc','MarkerFaceColor','w','LineWidth',2,'MarkerSize',8)
+    %plot([0,0],nanmean(dist_in_A)+[-1,1]*std(dist_in_A),'-m')
+    
+    plot(1,norm_dist_in_A(dataset_ix),'om','MarkerFaceColor','w','LineWidth',2,'MarkerSize',8)
+    %plot([1,1],nanmean(dist_in_QW)+[-1,1]*std(dist_in_QW),'-c')
+    
+    plot(2,norm_dist_A_QW(dataset_ix),'ok','MarkerFaceColor','w','LineWidth',2,'MarkerSize',8)
+    %plot([2,2],nanmean(dist_A_QW)+[-1,1]*std(dist_A_QW),'-k')
+    pause(.1)
+    
 end
+
+
+%% Show that coding dimension captures transitions between states
+
+dataset_ix = 1;
+[dFF,time,acquisition_rate] = load_data(dataset_ix);
+[whisk_angle,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
+pupil = load_pupil(dataset_ix,time);
+
+[A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,1);
+cd = get_coding_dimension(dFF,A,QW);
+
+A_or_QW = cd'*(dFF - mean(dFF,2));
+
+figure, 
+hold on, plot(cd'*(dFF - mean(dFF,2)))
+
+
+
 %%
 figure, plot(ones(7,1),rho_cd_pc1,'ok','MarkerFaceColor','w','MarkerSize',10,'LineWidth',1.5)
 ylabel('Correlation'), ylim([0,1])
@@ -180,34 +251,23 @@ signrank(C_wsp,C_wsp_A)
 %% Figure 3H
 
 
-%% Figure 3I
+%% A and QW subspaces are orthogonal
 
-angle_A_QW = nan(7,1);
-angle_shuff = nan(7,1);
+angle_A_QW = nan(17,1);
+angle_shuff = nan(17,1);
 
 num_PCs = 3;
 
-for dataset_ix = 1:7
+for dataset_ix = [1:6,9,16]
     [dFF,time,acquisition_rate] = load_data(dataset_ix);
     [whisk_angle,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
     pupil = load_pupil(dataset_ix,time);
 
     % Get score
-    [~, score] = pca(dFF');
-    [N,T] = size(dFF);
+    [~,T] = size(dFF);
     
-    % Correlation with pc1
-    pc1 = score(:,1);
-    temp = corr(whisk_set_point,pc1);
+    [A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate);
     
-    if temp < 0
-        pc1 = -pc1;
-    end
-    
-    %[A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,1);
-    buffer = round(acquisition_rate * 1); % 1 second buffer for transitions
-    [A,QW] = get_A_QW_periods(pc1,buffer);
-
     dFF_A = [];
     for k = 1:length(A)
         ix = A(k,1):A(k,2);
@@ -320,11 +380,14 @@ dataset_ix = 17;
 
 [dFF,time,acquisition_rate] = load_data(dataset_ix);
 [whisk_angle,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
-pupil = load_pupil(dataset_ix,time);
+
+[A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,1);
+cd = get_coding_dimension(dFF,A,QW);
+A_or_QW = cd'*(dFF - mean(dFF,2));
 
 [coeff, score] = pca(dFF');
 
-zsp = zscore(whisk_set_point);
+zsp = zscore(A_or_QW);
 
 figure, hold on
 for k = 1:length(score)-1
@@ -340,13 +403,142 @@ for k = 1:length(score)-1
 end
 view(-53,-52)
 
-%plot3(score(onset_indices,1),score(onset_indices,2),score(onset_indices,3),'or')
-%plot3(score(offset_indices,1),score(offset_indices,2),score(offset_indices,3),'ok')
+
+%% Plot variance unexplained vs # PCs
+
+dataset_ix = 6;
+
+[dFF,time,acquisition_rate] = load_data(dataset_ix);
+[~,whisk_set_point,~,~] = load_behav_data(dataset_ix,time);
+
+[~, score] = pca(dFF');
+
+[N,T] = size(dFF);
+num_its = 20;
+
+err = nan(N,num_its);
+for n_PCs = 1:N
+
+    reg = [score(:,1:n_PCs),ones(T,1)];
+    
+    for it_ix = 1:num_its
+
+        train_ixs = block_shuffle_time(T,acquisition_rate);
+        test_ixs = train_ixs(1:round(T * 0.2));
+        train_ixs = setdiff(train_ixs,test_ixs); 
+
+        b = (reg(train_ixs,:)'*reg(train_ixs,:)) \ reg(train_ixs,:)' * whisk_set_point(train_ixs);
+
+        mse = mean((whisk_set_point(test_ixs) - reg(test_ixs,:)*b).^2);
+        err(n_PCs,it_ix) = mse / var(whisk_set_point(test_ixs));
+    end
+end
+%% Give example of linear regression fitting to set pt
+
+dataset_ix = 6;
+
+[dFF,time,acquisition_rate] = load_data(dataset_ix);
+[whisk_angle,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
+
+[coeff, score] = pca(dFF');
+
+T = size(dFF,2);
+
+test_ixs = 1:floor(T * .2); 
+train_ixs = setdiff(1:T,test_ixs);
+
+reg = score(:,1:10);%(:,1:50);
+reg = [reg,ones(T,1)];
+
+b = (reg(train_ixs,:)'*reg(train_ixs,:)) \ reg(train_ixs,:)' * whisk_set_point(train_ixs);
+
+figure, plot(time(test_ixs),whisk_set_point(test_ixs),'k','LineWidth',1)
+hold on, plot(time(test_ixs),reg(test_ixs,:)*b,'Color',[.72,.27,1],'LineWidth',1.5)
+ylim([-.5,1.5])
+%%
+
+num_its = 100;
+err_res = cell(17,1);
+err_all = cell(17,1);
+
+for dataset_ix = [1:6,9,17]
+
+    [dFF,time,acquisition_rate] = load_data(dataset_ix);
+    [~,whisk_set_point,~,~] = load_behav_data(dataset_ix,time);
+
+    [N,T] = size(dFF);
+    [~, score] = pca(dFF');
+
+    % Get residual of whisker set point, ie the component of WSP that 
+    % is not well described by the first PC
+    reg = [score(:,1),ones(T,1)];
+    b = (reg'*reg) \ reg' * whisk_set_point;
+    residual = whisk_set_point - reg*b;
+
+    err_all{dataset_ix} = nan(N,num_its);
+    err_res{dataset_ix} = nan(N,num_its);
+    for n_PCs = 1:N
+
+        reg = [score(:,1:n_PCs),ones(T,1)];
+        for it_ix = 1:num_its
+            train_ixs = block_shuffle_time(T,acquisition_rate);
+            test_ixs = train_ixs(1:round(T * 0.2));
+            train_ixs = setdiff(train_ixs,test_ixs); 
+
+            b = (reg(train_ixs,:)'*reg(train_ixs,:)) \ reg(train_ixs,:)' * residual(train_ixs);
+
+            mse = mean((residual(test_ixs) - reg(test_ixs,:)*b).^2);
+            err_res{dataset_ix}(n_PCs,it_ix) = mse / var(residual(test_ixs));
+            
+            
+            b = (reg(train_ixs,:)'*reg(train_ixs,:)) \ reg(train_ixs,:)' * whisk_set_point(train_ixs);
+
+            mse = mean((whisk_set_point(test_ixs) - reg(test_ixs,:)*b).^2);
+            err_all{dataset_ix}(n_PCs,it_ix) = mse / var(whisk_set_point(test_ixs));
+        end
+    end
+end
+%%
+
+figure, plot_error_snake(1:703,err_res{6}',[.5,.5,.5])
+
+set(gca,'YScale','log')
+set(gca,'XScale','log')
+set(gca,'FontSize',15)
+xlabel('Number of PCs')
+ylabel('Unexplained variance') 
 
 %%
 
-figure, plot(zscore(whisk_angle))
-hold on, plot(zscore(score(:,1))+3)
-hold on, plot(zscore(score(:,2))+6)
-hold on, plot(zscore(score(:,3))+9)
+x = nanmean(err_res{5},2);
+y = smoothdata(x,'gaussian',10);
+figure, loglog(x,'k','LineWidth',1)
+hold on, loglog(y,'r','LineWidth',1)
+[a,b] = min(y)
+%%
 
+%% Figure 3G
+
+coeff_1 = [];
+coeff_2 = [];
+coeff_3 = [];
+
+for dataset_ix = [1:6,9,17]
+    [dFF,time,acquisition_rate] = load_data(dataset_ix);
+    [whisk_angle,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
+    pupil = load_pupil(dataset_ix,time);
+
+    % Get score
+    [coeff, score] = pca(dFF');
+    
+    % Correlation with pc1
+    pc1 = score(:,1);
+    temp = corr(whisk_set_point,pc1);
+    
+    if temp < 0
+        pc1 = -pc1;
+        C_wsp(dataset_ix) = -temp;
+    else
+        C_wsp(dataset_ix) = temp;
+    end
+end

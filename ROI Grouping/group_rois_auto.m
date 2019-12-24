@@ -31,7 +31,7 @@ datasets = {'FL87_180501_11_03_09',...  1
 		    % 'FL92_180228_11_18_24'
 
 % Choose dataset
-dataset_ix = 17;
+dataset_ix = 1;
 fname = datasets{dataset_ix};
 disp(fname)
 

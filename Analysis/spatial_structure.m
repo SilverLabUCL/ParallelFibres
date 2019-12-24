@@ -5,20 +5,28 @@ clear all; clc
 
 define_dirs;
 
-rho_all = []; distances_all = []; rho_shuff_all = [];
-for dataset_ix = 1:8
-    
+rho_all = []; distances_all = []; %rho_shuff_all = [];
+rho_ON = []; distances_ON = []; 
+rho_OFF = []; distances_OFF = [];
+for dataset_ix = [1:6,9,16]
+
+    % Get A and QW states
+    [dFF,time,acquisition_rate] = load_data(dataset_ix);
+    [~,~,whisk_amp,speed] = load_behav_data(dataset_ix,time);
+    pupil = load_pupil(dataset_ix,time);
+
+    [A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,1);
+    [change_dFF{dataset_ix},p{dataset_ix}] = change_dFF_sig(dFF,A,QW,acquisition_rate);
+
     [rho,distances] = get_corr_vs_dist(dataset_ix,1);
     %[rho,distances] = get_corr_vs_dist(dataset_ix,0,[],1);
-    
     
     rho_all = [rho_all; rho];
     distances_all = [distances_all; distances];
     
-    N_pairs = size(rho,1);
-    rho_shuff = rho(randsample(1:N_pairs,N_pairs));
-    
-    rho_shuff_all = [rho_shuff_all;rho_shuff];
+    %N_pairs = size(rho,1);
+    %rho_shuff = rho(randsample(1:N_pairs,N_pairs));
+    %rho_shuff_all = [rho_shuff_all;rho_shuff];
         
 end
 

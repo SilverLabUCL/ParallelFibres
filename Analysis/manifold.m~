@@ -11,7 +11,7 @@ define_dirs;
 ang_cd_pc1 = zeros(7,1);
 rho_cd_pc1 = zeros(7,1);
 
-for dataset_ix = 16%[1:7,9,16,17]
+for dataset_ix = 3%[1:7,9,16,17]
     [dFF,time,acquisition_rate] = load_data(dataset_ix);
     [whisk_angle,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
     pupil = load_pupil(dataset_ix,time);

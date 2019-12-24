@@ -41,7 +41,8 @@ function [dlc_whisk_time,whisk_angle_filt,whisk_set_point,whisk_amp,whisk_phase]
 
     % To get set point, median filter by 500 ms
     %whisk_set_point = smoothdata(whisk_angle_filt,'movmedian',round(0.5* fs));
-    whisk_set_point = smoothdata(whisk_angle_filt,'gaussian',[round(0.5* fs) 0] *2);
+    whisk_set_point = smoothdata(whisk_angle_filt,'gaussian',round(0.5* fs));
+    %smoothdata(whisk_angle_filt,'gaussian',[round(0.5* fs) 0] *2);
     
 
     % To get whisking amplitude and phase,
