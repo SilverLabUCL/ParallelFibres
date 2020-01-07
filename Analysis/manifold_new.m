@@ -155,13 +155,15 @@ corr(cd,pc1)
 
 %% Figure 3G
 
-[C_wsp,C_amp,C_spd,C_pupil] = deal(nan(7,1));
+[C_wsp,C_amp,C_spd,C_pupil] = deal(nan(17,1));
 
-[C_wsp_A,C_amp_A,C_spd_A,C_pupil_A] = deal(nan(7,1));
+[C_wsp_A,C_amp_A,C_spd_A,C_pupil_A] = deal(nan(17,1));
 
-[C_wsp_Q,C_amp_Q,C_spd_Q,C_pupil_Q] = deal(nan(7,1));
+[C_wsp_Q,C_amp_Q,C_spd_Q,C_pupil_Q] = deal(nan(17,1));
 
-for dataset_ix = 1:7
+C_state = nan(17,1);
+
+for dataset_ix = [1:6,9,17]
     [dFF,time,acquisition_rate] = load_data(dataset_ix);
     [whisk_angle,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
     pupil = load_pupil(dataset_ix,time);
@@ -180,9 +182,9 @@ for dataset_ix = 1:7
         C_wsp(dataset_ix) = temp;
     end
     
-    %[A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,1);
-    buffer = round(acquisition_rate * .5);
-    [A,QW] = get_A_QW_periods(pc1,buffer,1);
+    [A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,1);
+    %buffer = round(acquisition_rate * .5);
+    %[A,QW] = get_A_QW_periods(pc1,buffer,1);
     pause
 
     C_amp(dataset_ix) = corr(whisk_amp,pc1);
@@ -193,15 +195,16 @@ for dataset_ix = 1:7
     
     
     [pc1_A,whisk_set_point_A,whisk_amp_A,pupil_A,speed_A] = deal([]);
+    ix_A = [];
     for k = 1:length(A)
-        ix = A(k,1):A(k,2);
-        pc1_A = [pc1_A; pc1(ix)];
-        whisk_set_point_A = [whisk_set_point_A; whisk_set_point(ix)];
-        whisk_amp_A = [whisk_amp_A; whisk_amp(ix)];
-        speed_A = [speed_A; speed(ix)];
-        if ~isempty(pupil)
-            pupil_A = [pupil_A; pupil(ix)];
-        end
+        ix_A = [ix_A,A(k,1):A(k,2)];
+    end
+    pc1_A = pc1(ix_A);
+    whisk_set_point_A = whisk_set_point(ix_A);
+    whisk_amp_A = whisk_amp(ix_A);
+    speed_A = speed(ix_A);
+    if ~isempty(pupil)
+        pupil_A = pupil(ix_A);
     end
         
     C_wsp_A(dataset_ix) = corr(whisk_set_point_A,pc1_A);
@@ -211,42 +214,46 @@ for dataset_ix = 1:7
         C_pupil_A(dataset_ix) = corr(pupil_A,pc1_A);
     end
     
-    [pc1_Q,whisk_set_point_Q,whisk_amp_Q,pupil_Q,speed_Q] = deal([]);
+    [pc1_QW,whisk_set_point_QW,whisk_amp_QW,pupil_QW,speed_QW] = deal([]);
+    
+    ix_QW = [];
     for k = 1:length(QW)
-        ix = QW(k,1):QW(k,2);
-        pc1_Q = [pc1_Q; pc1(ix)];
-        whisk_set_point_Q = [whisk_set_point_Q; whisk_set_point(ix)];
-        whisk_amp_Q = [whisk_amp_Q; whisk_amp(ix)];
-        speed_Q = [speed_Q; speed(ix)];
-        if ~isempty(pupil)
-            pupil_Q = [pupil_Q; pupil(ix)];
-        end
+        ix_QW = [ix_QW,QW(k,1):QW(k,2)];
+    end
+    pc1_QW = pc1(ix_QW);
+    whisk_set_point_QW = whisk_set_point(ix_QW);
+    whisk_amp_QW = whisk_amp(ix_QW);
+    speed_QW = speed(ix_QW);
+    if ~isempty(pupil)
+        pupil_QW = pupil(ix_QW);
     end
         
-    C_wsp_Q(dataset_ix) = corr(whisk_set_point_Q,pc1_Q);
-    C_amp_Q(dataset_ix) = corr(whisk_amp_Q,pc1_Q);
-    C_spd_Q(dataset_ix) = corr(speed_Q,pc1_Q);
+    C_wsp_QW(dataset_ix) = corr(whisk_set_point_QW,pc1_QW);
+    C_amp_QW(dataset_ix) = corr(whisk_amp_QW,pc1_QW);
+    C_spd_QW(dataset_ix) = corr(speed_QW,pc1_QW);
     if ~isempty(pupil)
-        C_pupil_Q(dataset_ix) = corr(pupil_Q,pc1_Q);
+        C_pupil_QW(dataset_ix) = corr(pupil_QW,pc1_QW);
     end
     
-    
+    C_state(dataset_ix) = corr([pc1_A;pc1_QW],[ones(size(pc1_A));zeros(size(pc1_QW))]);
 end
 
 figure,  hold on
+plot(zeros-1,C_state,'ok','MarkerFaceColor','w','LineWidth',1.5,'MarkerSize',12)
 plot(zeros,C_wsp,'ob','MarkerFaceColor','w','LineWidth',1.5,'MarkerSize',12)
-plot(ones,C_wsp_Q,'oc','MarkerFaceColor','w','LineWidth',1.5,'MarkerSize',12)
+plot(ones,C_wsp_QW,'oc','MarkerFaceColor','w','LineWidth',1.5,'MarkerSize',12)
 plot(2*ones,C_wsp_A,'om','MarkerFaceColor','w','LineWidth',1.5,'MarkerSize',12)
-set(gca,'Xtick',[0,1,2])
+set(gca,'Xtick',[-1,0,1,2])
 set(gca,'XtickLabel',{})
 set(gca,'FontSize',15)
 set(ylabel('Cross correlation'))
-xlim([-.5,2.5])
+xlim([-1.5,2.5])
 ylim([-.5,1])
 
-signrank(C_wsp,C_wsp_Q)
-signrank(C_wsp_Q,C_wsp_A)
+signrank(C_wsp,C_wsp_QW)
+signrank(C_wsp_QW,C_wsp_A)
 signrank(C_wsp,C_wsp_A)
+signrank(C_state,C_wsp)
 
 %% Figure 3H
 
@@ -447,17 +454,42 @@ T = size(dFF,2);
 test_ixs = 1:floor(T * .2); 
 train_ixs = setdiff(1:T,test_ixs);
 
-reg = score(:,1:10);%(:,1:50);
+for num_PCs = [1,10,100]
+
+    reg = score(:,1:num_PCs);
+    reg = [reg,ones(T,1)];
+
+    b = (reg(train_ixs,:)'*reg(train_ixs,:)) \ reg(train_ixs,:)' * whisk_set_point(train_ixs);
+
+    figure, plot(time(test_ixs),whisk_set_point(test_ixs),'k','LineWidth',1)
+    hold on, plot(time(test_ixs),reg(test_ixs,:)*b,'Color',[.72,.27,1],'LineWidth',1.5)
+    ylim([-.5,1.5])
+end
+
+% now compare to best fitting 
+mse = zeros(size(dFF,1),1);
+for n = 1:size(dFF,1)
+
+    reg = dFF(n,:)';
+    reg = [reg,ones(T,1)];
+
+    b = (reg(train_ixs,:)'*reg(train_ixs,:)) \ reg(train_ixs,:)' * whisk_set_point(train_ixs);
+    mse(n) = mean((whisk_set_point(test_ixs) - reg(test_ixs,:)*b).^2);
+end
+
+[~,n_min] = min(mse);
+reg = dFF(n_min,:)';
 reg = [reg,ones(T,1)];
 
 b = (reg(train_ixs,:)'*reg(train_ixs,:)) \ reg(train_ixs,:)' * whisk_set_point(train_ixs);
 
 figure, plot(time(test_ixs),whisk_set_point(test_ixs),'k','LineWidth',1)
-hold on, plot(time(test_ixs),reg(test_ixs,:)*b,'Color',[.72,.27,1],'LineWidth',1.5)
+hold on, plot(time(test_ixs),reg(test_ixs,:)*b,'Color',[.52,.52,.52],'LineWidth',1.5)
 ylim([-.5,1.5])
+
 %%
 
-num_its = 100;
+num_its = 3;
 err_res = cell(17,1);
 err_all = cell(17,1);
 
@@ -471,24 +503,26 @@ for dataset_ix = [1:6,9,17]
 
     % Get residual of whisker set point, ie the component of WSP that 
     % is not well described by the first PC
-    reg = [score(:,1),ones(T,1)];
-    b = (reg'*reg) \ reg' * whisk_set_point;
-    residual = whisk_set_point - reg*b;
+    %reg = [score(:,1),ones(T,1)];
+    %b = (reg'*reg) \ reg' * whisk_set_point;
+    %residual = whisk_set_point - reg*b;
 
     err_all{dataset_ix} = nan(N,num_its);
     err_res{dataset_ix} = nan(N,num_its);
-    for n_PCs = 1:N
+    for it_ix = 1:num_its
+        
+        train_ixs = block_shuffle_time(T,acquisition_rate);
+        test_ixs = train_ixs(1:round(T * 0.2));
+        train_ixs = setdiff(train_ixs,test_ixs); 
+        
+        for n_PCs = 1:N
 
-        reg = [score(:,1:n_PCs),ones(T,1)];
-        for it_ix = 1:num_its
-            train_ixs = block_shuffle_time(T,acquisition_rate);
-            test_ixs = train_ixs(1:round(T * 0.2));
-            train_ixs = setdiff(train_ixs,test_ixs); 
+            reg = [score(:,1:n_PCs),ones(T,1)];
+        
+            %b = (reg(train_ixs,:)'*reg(train_ixs,:)) \ reg(train_ixs,:)' * residual(train_ixs);
 
-            b = (reg(train_ixs,:)'*reg(train_ixs,:)) \ reg(train_ixs,:)' * residual(train_ixs);
-
-            mse = mean((residual(test_ixs) - reg(test_ixs,:)*b).^2);
-            err_res{dataset_ix}(n_PCs,it_ix) = mse / var(residual(test_ixs));
+            %mse = mean((residual(test_ixs) - reg(test_ixs,:)*b).^2);
+            %err_res{dataset_ix}(n_PCs,it_ix) = mse / var(residual(test_ixs));
             
             
             b = (reg(train_ixs,:)'*reg(train_ixs,:)) \ reg(train_ixs,:)' * whisk_set_point(train_ixs);
@@ -498,16 +532,85 @@ for dataset_ix = [1:6,9,17]
         end
     end
 end
-%%
 
-figure, plot_error_snake(1:703,err_res{6}',[.5,.5,.5])
+%% Randomly choose QW period
+
+num_its = 10;
+err_res = cell(17,1);
+err_all = cell(17,1);
+
+for dataset_ix = [1:6,9,17]
+
+    [dFF,time,acquisition_rate] = load_data(dataset_ix);
+    [~,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
+    
+    [A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,0);
+    % Only keep QW periods of at least 500 ms
+    
+    
+    [N,T] = size(dFF);
+    [~, score] = pca(dFF');
+
+    % Get residual of whisker set point, ie the component of WSP that 
+    % is not well described by the first PC
+    reg = [score(:,1),ones(T,1)];
+    b = (reg'*reg) \ reg' * whisk_set_point;
+    residual = whisk_set_point - reg*b;
+
+    err_all{dataset_ix} = nan(N,num_its);
+    err_res{dataset_ix} = nan(N,num_its);
+    
+    for it_ix = 1:num_its
+            
+        QW_resort = randsample(size(QW,1),size(QW,1));
+        QW = QW(QW_resort,:);
+        QW_ixes = [];
+        for k = 1:size(QW,1)
+            QW_ixes = [QW_ixes, QW(k,1):QW(k,2)];
+        end
+
+        test_ixs = QW_ixes(1:round(T * 0.1));
+        train_ixs = setdiff(1:T,test_ixs); 
+
+        for n_PCs = 1:N
+            reg = [score(:,1:n_PCs),ones(T,1)];
+
+            %b = (reg(train_ixs,:)'*reg(train_ixs,:)) \ reg(train_ixs,:)' * residual(train_ixs);
+
+            %mse = mean((residual(test_ixs) - reg(test_ixs,:)*b).^2);
+            %err_res{dataset_ix}(n_PCs,it_ix) = mse / var(residual(test_ixs));
+            
+            
+            b = (reg(train_ixs,:)'*reg(train_ixs,:)) \ reg(train_ixs,:)' * whisk_set_point(train_ixs);
+
+            mse = mean((whisk_set_point(test_ixs) - reg(test_ixs,:)*b).^2);
+            err_all{dataset_ix}(n_PCs,it_ix) = mse / var(whisk_set_point(test_ixs));
+        end
+    end
+end
+
+%%
+dataset_ix=1;
+figure, plot(1:size(err_all{dataset_ix},1),err_all{dataset_ix}')
+%plot_error_snake(1:size(err_all{dataset_ix},1),err_all{dataset_ix}',[.5,.5,.5])
+[m,ix] = min((err_all{dataset_ix}));
+mean(ix)
 
 set(gca,'YScale','log')
 set(gca,'XScale','log')
 set(gca,'FontSize',15)
 xlabel('Number of PCs')
 ylabel('Unexplained variance') 
-
+%%
+opt_num_PCs = nan(17,1);
+for dataset_ix = [1:6,9,17]
+    [m,ix] = min((err_all{dataset_ix}));
+    opt_num_PCs(dataset_ix) = mean(ix);
+end
+figure, plot(zeros(17,1),opt_num_PCs,'ok','MarkerSize',8,'Linewidth',1.5)
+set(gca,'Box','off','XTick',[],'FontSize',15,'Yscale','log')
+ylabel('Optimal number PCs')
+ylim([1,500])
 %%
 
 x = nanmean(err_res{5},2);

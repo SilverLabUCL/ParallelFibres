@@ -55,12 +55,16 @@ function [A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,plot_me)
         ix_end = [ix_end;length(x)];
     end
 
+    % This has been changed ---
     % Criteria 2: Delete any that are < 3 s long
     A = [ix_start, ix_end];
     for k = 1:size(A,1)
-        if A(k,2) - A(k,1) < 3* acquisition_rate
-            A(k,:) = [nan,nan];
-        end
+        % Remove first 150 ms to be careful about transient periods
+        A(k,1) = A(k,1) + round(acquisition_rate * .5); % Added
+        A(k,2) = A(k,2) - round(acquisition_rate ); % Added
+        %if A(k,2) - A(k,1) < 3* acquisition_rate % Removed
+        %    A(k,:) = [nan,nan];
+        %end
     end
     A = A(~isnan(sum(A,2)),:);
 

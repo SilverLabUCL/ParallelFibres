@@ -6,8 +6,8 @@ clear all; clc
 define_dirs;
 
 rho_all = []; distances_all = []; %rho_shuff_all = [];
-rho_ON = []; distances_ON = []; 
-rho_OFF = []; distances_OFF = [];
+rho_ON_all = []; distances_ON_all = []; 
+rho_OFF_all = []; distances_OFF_all = [];
 for dataset_ix = [1:6,9,16]
 
     % Get A and QW states
@@ -15,15 +15,18 @@ for dataset_ix = [1:6,9,16]
     [~,~,whisk_amp,speed] = load_behav_data(dataset_ix,time);
     pupil = load_pupil(dataset_ix,time);
 
-    [A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,1);
-    [change_dFF{dataset_ix},p{dataset_ix}] = change_dFF_sig(dFF,A,QW,acquisition_rate);
-
-    [rho,distances] = get_corr_vs_dist(dataset_ix,1);
-    %[rho,distances] = get_corr_vs_dist(dataset_ix,0,[],1);
+    [rho,distances,rho_ON,distances_ON,rho_OFF,distances_OFF] = get_corr_vs_dist(dataset_ix);
+%[rho,distances] = get_corr_vs_dist(dataset_ix,0,[],1);
     
     rho_all = [rho_all; rho];
     distances_all = [distances_all; distances];
     
+    rho_ON_all = [rho_ON_all; rho_ON];
+    distances_ON_all = [distances_ON_all; distances_ON];
+
+    rho_OFF_all = [rho_OFF_all; rho_OFF];
+    distances_OFF_all = [distances_OFF_all; distances_OFF];
+
     %N_pairs = size(rho,1);
     %rho_shuff = rho(randsample(1:N_pairs,N_pairs));
     %rho_shuff_all = [rho_shuff_all;rho_shuff];
@@ -42,7 +45,7 @@ ylabel('Pairwise correlation')
 
 %% Plot error snake of distances
 
-dbin = .5;
+dbin = 3;
 dist_bins_e = 0:dbin:60;
 dist_bins_c = dist_bins_e(2:end) - dbin/2;
 
@@ -50,25 +53,33 @@ y_shuff_mean = zeros(size(dist_bins_c));
 y_shuff_top = zeros(size(dist_bins_c));
 y_shuff_bot = zeros(size(dist_bins_c));
 
-y_mean = zeros(size(dist_bins_c));
-y_top = zeros(size(dist_bins_c));
-y_bot = zeros(size(dist_bins_c));
+[y_mean,y_top,y_bot,y_ON_mean,y_ON_top,y_ON_bot,y_OFF_mean,y_OFF_top,y_OFF_bot] = deal(zeros(size(dist_bins_c)));
+
 for k = 1:length(dist_bins_c)
     ix = find(distances_all <= dist_bins_e(k+1) & distances_all > dist_bins_e(k));
-    y_mean(k) = mean(rho_all(ix));
+    y_mean(k) = median(rho_all(ix));
     ste = std(rho_all(ix))/sqrt(numel(ix));
     y_top(k) = y_mean(k) + ste;
     y_bot(k) = y_mean(k) - ste;
     
-    y_shuff_mean(k) = mean(rho_shuff_all(ix));
-    ste = std(rho_shuff_all(ix))/sqrt(numel(ix));
-    y_shuff_top(k) = y_shuff_mean(k) + ste;
-    y_shuff_bot(k) = y_shuff_mean(k) - ste;
+    ix = find(distances_ON_all <= dist_bins_e(k+1) & distances_ON_all > dist_bins_e(k));
+    y_ON_mean(k) = median(rho_ON_all(ix));
+    ste = std(rho_ON_all(ix))/sqrt(numel(ix));
+    y_ON_top(k) = y_ON_mean(k) + ste;
+    y_ON_bot(k) = y_ON_mean(k) - ste;
+    
+    ix = find(distances_OFF_all <= dist_bins_e(k+1) & distances_OFF_all > dist_bins_e(k));
+    y_OFF_mean(k) = median(rho_OFF_all(ix));
+    ste = std(rho_OFF_all(ix))/sqrt(numel(ix));
+    y_OFF_top(k) = y_OFF_mean(k) + ste;
+    y_OFF_bot(k) = y_OFF_mean(k) - ste;
 end
 
 figure
-fill([dist_bins_c, fliplr(dist_bins_c)],[y_shuff_top, fliplr(y_shuff_bot)],'r','FaceColor','r','LineStyle','none','FaceAlpha',.3)
-hold on, plot(dist_bins_c,y_shuff_mean,'r')
+fill([dist_bins_c, fliplr(dist_bins_c)],[y_ON_top, fliplr(y_ON_bot)],'r','FaceColor','m','LineStyle','none','FaceAlpha',.3)
+hold on, plot(dist_bins_c,y_ON_mean,'m')
+fill([dist_bins_c, fliplr(dist_bins_c)],[y_OFF_top, fliplr(y_OFF_bot)],'r','FaceColor','c','LineStyle','none','FaceAlpha',.3)
+hold on, plot(dist_bins_c,y_OFF_mean,'c')
 fill([dist_bins_c, fliplr(dist_bins_c)],[y_top, fliplr(y_bot)],'k','FaceColor','k','LineStyle','none','FaceAlpha',.3)
 plot(dist_bins_c,y_mean,'k')
 

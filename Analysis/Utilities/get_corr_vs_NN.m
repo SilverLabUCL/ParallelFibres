@@ -11,7 +11,7 @@
 %    acquisition_rate
 %    distances
 
-function [rho_all,distances_all,rho_ON_all,distances_ON_all,rho_OFF_all,distances_OFF_all] = get_corr_vs_dist(dataset_ix,grouped,euclid_dist)
+function [NN,rho_all,rho_ON_all,rho_OFF_all] = get_corr_vs_NN(dataset_ix,grouped)
 
     % If euclid_dist = 0, uses distance after projecting onto plane
     % orthogonal to average fiber direction
@@ -27,6 +27,7 @@ function [rho_all,distances_all,rho_ON_all,distances_ON_all,rho_OFF_all,distance
 
     fname = datasets{dataset_ix};
     disp(fname)
+    
     
     % Load functional data - keeping specific to
     load([basedir,fname,'/processed/',fname,'_GroupedData.mat'])
@@ -55,12 +56,14 @@ function [rho_all,distances_all,rho_ON_all,distances_ON_all,rho_OFF_all,distance
     % Patch size
     [d1,d2] = size(Cn{1});
 
-    rho_all = [];
-    distances_all = [];
+    NN = 1:10;
+    rho_all = zeros(size(NN));
+    rho_all_ste = [];
     rho_ON_all = [];
-    distances_ON_all = [];
+    rho_ON_ste = [];
     rho_OFF_all = [];
-    distances_OFF_all = [];
+    rho_OFF_ste = [];
+    count = [];
 
     for p = 1:Numb_patches
         N = size(dFF{p},1);
@@ -115,6 +118,8 @@ function [rho_all,distances_all,rho_ON_all,distances_ON_all,rho_OFF_all,distance
                 end
             end
         end
+        
+        for nn_ix = 1:leng
 
         rho = corrcoef(dFF{p}');
 
@@ -139,5 +144,6 @@ function [rho_all,distances_all,rho_ON_all,distances_ON_all,rho_OFF_all,distance
 
     end
         
+    
     
     

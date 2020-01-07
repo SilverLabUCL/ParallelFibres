@@ -30,11 +30,7 @@ dataset_ix = 4;
 % Choose patch number
 patch_no = 1;
 
-if ismember(dataset_ix,[4,5,6,7])
-    smooth_win_s = 0.35;
-else
-    smooth_win_s = [];
-end
+smooth_win_s = [];
 
 fname = datasets{dataset_ix};
 disp(fname)
