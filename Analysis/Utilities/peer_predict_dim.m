@@ -22,7 +22,7 @@ function [ num_dim, Test_t, y_est, res, U_x, U_y, y_est_train, res_train ] = pee
 %       the predictor matrix.
 %   Res - 2D arrayL [ROI x nDim] = [#ROI_Y x length(num_dim)]
 %       Residuals for each neuronY and num_dim tested = var( y_est - y)
-%   Ux - Projections of x to new ba sis
+%   Ux - Projections of x to new basis
 %   Uy - Projections of y to new basis
 %   y_est_train and res_train - same as y_est, except estimate for training
 %   half to judge "quality of decomposition"

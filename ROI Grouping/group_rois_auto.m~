@@ -6,7 +6,7 @@ addpath('From CNMF_E/')
 addpath('Utilities/')
 
 basedir = '~/Documents/ParallelFibres/Data/';
-
+%basedir = 'C:\Users\SilverLab\Documents\Alex\ParallelFibres\Data\';
 datasets = {'FL87_180501_11_03_09',...  1
             'FL87_180501_10_47_25',...  2
             'FL87_180501_10_36_14',...  3 
@@ -27,25 +27,29 @@ datasets = {'FL87_180501_11_03_09',...  1
              'FL75_170912_10_33_29',... 16
              'FL76_170913_10_57_06',... 17
              'FL77_180113_10_58_50'};  %18
-       		% 'FL92_180228_11_10_48' Only behavioural data
-		    % 'FL92_180228_11_18_24' Only behavioural data
+       		% 'FL92_180228_11_10_48'
+		    % 'FL92_180228_11_18_24'
 
 % Choose dataset
-dataset_ix = 15;
+dataset_ix = 18;
 fname = datasets{dataset_ix};
 disp(fname)
 
 fname_fibreangles = [basedir,fname,'/processed/fibre_direction.mat'];
+%fname_fibreangles = [basedir,fname,'\processed\fibre_direction.mat'];
 load(fname_fibreangles,'vector_mean');
 
 fname_SNR = [basedir,fname,'/processed/SNR.mat'];
+%fname_SNR = [basedir,fname,'\processed\SNR.mat'];
 load(fname_SNR,'SNR_thresh');
 
 fname_corr = [basedir,fname,'/processed/corr_histograms.mat'];
+%fname_corr = [basedir,fname,'\processed\corr_histograms.mat'];
 load(fname_corr,'C_inter');
 rho_min = prctile(C_inter,95)
 
 load([basedir,fname,'/',fname,'.mat'],'Numb_patches','Numb_trials')
+%load([basedir,fname,'\',fname,'.mat'],'Numb_patches')
 
 % Get time information
 MatrixTime = [];
@@ -70,7 +74,7 @@ if isfile([basedir,fname,'/processed/',fname,'_GroupedData.mat'])
 end
 
 %% Choose patch number
-for patch_no = 1:Numb_patches
+for patch_no = 2:Numb_patches
     
     %
     disp([num2str(patch_no),' / ',num2str(Numb_patches)])
@@ -89,7 +93,8 @@ for patch_no = 1:Numb_patches
     [Ain,~,~,~] = remove_bad_cells(Ain,Y,[d1,d2],acquisition_rate,SNR_thresh); 
 
     % Trim ROIs to remove 
-    Ain = trim_ROIs(Ain,[d1,d2]);
+    Ain = trim_ROIs(Ain,[d1,d2
+        ]);
 
     % Remove low SNR ROIs again
     [Ain,SNR,A_bad,SNR_bad] = remove_bad_cells(Ain,Y,[d1,d2],acquisition_rate,SNR_thresh); 

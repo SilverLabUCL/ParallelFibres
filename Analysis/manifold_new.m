@@ -442,7 +442,7 @@ for n_PCs = 1:N
 end
 %% Give example of linear regression fitting to set pt
 
-dataset_ix = 6;
+dataset_ix = 2; %6
 
 [dFF,time,acquisition_rate] = load_data(dataset_ix);
 [whisk_angle,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
@@ -451,7 +451,7 @@ dataset_ix = 6;
 
 T = size(dFF,2);
 
-test_ixs = 1:floor(T * .2); 
+test_ixs = (1:floor(T * .2)) ; 
 train_ixs = setdiff(1:T,test_ixs);
 
 for num_PCs = [1,10,100]
@@ -464,6 +464,8 @@ for num_PCs = [1,10,100]
     figure, plot(time(test_ixs),whisk_set_point(test_ixs),'k','LineWidth',1)
     hold on, plot(time(test_ixs),reg(test_ixs,:)*b,'Color',[.72,.27,1],'LineWidth',1.5)
     ylim([-.5,1.5])
+    mse = mean((whisk_set_point(test_ixs) - reg(test_ixs,:)*b).^2);
+    title(mse)
 end
 
 % now compare to best fitting 
@@ -486,6 +488,7 @@ b = (reg(train_ixs,:)'*reg(train_ixs,:)) \ reg(train_ixs,:)' * whisk_set_point(t
 figure, plot(time(test_ixs),whisk_set_point(test_ixs),'k','LineWidth',1)
 hold on, plot(time(test_ixs),reg(test_ixs,:)*b,'Color',[.52,.52,.52],'LineWidth',1.5)
 ylim([-.5,1.5])
+title(mse(n_min))
 
 %%
 
