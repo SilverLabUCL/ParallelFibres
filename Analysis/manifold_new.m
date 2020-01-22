@@ -263,9 +263,9 @@ signrank(C_state,C_wsp)
 angle_A_QW = nan(17,1);
 angle_shuff = nan(17,1);
 
-num_PCs = 3;
+num_PCs = 2;
 
-for dataset_ix = [1:6,9,16]
+for dataset_ix = [1:6,9,16,17]
     [dFF,time,acquisition_rate] = load_data(dataset_ix);
     [whisk_angle,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
     pupil = load_pupil(dataset_ix,time);
