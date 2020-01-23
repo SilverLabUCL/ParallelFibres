@@ -57,6 +57,9 @@ function [whisk_angle,whisk_set_point,whisk_amp,Speed_smooth,whisk_time,Speed_ti
     dt_speed = mean(diff(Speed_time));
     Speed_smooth = smoothdata(wheel_MI(:,1),'gaussian',[round(smooth_win_s/dt_speed) 0] *2);
     
+    % Convert to units of standard deviations
+    Speed_smooth = zscore(Speed_smooth);
+    
     % Interpolate all data to functional time
     if ~isempty(time)
         Speed_smooth = interp1(Speed_time,Speed_smooth,time);

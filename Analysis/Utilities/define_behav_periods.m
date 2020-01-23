@@ -68,6 +68,9 @@ function [A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,plot_me)
     end
     A = A(~isnan(sum(A,2)),:);
 
+    % Remove any A periods with no length
+    A(diff(A')<=0,:) = [];
+
     % Find Quiet Wakefulness periods (noW,noR)
     % Criteria 1: both R and W are below .1 STD
     notRW = (x < .1 & y < .1);
@@ -86,6 +89,9 @@ function [A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,plot_me)
 
     QW = [ix_start, ix_end];
     QW = QW(~isnan(sum(QW,2)),:);
+    
+    % Remove any QW periods with no length
+    QW(diff(QW')<=0,:) = [];
 
     % Plot to manually check behavioural labels
     if plot_me

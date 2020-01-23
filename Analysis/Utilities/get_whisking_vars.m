@@ -44,6 +44,8 @@ function [dlc_whisk_time,whisk_angle_filt,whisk_set_point,whisk_amp,whisk_phase]
     whisk_set_point = smoothdata(whisk_angle_filt,'gaussian',round(0.5* fs));
     %smoothdata(whisk_angle_filt,'gaussian',[round(0.5* fs) 0] *2);
     
+    % Convert to degrees
+    whisk_set_point = rad2deg(whisk_set_point);
 
     % To get whisking amplitude and phase,
     fc2 = 30; fc1 = 8;
