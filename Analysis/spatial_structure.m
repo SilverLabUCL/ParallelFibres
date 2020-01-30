@@ -34,52 +34,8 @@ end
 
 clear rho distances
 
-%% Plot error snake of distances
-
-dbin = 3;
-dist_bins_e = 0:dbin:60;
-dist_bins_c = dist_bins_e(2:end) - dbin/2;
-
-y_shuff_mean = zeros(size(dist_bins_c));
-y_shuff_top = zeros(size(dist_bins_c));
-y_shuff_bot = zeros(size(dist_bins_c));
-
-[y_mean,y_top,y_bot,y_ON_mean,y_ON_top,y_ON_bot,y_OFF_mean,y_OFF_top,y_OFF_bot] = deal(zeros(size(dist_bins_c)));
-
-for k = 1:length(dist_bins_c)
-    ix = find(distances_all <= dist_bins_e(k+1) & distances_all > dist_bins_e(k));
-    y_mean(k) = median(rho_all(ix));
-    ste = std(rho_all(ix))/sqrt(numel(ix));
-    y_top(k) = y_mean(k) + ste;
-    y_bot(k) = y_mean(k) - ste;
-    
-    ix = find(distances_ON_all <= dist_bins_e(k+1) & distances_ON_all > dist_bins_e(k));
-    y_ON_mean(k) = median(rho_ON_all(ix));
-    ste = std(rho_ON_all(ix))/sqrt(numel(ix));
-    y_ON_top(k) = y_ON_mean(k) + ste;
-    y_ON_bot(k) = y_ON_mean(k) - ste;
-    
-    ix = find(distances_OFF_all <= dist_bins_e(k+1) & distances_OFF_all > dist_bins_e(k));
-    y_OFF_mean(k) = median(rho_OFF_all(ix));
-    ste = std(rho_OFF_all(ix))/sqrt(numel(ix));
-    y_OFF_top(k) = y_OFF_mean(k) + ste;
-    y_OFF_bot(k) = y_OFF_mean(k) - ste;
-end
-
-figure
-fill([dist_bins_c, fliplr(dist_bins_c)],[y_ON_top, fliplr(y_ON_bot)],'r','FaceColor','m','LineStyle','none','FaceAlpha',.3)
-hold on, plot(dist_bins_c,y_ON_mean,'m')
-fill([dist_bins_c, fliplr(dist_bins_c)],[y_OFF_top, fliplr(y_OFF_bot)],'r','FaceColor','c','LineStyle','none','FaceAlpha',.3)
-hold on, plot(dist_bins_c,y_OFF_mean,'c')
-fill([dist_bins_c, fliplr(dist_bins_c)],[y_top, fliplr(y_bot)],'k','FaceColor','k','LineStyle','none','FaceAlpha',.3)
-plot(dist_bins_c,y_mean,'k')
-
-set(gca,'FontSize',18)
-xlabel('Distance between fibres (um)')
-ylabel('Pairwise correlation')
-set(gca,'Box','off')
-
-%% Plot error snake of distances
+%% Plot correlation vs error
+% Figure 1F
 
 dbin = 3;
 dist_bins_e = 0:dbin:60;

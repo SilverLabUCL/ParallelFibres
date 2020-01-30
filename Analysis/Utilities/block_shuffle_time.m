@@ -16,7 +16,7 @@ function T_shuffled = block_shuffle_time(T,acquisition_rate,block_s)
     end
 
     % Length of blocks in bins
-    block_length = block_s * round(acquisition_rate);
+    block_length = round(block_s *acquisition_rate);
     num_blocks = ceil(T/block_length);
     
     % Random reordering of blocks

@@ -56,6 +56,75 @@ t = p(4); t.FontSize=20;
 t = p(5); t.FaceColor = [.7,.7,.7]; t.EdgeColor = [.7,.7,.7];
 t = p(6); t.FontSize=20;
 
+%% Histogram of GC corrs with different behaviours
+% Figure S3
+% Warning - slow
+
+C_wsp = cell(15,1);
+p_wsp = cell(15,1);
+
+C_wamp = cell(15,1);
+p_wamp = cell(15,1);
+
+C_speed = cell(15,1);
+p_speed = cell(15,1);
+
+C_pupil = cell(15,1);
+p_pupil = cell(15,1);
+
+for dataset_ix = 1:15
+    [dFF,time,acquisition_rate] = load_data(dataset_ix);
+    [~,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
+    pupil = load_pupil(dataset_ix,time);
+
+    % Get A and QW states
+    [C_wsp{dataset_ix},p_wsp{dataset_ix},...
+        C_wamp{dataset_ix},p_wamp{dataset_ix},...
+        C_speed{dataset_ix},p_speed{dataset_ix},...
+        C_pupil{dataset_ix},p_pupil{dataset_ix}] ...
+        = corr_sig(dFF,whisk_set_point,whisk_amp,speed,pupil,acquisition_rate);
+    
+end
+%% Generates figures for previous cell
+
+% Replace below with whisker set point, amplitude, locomotion, or pupil
+C = C_wsp; p_val = p_wsp;
+
+bins = linspace(-1,1,50);
+bins_c = bins(2:end)-mean(diff(bins))/2;
+
+C_all = vertcat(C{:});
+p_all = vertcat(p_val{:});
+
+C_pass_shuff = C_all(p_all < 0.05);
+C_fail_shuff = C_all(p_all >= 0.05);
+
+C_up = C_pass_shuff(C_pass_shuff>0);
+C_down = C_pass_shuff(C_pass_shuff<0);
+
+h_up = histcounts(C_up,bins);
+h_down = histcounts(C_down,bins);
+h_fail = histcounts(C_fail_shuff,bins);
+
+figure, bar(bins_c,h_fail,'FaceColor',[.7,.7,.7],'EdgeColor','k','BarWidth',1)
+hold on, bar(bins_c,h_up,'FaceColor',[1,.3,1],'EdgeColor','k','BarWidth',1)
+hold on, bar(bins_c,h_down,'FaceColor',[.2,1,1],'EdgeColor','k','BarWidth',1)
+set(gca,'FontSize',18)
+set(gca,'Box','off')
+xlabel('Correlation')
+ylabel('Number')
+
+fracs = [sum(h_up), sum(h_down),sum(h_fail)];
+fracs = fracs/sum(fracs);
+figure, p = pie(fracs);
+set(gca,'FontSize',18)
+t = p(1); t.FaceColor = [1,.3,1]; t.EdgeColor = [1,.3,1];
+t = p(2); t.FontSize=20;
+t = p(3); t.FaceColor = [.2,1,1]; t.EdgeColor = [.2,1,1];
+t = p(4); t.FontSize=20;
+t = p(5); t.FaceColor = [.7,.7,.7]; t.EdgeColor = [.7,.7,.7];
+t = p(6); t.FontSize=20;
+
 %% Show example of population activity
 % Requires running previous cell 
 % Figure 1C

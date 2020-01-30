@@ -27,7 +27,7 @@ function [change_dFF,p] = change_dFF_sig(dFF,A,QW,acquisition_rate)
     end
     
     % Calculate two-tailed p value 
-    p = zeros(N,1);
+    p = nan(N,1);
     for k = 1:N
         p(k) = sum(change_dFF_shuff(:,k) > abs(change_dFF(k)) |  change_dFF_shuff(:,k) < -abs(change_dFF(k)))/num_reps;
     end
