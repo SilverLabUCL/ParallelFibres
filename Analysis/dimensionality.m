@@ -6,19 +6,20 @@ clear all; clc
 % Common code to define base directory and datasets
 define_dirs;
 
+%%
 N_sub = 300;
 
-varmax = nan(8,1);
-dimmax = nan(8,1);
-varexp = cell(8,1);
+varmax = nan(15,1);
+dimmax = nan(15,1);
+varexp = cell(15,1);
 
-varmax_rois = nan(8,1);
-dimmax_rois = nan(8,1);
-varexp_rois = cell(8,1);
+varmax_rois = nan(15,1);
+dimmax_rois = nan(15,1);
+varexp_rois = cell(15,1);
 
 tic
 
-for dataset_ix = 1:8
+for dataset_ix = 1:15
     
     dataset_ix, toc
     
