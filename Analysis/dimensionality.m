@@ -6,22 +6,24 @@ clear all; clc
 % Common code to define base directory and datasets
 define_dirs;
 
-%%
-N_sub = 300;
+%% Calculate dimensionality for chosen subpopulation size
+% Takes forever
+
+N_sub = 750;
 
 varmax = nan(15,1);
 dimmax = nan(15,1);
 varexp = cell(15,1);
 
-varmax_rois = nan(15,1);
-dimmax_rois = nan(15,1);
-varexp_rois = cell(15,1);
+%varmax_rois = nan(15,1);
+%dimmax_rois = nan(15,1);
+%varexp_rois = cell(15,1);
 
 tic
 
 for dataset_ix = 1:15
     
-    dataset_ix, toc
+    toc
     
     % Load data
     [dFF,~,acquisition_rate] = load_data(dataset_ix,1);
@@ -29,13 +31,13 @@ for dataset_ix = 1:15
     if size(dFF,1) > N_sub
 
         % Calculate dimensionality for grouped axons
-        [varexp{dataset_ix},dimmax(dataset_ix),varmax(dataset_ix)] = get_dim(dFF,N_sub,N_sub,acquisition_rate);
+        [varexp{dataset_ix},dimmax(dataset_ix),~] = get_dim(dFF,N_sub,N_sub,acquisition_rate);
 
         %clear dFF
 
         % Calculate dimensionality for ungrouped ROIs
-        [dFF,~,acquisition_rate] = load_data(dataset_ix,0);
-        [varexp_rois{dataset_ix},dimmax_rois(dataset_ix),varmax_rois(dataset_ix)] = get_dim(dFF,N_sub,N_sub,acquisition_rate);
+        %[dFF,~,acquisition_rate] = load_data(dataset_ix,0);
+        %[varexp_rois{dataset_ix},dimmax_rois(dataset_ix),varmax_rois(dataset_ix)] = get_dim(dFF,N_sub,N_sub,acquisition_rate);
         
     end
 
@@ -44,36 +46,41 @@ end
 
 toc
 
-save([basedir,'processed/dimensionality_N',num2str(N_sub)],'varmax','dimmax','varexp','varmax_rois','dimmax_rois','varexp_rois')
+save([basedir,'Dimensionality/dimensionality_N',num2str(N_sub)],'varmax','dimmax','varexp')
 
 %% Plot var explained vs. number components
+% Figure 4A
 
-load([basedir,'processed/dimensionality_N300'])
+N = 300;
+
+load([basedir,'Dimensionality/dimensionality_N',num2str(N)])
+
+c_87=[.1,.5,.8];
+c_76=[1,.7,0];
+c_77=[.7,.1,.7];
+c_s=[1,.4,.4];
+
+ dataset_colors = {c_87,c_87,c_87,c_87,c_77,c_s,c_s,[],[],c_87,c_87,c_s,c_s,c_76,c_77};
 
 figure, hold on
-for dataset_ix = 1:8
-    dim_tested = find(~isnan(sum(varexp{dataset_ix},1)));
-    plot_error_snake(dim_tested,varexp{dataset_ix}(:,dim_tested),[0,0,0])
+varmax = nan(15,1);
+dimmax = nan(15,1);
+for dataset_ix = 1:15
+    if ~isempty(varexp{dataset_ix})
+        plot_error_snake(1:N,varexp{dataset_ix},dataset_colors{dataset_ix})
+        [varmax(dataset_ix),dimmax(dataset_ix)] = max(nanmean(varexp{dataset_ix},1));
+        plot(dimmax(dataset_ix),varmax(dataset_ix)+.03,'v','MarkerFaceColor',dataset_colors{dataset_ix},'MarkerEdgeColor',dataset_colors{dataset_ix})
+    end
 end
-plot(dimmax,varmax+.03,'vk','MarkerFaceColor','k')
 xlabel('Number of components')
 ylabel('Variance explained (cross-val)')
 ylim([0,.7])
 
-figure, hold on
-for dataset_ix = 1:8
-    dim_tested = find(~isnan(sum(varexp_rois{dataset_ix},1)));
-    plot_error_snake(dim_tested,varexp_rois{dataset_ix}(:,dim_tested),[1,0,0])
-end
-plot(dimmax_rois,varmax_rois+.03,'vk','MarkerFaceColor','k')
-xlabel('Number of components')
-ylabel('Variance explained (cross-val)')
-ylim([0,.7])
 
 %% Extrapolate to maximum dimensionality
-
+% Figure 4B
 varmax_all = []; dimmax_all = [];
-for dataset_ix = 1:8
+for dataset_ix = 1:15
     if ~isempty(varexp{dataset_ix})
     for k = 1:10
         [varmax_,dimmax_] = max(varexp{dataset_ix}(k,:));
@@ -82,18 +89,6 @@ for dataset_ix = 1:8
     end
     end
 end
-
-varmax_rois_all = []; dimmax_rois_all = [];
-for dataset_ix = 1:8
-    if ~isempty(varexp_rois{dataset_ix})
-    for k = 1:10
-        [varmax_,dimmax_] = max(varexp_rois{dataset_ix}(k,:));
-        varmax_rois_all = [varmax_rois_all; varmax_];
-        dimmax_rois_all = [dimmax_rois_all; dimmax_];
-    end
-    end
-end
-
 figure, 
 ix = find(~isnan(varmax_all));
 plot(varmax_all,dimmax_all,'vk','MarkerFaceColor',[.6,.6,.6],'MarkerEdgeColor',[.6,.6,.6])
@@ -104,40 +99,37 @@ xlabel('Max variance explained')
 ylabel('Number of components')
 set(gca,'FontSize',18)
 
-figure,
-ix = find(~isnan(varmax_rois_all));
-plot(varmax_rois_all,dimmax_rois_all,'vr','MarkerFaceColor',[1,.6,.6],'MarkerEdgeColor',[1,.6,.6]);
-hold on, plot([0,1],[0,1]*(varmax_rois_all(ix)'*varmax_rois_all(ix))\(varmax_rois_all(ix)'*dimmax_rois_all(ix)),'k')
-ix = find(~isnan(varmax_rois));
-plot(varmax_rois,dimmax_rois,'vr','MarkerFaceColor','r')
-xlabel('Max variance explained')
-ylabel('Number of components')
-set(gca,'FontSize',18)
 
-%% Extrapolate extrapolation
+%% Extrapolate extrapolation for different subsample populations
+% Figure 4B
 
-N_sub = 150:50:700;
+N_sub = 100:50:700;
 
 slope = zeros(size(N_sub));
 slope_rois = zeros(size(N_sub));
 for k = 1:length(N_sub)
     
-    load([basedir,'processed/dimensionality_N',num2str(N_sub(k))])
+    load([basedir,'Dimensionality/dimensionality_N',num2str(N_sub(k))])
+
+    % Recalculate max variance and dimensionality
+    varmax = nan(15,1);
+    dimmax = nan(15,1);
+    for dataset_ix = 1:15
+        if ~isempty(varexp{dataset_ix})
+            [varmax(dataset_ix),dimmax(dataset_ix)] = max(nanmean(varexp{dataset_ix},1));
+        end
+    end
     
     ix = find(~isnan(varmax)); 
     slope(k) = (varmax(ix)'*varmax(ix))\(varmax(ix)'*dimmax(ix));
-
-    
-    ix = find(~isnan(varmax_rois)); 
-    slope_rois(k) = (varmax_rois(ix)'*varmax_rois(ix))\(varmax_rois(ix)'*dimmax_rois(ix));
 end
 
-figure, bar(N_sub',N_sub./slope,'FaceColor','k','EdgeColor','k','LineWidth',2)
-set(gca, 'FontSize',18)
-xtickangle(45), xlim([100,750])
+figure, bar(N_sub',N_sub./slope,'FaceColor',[.6,.6,.6],'EdgeColor','w','LineWidth',.8)
+set(gca, 'FontSize',15, 'Box', 'off','XTick',100:100:700)
+xtickangle(45), xlim([50,750])
 xlabel('Number of neurons')
 ylabel('Neurons per dimension')
-%% Following fragments of code are for modelling what happens with code .. 
+%% Testing dimensionality for random matrices
 
 T = 5000;
 N = 300;
@@ -163,7 +155,7 @@ for it = 1:25
     U_true = orth(U_true);
 
     noise_ix = 1;
-    for noise =  logspace(log10(.02),log10(.2),15)%logspace(log10(.005),log10(.15),5)
+    for noise =  logspace(log10(.02),log10(.2),15)
         
         F = U_true*SV_true + noise*randn(N,T);
         [varexp{it,noise_ix},dimmax(it,noise_ix),varmax(it,noise_ix)] = get_dim(F,N,N);
@@ -171,11 +163,11 @@ for it = 1:25
 
     end
 end
-%%
-save([basedir,'processed/dimensionality_sim'],'varmax','dimmax','varexp','notes')
 
-%% Plot
+save([basedir,'Dimensionality/dimensionality_sim'],'varmax','dimmax','varexp','notes')
 
+%% Plot extrapolation with noise
+% Figure S6
 varmax = []; dimmax = [];
 for it = 1:25
     for noise_ix = 1:15
@@ -189,8 +181,24 @@ end
 
 ix = find(~isnan(varmax));
 
-figure, plot(varmax,dimmax,'v','MarkerEdgeColor','k','MarkerFaceColor','w','LineWidth',1.2)
+figure, plot(varmax,dimmax,'.','MarkerEdgeColor','k','MarkerFaceColor','w','LineWidth',1.2)
 xlabel('Variance explained')
 ylabel('Number of components')
 set(gca,'FontSize',18)
 
+%% Example dimensionality
+% Figure S6
+
+it = 1
+varexp{it,noise_ix}(k,:)
+
+
+figure, hold on
+varmax = nan(15,1);
+dimmax = nan(15,1);
+for noise_ix = 8:15
+    plot_error_snake(1:N,varexp{it,noise_ix},'k')
+end
+xlabel('Number of components')
+ylabel('Variance explained (cross-val)')
+ylim([0,.7])

@@ -16,13 +16,22 @@ datasets = {'FL87_180501_11_03_09',...  1
             'FL77_180213_10_46_41',...  5
             'FL_S_170906_11_26_25',...  6
             'FL_S_170905_10_40_52',...  7            
-            'FL45_170125_14_47_04'}; %  8
+            'FL45_170125_14_47_04',...  8
+             ...%%
+             'FL95_180425_10_53_40',...  9
+             'FL87_180413_11_00_55',...  10
+             'FL87_180117_11_23_20',...  12
+             'FL_S_171109_14_54_34',...  14
+             'FL_S_171109_15_19_52',...  15
+             ...%
+             'FL76_170913_10_57_06',... 17
+             'FL77_180113_10_58_50'};  %18
 
-d_all = cell(8,1);
+d_all = cell(18,1);
 
 
 figure, hold on, plot(1:9,'k')
-for dataset_ix = 1:8
+for dataset_ix = 1:18
     
     fname = datasets{dataset_ix};
     
@@ -46,7 +55,6 @@ end
 set(gca,'FontSize',15)
 xlabel('Mean distance (\mu m)')
 ylabel('Standard deviation (\mu m)')
-%saveas(gcf,[basedir,'/figs/intervaricosity_distances_mean_std.png']);
 
 [mean(vertcat(d_all{:})), std(vertcat(d_all{:}))]
 
@@ -62,7 +70,7 @@ mean_all = sum(mean_per_zone.*estimates_per_zone)/num_estimates_all;
 std_per_zone = sqrt(estimates_per_zone).*ste_per_zone;
 var_per_zone = std_per_zone.^2;
 
-var_all = sum((var_per_zone + mean_per_zone.^2).*esti  mates_per_zone) / num_estimates_all - mean_all^2
+var_all = sum((var_per_zone + mean_per_zone.^2).*estimates_per_zone) / num_estimates_all - mean_all^2
 sqrt(var_all)/sqrt(num_estimates_all)
 
 %% Comapare to Shepherd et al 
@@ -78,17 +86,17 @@ set(gca,'FontSize',18)
 xlabel('Distance (\mu m)')
 ylabel('Probability')
 
-figure, histogram(vertcat(d_all{:}),'FaceColor','k')
-hold on, plot(mean(vertcat(d_all{:})),160,'vk','MarkerFaceColor','k')
-hold on, plot(5.19,180,'vr','MarkerFaceColor','r')
-hold on, plot([1,14],[210,210],'r','LineWidth',1.5)
-hold on, plot([1,1],[205,215],'r','LineWidth',1.5)
-hold on, plot([14,14],[205,215],'r','LineWidth',1.5)
-set(gca,'FontSize',18)
+figure, histogram(vertcat(d_all{:}),'FaceColor','r')
+hold on, plot(mean(vertcat(d_all{:})),260,'vr','MarkerFaceColor','r')
+hold on, plot(5.2,300,'vk','MarkerFaceColor','k')
+hold on, plot([1,14],[310,310],'k','LineWidth',1.5)
+hold on, plot([1,1],[305,315],'k','LineWidth',1.5)
+hold on, plot([14,14],[305,315],'k','LineWidth',1.5)
+set(gca,'box','off')
+set(gca,'FontSize',15)
 xlabel('Distance (\mu m)')
 ylabel('Number')
 
-%saveas(gcf,[basedir,'/figs/intervaricosity_distances_histogram.png']);
 
 
 
