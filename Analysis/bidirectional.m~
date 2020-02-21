@@ -230,8 +230,6 @@ xlabel('Time (s)'), ylabel('\Delta F/F')
 
 dataset_ix = 6;
 [dFF,time,acquisition_rate] = load_data(dataset_ix);
-[~,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
-
 [N,~] = size(dFF);
 [A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,1);
 
@@ -251,7 +249,7 @@ for k = 1:size(wsp_bin,2)
 end
 
 %%
-n = 168;
+n = 167;
 figure, plot(wsp_bin,tuningcurves(n,:),'-sk')
  hold on,
 for k = 1:size(wsp_bin,2)

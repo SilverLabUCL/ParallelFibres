@@ -68,7 +68,7 @@ zlabel('PC 3')
 %% Plot 3d manifold
 % Figure 2B
 
-dataset_ix = 2;
+dataset_ix = 9;
 
 [dFF,time,acquisition_rate] = load_data(dataset_ix);
 [whisk_angle,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
@@ -247,7 +247,7 @@ for dataset_ix = 1:15
         for k = 1:length(QW)
             ix_QW = [ix_QW, QW(k,1):QW(k,2)];
         end
-        dFF_QW = dFF(:,ix_QW);
+        dFF+
         coeff_QW = pca(dFF_QW');
 
         angle_A_QW(dataset_ix) = subspace(coeff_QW(:,1:num_PCs),coeff_A(:,1:num_PCs));
@@ -298,7 +298,7 @@ angle_A_OFF = nan(15,1);
 angle_QW_ON = nan(15,1);
 angle_QW_OFF = nan(15,1);
 
-num_PCs = 1;
+num_PCs = 2;
 kmax = 1000;
 
 for dataset_ix = 1:15

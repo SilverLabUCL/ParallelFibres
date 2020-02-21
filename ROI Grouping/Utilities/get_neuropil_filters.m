@@ -1,5 +1,6 @@
 % This function makes fake ROIs to determine distribution of SNR in the
-% neuropil
+% neuropil - NOT the filters used for neuropil subtraction,
+% for that function see get_neuropil_masks.m
 %
 % Input:
 %    Ain              Spatial filters

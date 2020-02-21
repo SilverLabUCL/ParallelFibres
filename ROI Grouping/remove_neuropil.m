@@ -1,5 +1,5 @@
-% This script groups ROIs onto putative axons, separately for each patch in
-% each experiment
+%% This script removes neuropil from all varicosities
+% And resaves 
 
 clear all; clc; close all
 addpath('From CNMF_E/')
@@ -18,56 +18,38 @@ datasets = {'FL87_180501_11_03_09',...  1
              ...%%
              'FL95_180425_10_53_40',...  9
              'FL87_180413_11_00_55',...  10
-             'FL104_180725_10_42_37',... 11
              'FL87_180117_11_23_20',...  12
-             'FL106_180807_10_52_25',... 13
              'FL_S_171109_14_54_34',...  14
              'FL_S_171109_15_19_52',...  15
              ...%
-             'FL75_170912_10_33_29',... 16
              'FL76_170913_10_57_06',... 17
              'FL77_180113_10_58_50'};  %18
-       		% 'FL92_180228_11_10_48' Only behavioural data
-		    % 'FL92_180228_11_18_24' Only behavioural data
 
-% Choose dataset
-dataset_ix = 1;
+dataset_ix = 6;
+
 fname = datasets{dataset_ix};
 disp(fname)
 
-fname_fibreangles = [basedir,fname,'/processed/fibre_direction.mat'];
-load(fname_fibreangles,'vector_mean');
+load([basedir,fname,'/',fname,'.mat'],'Numb_patches');
+load([basedir,fname,'/processed/',fname,'_GroupedData.mat'],'Ain_rois','Cn');
 
-fname_SNR = [basedir,fname,'/processed/SNR.mat'];
-load(fname_SNR,'SNR_thresh');
+dFF_neuropil = cell(Numb_patches,1);
 
-fname_corr = [basedir,fname,'/processed/corr_histograms.mat'];
-load(fname_corr,'C_inter');
-rho_min = prctile(C_inter,95)
-
-load([basedir,fname,'/',fname,'.mat'],'Numb_patches','Numb_trials')
-
-% Get time information
-MatrixTime = [];
-load([basedir,fname,'/',fname,'_time.mat'])
-
-% Default smoothing window
-smooth_win_s = [];
-
-Cn_all = cell(Numb_patches,1);
-dFF_axons_all = cell(Numb_patches,1);
-Ain_axons_all = cell(Numb_patches,1);
-dFF_rois_all = cell(Numb_patches,1);
-Ain_rois_all = cell(Numb_patches,1);
-ix_axons_to_rois_all = cell(Numb_patches,1);
-axon_ids_all = cell(Numb_patches,1);
-time_rois_all = cell(Numb_patches,1);
-time_axons_all = cell(Numb_patches,1);
-
-% Check if file already exists
-if isfile([basedir,fname,'/processed/',fname,'_GroupedData.mat'])
-    error('Data has already been grouped. Proceeding will cause this file to be overwritten.')
+for patch_no = 1:Numb_patches
+    
+    % Load data
+    disp([num2str(patch_no),' / ',num2str(Numb_patches)])
+    load([basedir,fname,'/raw/Patch',sprintf('%03d',patch_no),'.mat'])
+    Y = double(Y); T = size(Y,2);
+    
+    Ain_npl = get_neuropil_masks(Ain_rois{patch_no},[d1,d2],Pixel_size);
+    
+    [dFF,F_raw,F_neuropil] = get_dFF(Ain_rois{patch_no},Ain_npl,Y,acquisition_rate);
+    
+    dFF_neuropil{patch_no} = dFF;
+    
 end
+
 
 %% Choose patch number
 for patch_no = 1:Numb_patches
