@@ -9,7 +9,7 @@ define_dirs;
 %% Calculate dimensionality for chosen subpopulation size
 % Takes forever
 
-N_sub = 750;
+N_sub = 100;
 
 varmax = nan(15,1);
 dimmax = nan(15,1);
@@ -93,7 +93,6 @@ figure,
 ix = find(~isnan(varmax_all));
 plot(varmax_all,dimmax_all,'vk','MarkerFaceColor',[.6,.6,.6],'MarkerEdgeColor',[.6,.6,.6])
 hold on, plot([0,1],[0,1]*(varmax_all(ix)'*varmax_all(ix))\(varmax_all(ix)'*dimmax_all(ix)),'k')
-ix = find(~isnan(varmax));
 plot(varmax,dimmax,'vk','MarkerFaceColor','k')
 xlabel('Max variance explained')
 ylabel('Number of components')

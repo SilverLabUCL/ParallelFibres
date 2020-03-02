@@ -147,7 +147,7 @@ C = C(ix); ix_down = ix_down(ix);
 
 % CAREFUL : INVERTED COLOR SCALE HERE
 figure, imagesc(time,1:N,-dFF([ix_up; ix_down; ix_fail],:))
-colormap(gray), caxis([-1.5,0])
+ colormap(gray), caxis([-1.5,0])
 set(gca,'FontSize',15,'YTick',[1,700])
 xlabel('Time (s)'), ylabel('Axon number')
 
@@ -169,17 +169,13 @@ xlabel('Time (s)'), ylabel('Loc. (std)')
 % Figure 1D
 
 figure, hold on
-%for k = 1:length(QW)
-%    rectangle('Position',[time(QW(k,1)) -20 time(QW(k,2))-time(QW(k,1)) 80],'FaceColor',[.65 1 1],'EdgeColor','w')
-%end
-%for k = 1:length(A)
-%    rectangle('Position',[time(A(k,1)) -20 time(A(k,2))-time(A(k,1)) 80],'FaceColor',[1 .8 1],'EdgeColor','w')
-%end
+
 plot(time, whisk_set_point,'k','LineWidth',1.5)
 for k = 1:length(QW)
     ix = QW(k,1):QW(k,2);
     plot(time(ix), whisk_set_point(ix),'c','LineWidth',1.5)
 end
+
 for k = 1:length(A)
     ix = A(k,1):A(k,2);
     plot(time(ix), whisk_set_point(ix),'m','LineWidth',1.5)
@@ -189,17 +185,13 @@ axis([220,280,-20,60])
 xlabel('Time (s)'), ylabel('WSP (deg.)')
 
 figure, hold on
-%for k = 1:length(QW)
-%    rectangle('Position',[time(QW(k,1)) -20 time(QW(k,2))-time(QW(k,1)) 80],'FaceColor',[.65 1 1],'EdgeColor','w')
-%end
-%for k = 1:length(A)
-%    rectangle('Position',[time(A(k,1)) -20 time(A(k,2))-time(A(k,1)) 80],'FaceColor',[1 .8 1],'EdgeColor','w')
-%end
+
 plot(time, speed,'k','LineWidth',1.5)
 for k = 1:length(QW)
     ix = QW(k,1):QW(k,2);
     plot(time(ix), speed(ix),'c','LineWidth',1.5)
 end
+
 for k = 1:length(A)
     ix = A(k,1):A(k,2);
     plot(time(ix), speed(ix),'m','LineWidth',1.5)
@@ -215,16 +207,103 @@ end
 for k = 1:length(A)
     rectangle('Position',[time(A(k,1)) -20 time(A(k,2))-time(A(k,1)) 80],'FaceColor',[1 .9 1],'EdgeColor','w')
 end
-ix_display_on = [42,60,142];
+ix_display_on = [42,60,115,142,536];
 ix_display_off = [9,149,226];
-for k = 1:3
+for k = 1:5
     plot(time,dFF(ix_display_on(k),:)+k*3,'Color',[.3,.3,.3],'LineWidth',1)
+end
+for k=1:3
     plot(time,dFF(ix_display_off(k),:)-k*3,'Color',[.3,.3,.3],'LineWidth',1)
 end
 set(gca,'FontSize',15,'Box','off','YTick',[0,2])
-axis([220,280,-10,15])
+axis([220,280,-10,20])
 xlabel('Time (s)'), ylabel('\Delta F/F')
 
+%% Show full example of up / down /non mod 
+% Figure S5
+
+figure, hold on
+for k = 1:length(QW)
+    rectangle('Position',[time(QW(k,1)) -20 time(QW(k,2))-time(QW(k,1)) 80],'FaceColor',[.75 1 1],'EdgeColor','w')
+end
+for k = 1:length(A)
+    rectangle('Position',[time(A(k,1)) -20 time(A(k,2))-time(A(k,1)) 80],'FaceColor',[1 .9 1],'EdgeColor','w')
+end
+ix_display_fail = [4,13,65];
+ix_display_on = [42,60,115,142,536];
+ix_display_off = [9,149,226];
+for k = 1:5
+    plot(time,dFF(ix_display_on(k),:)+k*3,'Color',[.3,.3,.3],'LineWidth',1)
+end
+for k=1:3
+    plot(time,dFF(ix_display_off(k),:)-k*3-2,'Color',[.3,.3,.3],'LineWidth',1)
+end
+for k = 1:3
+    plot(time,dFF(ix_display_fail(k),:)+k*3+18,'Color',[.3,.3,.3],'LineWidth',1)
+end
+set(gca,'FontSize',15,'Box','off','YTick',[0,2])
+axis([0,400,-13,31])
+xlabel('Time (s)'), ylabel('\Delta F/F')
+
+%% Get distribution of SNRs of all axons comparing non modulated to others
+% Figure S5
+addpath('../ROI Grouping/Utilities/')
+addpath('../ROI Grouping/From CNMF_E/')
+
+SNR_up = [];
+SNR_down = [];
+SNR_fail = [];
+
+for dataset_ix = 1:15
+    fname = datasets{dataset_ix};
+    disp(fname)
+
+    [~,time,acquisition_rate] = load_data(dataset_ix);
+    load([basedir,fname,'/',fname,'.mat'],'Numb_patches')
+    load([basedir,fname,'/processed/',fname,'_GroupedData.mat'],'Ain_axons','dFF_axons')
+
+    [~,~,whisk_amp,speed] = load_behav_data(dataset_ix,time);
+    [A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate); 
+    
+    
+    for patch_no = 1:Numb_patches
+        patch_no
+        
+        [change_dFF,p_val] = change_dFF_sig(dFF_axons{patch_no},A,QW,acquisition_rate);
+        
+        ix_up = find(p_val < 0.05 & change_dFF>0);
+        ix_down = find(p_val < 0.05 & change_dFF<0);
+        ix_fail = find(p_val > 0.05);
+        
+        
+        % Load data
+        load([basedir,fname,'/raw/Patch',sprintf('%03d',patch_no),'.mat'])
+        Y = double(Y);
+        
+        % Get SNR for all ROIs
+        [~,SNR_all,~,~] = remove_bad_cells(Ain_axons{patch_no},Y,[d1,d2],acquisition_rate,0);
+        
+
+        SNR_up = [SNR_up; SNR_all(ix_up)];
+        SNR_down = [SNR_down; SNR_all(ix_down)];
+        SNR_fail = [SNR_fail; SNR_all(ix_fail)];
+    end
+end
+
+figure, histogram(SNR_up,1:35,'FaceColor','r')
+set(gca,'FontSize',15)
+xlabel('SNR')
+ylabel('Number')
+
+figure, histogram(SNR_down,1:35,'FaceColor','b')
+set(gca,'FontSize',15)
+xlabel('SNR')
+ylabel('Number')
+
+figure, histogram(SNR_fail,1:35,'FaceColor','k')
+set(gca,'FontSize',15)
+xlabel('SNR')
+ylabel('Number')
 %% Show example of single PF tuning curves
 % Figure 1C
 

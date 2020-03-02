@@ -5,70 +5,11 @@ clear all; clc
 
 define_dirs;
 
-%%
-
-dataset_ix = 2;
-
-[dFF,time,acquisition_rate] = load_data(dataset_ix);
-[~,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
-
-[N,T] = size(dFF);
-
-[change_dFF,p_val] = change_dFF_sig(dFF,A,QW,acquisition_rate);
-ix_fail = find(p_val >.05);
-ix_ON = find(p_val < .05 & change_dFF > 0);
-ix_OFF = find(p_val < .05 & change_dFF < 0);
-
-dwsp = 5;
-wsp_bin = -20:dwsp:60;
-tuningcurves = nan(N,size(wsp_bin,2));
-for k = 1:size(wsp_bin,2)
-    ix = find(whisk_set_point > wsp_bin(k) - dwsp/2 & whisk_set_point < wsp_bin(k) + dwsp/2);
-    tuningcurves(:,k) = mean(dFF(:,ix),2);
-end
-
-dFF = nan(N,T);
-for n = 1:N
-    dFF(n,:) = interp1(wsp_bin,tuningcurves(n,:),whisk_set_point);
-end
-
-ix = find(isnan(sum(dFF,1)));
-dFF(:,ix) = [];
-whisk_set_point(ix)=[];
-whisk_amp(ix)=[];
-speed(ix)=[];
-
-[A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,1);
-cd = get_coding_dimension(dFF,A,QW);
-A_or_QW = cd'*(dFF - nanmean(dFF,2));
-
-[coeff, score] = pca(dFF');
-
-zsp = zscore(A_or_QW);
-
-figure, hold on
-for k = 1:length(score)-1
-    c = (zsp(k)+1)/2;
-    if c < 0
-        c = 0;
-    elseif c > 1
-        c = 1;
-    end
-    c=c*[1,0,1]+(1-c)*[0,1,1];
-    
-    plot3(score(k:k+1,1),score(k:k+1,2),score(k:k+1,3),'-','Color',c)
-end
-view(44,44)
-set(gca,'FontSize',15,'XTick',[],'YTick',[],'ZTick',[])
-xlabel('PC 1')
-ylabel('PC 2')
-zlabel('PC 3')
-
 
 %% Plot 3d manifold
 % Figure 2B
 
-dataset_ix = 2;
+dataset_ix = 1;
 
 [dFF,time,acquisition_rate] = load_data(dataset_ix);
 [whisk_angle,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
@@ -79,64 +20,26 @@ A_or_QW = cd'*(dFF - nanmean(dFF,2));
 
 [coeff, score] = pca(dFF');
 
-zsp = zscore(A_or_QW);
+A_or_QW = zscore(A_or_QW);
+c = nan(size(A_or_QW,2),3);
 
 figure, hold on
 for k = 1:length(score)-1
-    c = (zsp(k)+1)/2;
-    if c < 0
-        c = 0;
-    elseif c > 1
-        c = 1;
+    c_ = (A_or_QW(k)+1)/2;
+    if c_ < 0
+        c_ = 0;
+    elseif c_ > 1
+        c_ = 1;
     end
-    c=c*[1,0,1]+(1-c)*[0,1,1];
+    c(k,:)=c_*[1,0,1]+(1-c_)*[0,1,1];
     
-    plot3(score(k:k+1,1),score(k:k+1,2),score(k:k+1,3),'-','Color',c)
+    plot3(score(k:k+1,1),score(k:k+1,2),score(k:k+1,3),'-','Color',c(k,:))
 end
 view(44,44)
 set(gca,'FontSize',15,'XTick',[],'YTick',[],'ZTick',[])
 xlabel('PC 1')
 ylabel('PC 2')
 zlabel('PC 3')
-%% Plot 3d manifold - removing OFF PFs
-
-dataset_ix = 2;
-
-[dFF,time,acquisition_rate] = load_data(dataset_ix);
-[whisk_angle,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
-
-[A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,1);
-
-cd = get_coding_dimension(dFF,A,QW);
-A_or_QW = cd'*(dFF - mean(dFF,2));
-
-% Remove down
-[change_dFF,p_val] = change_dFF_sig(dFF,A,QW,acquisition_rate);
-ix_down = find(p_val < 0.05 & change_dFF<0);
-dFF(ix_down,:) = [];
-
-[coeff, score] = pca(dFF');
-
-zsp = zscore(A_or_QW);
-
-figure, hold on
-for k = 1:length(score)-1
-    c = (zsp(k)+1)/2;
-    if c < 0
-        c = 0;
-    elseif c > 1
-        c = 1;
-    end
-    c=c*[1,0,1]+(1-c)*[0,1,1];
-    
-    plot3(score(k:k+1,1),score(k:k+1,2),score(k:k+1,3),'-','Color',c)
-end
-view(44,44)
-set(gca,'FontSize',15,'XTick',[],'YTick',[],'ZTick',[])
-xlabel('PC 1')
-ylabel('PC 2')
-zlabel('PC 3')
-
 
 %%  Distance between manifolds
 % Figure 2C
@@ -224,7 +127,7 @@ angle_A_QW = nan(15,1);
 angle_shuff = nan(15,1);
 p_val = nan(15,1);
 
-num_PCs = 2;
+num_PCs = 1;
 kmax = 1000;
 
 for dataset_ix = 1:15
@@ -254,7 +157,7 @@ for dataset_ix = 1:15
 
         angle_shuff_dist = zeros(kmax,1);
         for k = 1:kmax
-            train_ixs = block_shuffle_time(T,acquisition_rate,.5);
+            train_ixs = block_shuffle_time(T,acquisition_rate);%,.5);
             test_ixs = train_ixs(1:round(T/2));
             train_ixs = setdiff(train_ixs,test_ixs); 
 
@@ -289,7 +192,7 @@ histogram(angle_shuff_dist,'Normalization','probability','EdgeColor',c,'FaceColo
 plot(angle_A_QW(dataset_ix),.25,'vk','MarkerFaceColor','k')
 xlabel('Angle (rad.)'), ylabel('Probability')
 set(gca,'FontSize',15)
-xlim([0,1.6])
+xlim([0,2])
 %% Angle between subspaces & cartesian ON/OFF
 % 
 
@@ -298,7 +201,7 @@ angle_A_OFF = nan(15,1);
 angle_QW_ON = nan(15,1);
 angle_QW_OFF = nan(15,1);
 
-num_PCs = 1;
+num_PCs = 2;
 kmax = 1000;
 
 for dataset_ix = 1:15
@@ -332,18 +235,12 @@ for dataset_ix = 1:15
         cartesian_OFF = zeros(N,N);
         cartesian_OFF(ix_OFF,ix_OFF) = eye(numel(ix_OFF));
 
-        ix_NOTON = sort([ix_fail;ix_OFF]);
-        ix_NOTOFF = sort([ix_fail;ix_ON]);
-        cartesian_NOTOFF = zeros(N,N);
-        cartesian_NOTOFF(ix_NOTOFF,ix_NOTOFF) = eye(numel(ix_NOTOFF));
-        cartesian_NOTON = zeros(N,N);
-        cartesian_NOTON(ix_NOTON,ix_NOTON) = eye(numel(ix_NOTON));
-
-        angle_A_ON(dataset_ix) = subspace(coeff_A(:,1:num_PCs),cartesian_NOTOFF);
+        
+        angle_A_ON(dataset_ix) = subspace(coeff_A(:,1:num_PCs),cartesian_ON);
         angle_A_OFF(dataset_ix) = subspace(coeff_A(:,1:num_PCs),cartesian_OFF);
 
         angle_QW_ON(dataset_ix) = subspace(coeff_QW(:,1:num_PCs),cartesian_ON);
-        angle_QW_OFF(dataset_ix) = subspace(coeff_QW(:,1:num_PCs),cartesian_NOTON);
+        angle_QW_OFF(dataset_ix) = subspace(coeff_QW(:,1:num_PCs),cartesian_OFF);
     end
 end
 

@@ -15,7 +15,7 @@ for dataset_ix = 1:15
     [~,~,whisk_amp,speed] = load_behav_data(dataset_ix,time);
     pupil = load_pupil(dataset_ix,time);
 
-    [rho,distances,rho_ON,distances_ON,rho_OFF,distances_OFF] = get_corr_vs_dist(dataset_ix);
+    [ç,distances,rho_ON,distances_ON,rho_OFF,distances_OFF] = get_corr_vs_dist(dataset_ix);
     
     rho_all = [rho_all; rho];
     distances_all = [distances_all; distances];
@@ -33,6 +33,8 @@ for dataset_ix = 1:15
 end
 
 clear rho distances
+
+ranksum(rho_all(distances_all<2),rho_all(distances_all>=2))
 
 %% Plot correlation vs error
 % Figure 1F
@@ -112,17 +114,21 @@ temp = vertcat(NN_dist_ON{:}); temp = temp(~isnan(temp));
 plot([1,1],mean(temp)+[-1,1]*std(temp)/sqrt(numel(temp)),'r')
 plot(1,mean(temp),'sr','MarkerFaceColor','r')
 
-temp = vertcat(NN_dist_ON_shuff{:}); temp = temp(~isnan(temp));
-plot([2,2],mean(temp)+[-1,1]*std(temp)/sqrt(numel(temp)),'r')
-plot(2,mean(temp),'sr')
+temp_shuff = vertcat(NN_dist_ON_shuff{:}); temp_shuff = temp_shuff(~isnan(temp_shuff));
+plot([2,2],mean(temp_shuff)+[-1,1]*std(temp_shuff)/sqrt(numel(temp_shuff)),'r')
+plot(2,mean(temp_shuff),'sr')
+
+signrank(temp,temp_shuff)
 
 temp = vertcat(NN_dist_OFF{:}); temp = temp(~isnan(temp));
 plot([3,3],mean(temp)+[-1,1]*std(temp)/sqrt(numel(temp)),'b')
 plot(3,mean(temp),'sb','MarkerFaceColor','b')
 
-temp = vertcat(NN_dist_OFF_shuff{:}); temp = temp(~isnan(temp));
-plot([4,4],mean(temp)+[-1,1]*std(temp)/sqrt(numel(temp)),'b')
-plot(4,mean(temp),'sb')
+temp_shuff = vertcat(NN_dist_OFF_shuff{:}); temp_shuff = temp_shuff(~isnan(temp_shuff));
+plot([4,4],mean(temp_shuff)+[-1,1]*std(temp_shuff)/sqrt(numel(temp_shuff)),'b')
+plot(4,mean(temp_shuff),'sb')
+
+signrank(temp,temp_shuff)
 
 set(gca,'FontSize',15)
 ylabel('NN distances')
