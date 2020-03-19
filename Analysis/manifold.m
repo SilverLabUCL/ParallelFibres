@@ -127,7 +127,7 @@ angle_A_QW = nan(15,1);
 angle_shuff = nan(15,1);
 p_val = nan(15,1);
 
-num_PCs = 1;
+num_PCs = 2;
 kmax = 1000;
 
 for dataset_ix = 1:15

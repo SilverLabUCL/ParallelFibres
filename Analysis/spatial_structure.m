@@ -15,7 +15,9 @@ for dataset_ix = 1:15
     [~,~,whisk_amp,speed] = load_behav_data(dataset_ix,time);
     pupil = load_pupil(dataset_ix,time);
 
-    [ç,distances,rho_ON,distances_ON,rho_OFF,distances_OFF] = get_corr_vs_dist(dataset_ix);
+    % Choose between 2d (patch based) and 3d (all patches) versions
+    %[rho,distances,rho_ON,distances_ON,rho_OFF,distances_OFF] = get_corr_vs_dist(dataset_ix);
+    [rho,distances,rho_ON,distances_ON,rho_OFF,distances_OFF] = get_corr_vs_dist_3D(dataset_ix);
     
     rho_all = [rho_all; rho];
     distances_all = [distances_all; distances];
@@ -36,7 +38,7 @@ clear rho distances
 
 ranksum(rho_all(distances_all<2),rho_all(distances_all>=2))
 
-%% Plot correlation vs error
+%% Plot correlation vs distance
 % Figure 1F
 
 dbin = 3;
@@ -67,19 +69,20 @@ for k = 1:length(dist_bins_c)
     plot(dist_bins_c(k),mean(rho_OFF_all(ix)),'sc');
     plot(dist_bins_c(k) * [1,1],mean(rho_OFF_all(ix)) + ste*[-1,1],'c');
 end
-
+%%
+options = optimset('MaxFunEvals',500000);
 expfun = @(params,x) params(1) + params(2) .* exp(-params(3) .* x); 
 err = @(params) sum( ( expfun(params,distances_all) - rho_all ).^2 );
-params_fit = fminsearch(err,[1,1,1]);
+params_fit = fminsearch(err,[1,1,1],options);
 x = 1:.01:59;
 hold on, plot(x,expfun(params_fit,x),'k','LineWidth',3)
 
 err = @(params) sum( ( expfun(params,distances_ON_all) - rho_ON_all ).^2 );
-params_fit = fminsearch(err,[1,1,1]);
+params_fit = fminsearch(err,[1,1,1],options);
 hold on, plot(x,expfun(params_fit,x),'m','LineWidth',3)
 
 err = @(params) sum( ( expfun(params,distances_OFF_all) - rho_OFF_all ).^2 );
-params_fit = fminsearch(err,[1,1,1]);
+params_fit = fminsearch(err,[1,1,1],options);
 hold on, plot(x,expfun(params_fit,x),'c','LineWidth',3)
 
 set(gca,'FontSize',18)
