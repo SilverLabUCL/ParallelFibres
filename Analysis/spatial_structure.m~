@@ -4,7 +4,6 @@
 clear all; clc
 
 define_dirs;
-%%
 
 rho_all = []; distances_all = []; %rho_shuff_all = [];
 rho_ON_all = []; distances_ON_all = []; 
@@ -17,8 +16,8 @@ for dataset_ix = 1:15
     pupil = load_pupil(dataset_ix,time);
 
     % Choose between 2d (patch based) and 3d (all patches) versions
-    [rho,distances,rho_ON,distances_ON,rho_OFF,distances_OFF] = get_corr_vs_dist(dataset_ix,0);
-    %[rho,distances,rho_ON,distances_ON,rho_OFF,distances_OFF] = get_corr_vs_dist_3D(dataset_ix);
+    %[rho,distances,rho_ON,distances_ON,rho_OFF,distances_OFF] = get_corr_vs_dist(dataset_ix);
+    [rho,distances,rho_ON,distances_ON,rho_OFF,distances_OFF] = get_corr_vs_dist_3D(dataset_ix);
     
     rho_all = [rho_all; rho];
     distances_all = [distances_all; distances];
@@ -38,14 +37,11 @@ end
 clear rho distances
 
 ranksum(rho_all(distances_all<2),rho_all(distances_all>=2))
-%%
-save([basedir,'spatial_corr_grouped'],'rho_all','distances_all',...
-    'rho_ON_all','distances_ON_all','rho_OFF_all','distances_OFF_all')
+
+save(
 
 %% Plot correlation vs distance
 % Figure 1F
-
-load([basedir,'spatial_corr_3D_ungrouped'])
 
 dbin = 3;
 dist_bins_e = 0:dbin:60;
@@ -62,20 +58,43 @@ figure, hold on
 for k = 1:length(dist_bins_c)
     ix = find(distances_all <= dist_bins_e(k+1) & distances_all > dist_bins_e(k));
     ste = std(rho_all(ix))/sqrt(numel(ix));
-    plot(dist_bins_c(k),mean(rho_all(ix)),'sk');
+    plot(dist_bins_c(k),median(rho_all(ix)),'sk');
     plot(dist_bins_c(k) * [1,1],mean(rho_all(ix)) + ste*[-1,1],'k');
     
     ix = find(distances_ON_all <= dist_bins_e(k+1) & distances_ON_all > dist_bins_e(k));
     ste = std(rho_ON_all(ix))/sqrt(numel(ix));
-    plot(dist_bins_c(k),mean(rho_ON_all(ix)),'sm');
+    plot(dist_bins_c(k),median(rho_ON_all(ix)),'sm');
     plot(dist_bins_c(k) * [1,1],mean(rho_ON_all(ix)) + ste*[-1,1],'m');
     
     ix = find(distances_OFF_all <= dist_bins_e(k+1) & distances_OFF_all > dist_bins_e(k));
     ste = std(rho_OFF_all(ix))/sqrt(numel(ix));
-    plot(dist_bins_c(k),mean(rho_OFF_all(ix)),'sc');
+    plot(dist_bins_c(k),median(rho_OFF_all(ix)),'sc');
     plot(dist_bins_c(k) * [1,1],mean(rho_OFF_all(ix)) + ste*[-1,1],'c');
 end
 
+%%
+options = optimset('MaxFunEvals',500000);
+expfun = @(params,x) params(1) + params(2) .* exp(-params(3) .* x); 
+err = @(params) sum( ( expfun(params,distances_all) - rho_all ).^2 );
+params_fit = fminsearch(err,[.1,.5,.5],options);
+x = 1:.01:59;
+hold on, plot(x,expfun(params_fit,x),'k','LineWidth',3)
+
+err = @(params) sum( ( expfun(params,distances_ON_all) - rho_ON_all ).^2 );
+params_fit = fminsearch(err,[.1,.5,.5],options);
+hold on, plot(x,expfun(params_fit,x),'m','LineWidth',3)
+
+err = @(params) sum( ( expfun(params,distances_OFF_all) - rho_OFF_all ).^2 );
+params_fit = fminsearch(err,[.1,.5,.5],options);
+hold on, plot(x,expfun(params_fit,x),'c','LineWidth',3)
+
+set(gca,'FontSize',18)
+xlabel('Distance between fibres (um)')
+ylabel('Pairwise correlation')
+set(gca,'Box','off')
+ylim([.1,.4])
+
+%%
 options = optimset('MaxFunEvals',500000);
 expfun = @(params,x) params(1) + params(2) .* exp(-params(3) .* x)+ params(4) .* exp(-params(5) .* x); 
 err = @(params) sum( ( expfun(params,distances_all) - rho_all ).^2 );

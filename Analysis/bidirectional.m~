@@ -229,10 +229,13 @@ end
 for k = 1:length(A)
     rectangle('Position',[time(A(k,1)) -20 time(A(k,2))-time(A(k,1)) 80],'FaceColor',[1 .9 1],'EdgeColor','w')
 end
+%ix_display_fail = [4,13,65]; 
+%ix_display_on = [42,60,115,142,536];
+%ix_display_off = [9,149,226]; % dataset 6
 
-ix_display_fail = [4,13,65];
-ix_display_on = [42,60,115,142,536];
-ix_display_off = [9,149,226]; % dataset 6
+ix_display_fail = [10,17,32]; 
+ix_display_on = [86,33,52,338,326]; 
+ix_display_off = [445,375,407];
 
 for k = 1:5
     plot(time,dFF(ix_display_on(k),:)+k*3,'Color',[.3,.3,.3],'LineWidth',1)

@@ -1,24 +1,9 @@
-%
-% This function loads data from all patches of a given experiment
-% and concatenates it 
-%
-% Input:
-%    dataset_ix       Dataset number
-% 
-% Output:       
-%    dFF_all
-%    time
-%    acquisition_rate
-%    distances
 
-function [rho_all,distances_all,rho_ON_all,distances_ON_all,rho_OFF_all,distances_OFF_all] = get_corr_vs_dist(dataset_ix,grouped)
-    
-    if nargin < 2 || isempty(grouped)
-        grouped = 1;
-    end
-
+clear all
     define_dirs;
 
+    dataset_ix = 4
+    grouped = 0;
     fname = datasets{dataset_ix};
     disp(fname)
     
@@ -49,15 +34,10 @@ function [rho_all,distances_all,rho_ON_all,distances_ON_all,rho_OFF_all,distance
     % Patch size
     [d1,d2] = size(Cn{1});
 
-    rho_all = [];
-    distances_all = [];
-    rho_ON_all = [];
-    distances_ON_all = [];
-    rho_OFF_all = [];
-    distances_OFF_all = [];
-
-    for p = 1:Numb_patches
+        %%
+for p = 1:Numb_patches
         N = size(dFF{p},1);
+        p
         
         % Find ON and OFF GCs in this patch
         [change_dFF,p_val] = change_dFF_sig(dFF{p},A,QW,acquisition_rate);
@@ -65,6 +45,29 @@ function [rho_all,distances_all,rho_ON_all,distances_ON_all,rho_OFF_all,distance
         J_ON = zeros(N,N); J_ON(ix_ON,ix_ON) = 1;
         ix_OFF = find(change_dFF < 0 & p_val < .05);
         J_OFF = zeros(N,N); J_OFF(ix_OFF,ix_OFF) = 1;
+        
+        
+        rho = corrcoef(dFF{p}');
+        rho = rho - diag(diag(rho));
+        [a,b] = find(rho > .8);
+        if ~isempty(intersect(a,ix_OFF))
+            ix_QW = [];
+            for k = 1:length(QW)
+                ix_QW = [ix_QW, QW(k,1):QW(k,2)];
+            end
+            temp=intersect(a,ix_OFF);
+            % [corr(dFF{p}(j,:)',dFF{p}(k,:)'),corr(dFF{p}(j,ix_QW)',dFF{p}(k,ix_QW)')]
+            % figure, plot(time_rois{p}(j,:)/1000,dFF{p}(j,:)), hold on, plot(time_rois{p}(k,:)/1000,1+dFF{p}(k,:))
+            figure(1), subplot(1,2,1)
+            imagesc(corrcoef(dFF{p}(temp,:)')), caxis([.5,1])
+            subplot(1,2,2)
+            imagesc(corrcoef(dFF{p}(temp,ix_QW)')), caxis([.5,1])
+            pause
+            close(1)
+
+        end
+end
+    %%
 
         % If projecting distances, project centroids now
         % Get vector of projected XY positions
@@ -96,28 +99,4 @@ function [rho_all,distances_all,rho_ON_all,distances_ON_all,rho_OFF_all,distance
             end
         end
 
-        rho = corrcoef(dFF{p}');
-
-        % Remove doublecounting
-        
-        rho_ON = rho(triu(J_ON,1)==1);
-        rho_OFF = rho(triu(J_OFF,1)==1);
-        rho = rho(triu(ones(size(rho)),1)==1);
-        
-        distances_ON = distances(triu(J_ON,1)==1);
-        distances_OFF = distances(triu(J_OFF,1)==1);
-        distances = distances(triu(ones(size(distances)),1)==1);
-
-        rho_all = [rho_all; rho];
-        distances_all = [distances_all; distances];
-        
-        rho_ON_all = [rho_ON_all; rho_ON];
-        distances_ON_all = [distances_ON_all; distances_ON];
-        
-        rho_OFF_all = [rho_OFF_all; rho_OFF];
-        distances_OFF_all = [distances_OFF_all; distances_OFF];
-
-    end
-        
-    
     

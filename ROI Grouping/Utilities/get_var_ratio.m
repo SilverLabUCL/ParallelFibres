@@ -41,7 +41,7 @@ if isrow(yy)
 end
 
 % Data matrix
-X = [xx,yy];
+X = [xx,yy]; % Tx2 matrix
 
 % Fit 2 Gaussians to capture the baseline data + events
 options = statset('MaxIter',1000); % Increase number of EM iterations
@@ -66,24 +66,25 @@ x = [xx,ones(size(xx))];
 b = (x'*x)\(x'*yy);
 u = [1;b(1)]; u = u/norm(u);
 u0 = u;
+v0 = [-u0(2);u0(1)];
 
-
-% Find minimum
-f = @(uu)var(X*[-uu(2);uu(1)]/norm(uu));
-u = fminsearch(f,u0);
-
-% Orthogonal vector to u
+% Find minimum projection onto a vector
 % This is the vector we will project onto
-v = [-u(2);u(1)];
+f = @(vv)var(X*[vv(1);vv(2)]/norm(vv));
+v = fminsearch(f,v0);
+v = v/norm(v);
 
 % Ratio of variances
-num = var(X*v); % variance of 
-den = v'*S_bl*v; % variance of baseline gaussian projected onto v
-var_ratio = num / den;
+% All data
+var_proj_data = var(X*v); % variance of projection of X onto v
+% Baseline distribution
+mean_proj_baseline = (m_bl*v)'; 
+var_proj_baseline = v'*S_bl*v; % variance of baseline gaussian projected onto v
+var_ratio = var_proj_data / var_proj_baseline;
 
 % Plot everything 
 if manual
-    figure(2), hold off, plot(xx,yy,'.'), hold on
+    figure(2), hold off, plot(xx,yy,'-','Color',[.3,.3,.3]), hold on
     
     % To plot error ellipse
     % Get eigenvectors & eigenvalues of the fitted baseline distribution
@@ -106,11 +107,20 @@ if manual
     plot(r_ellipse_bl(:,1) + m_bl(1),r_ellipse_bl(:,2) + m_bl(2),'k','LineWidth',2)
     
     % Plot u and v vetors
-    plot(m_bl(1)+[0,u(1)],m_bl(2)+[0,u(2)],'k','LineWidth',3)
-    plot(m_bl(1)+[0,v(1)],m_bl(2)+[0,v(2)],'r','LineWidth',3)
+    plot(m_bl(1)+[0,u(1)]/3,m_bl(2)+[0,u(2)]/3,'k','LineWidth',3)
+    plot(m_bl(1)+[0,v(1)]/3,m_bl(2)+[0,v(2)]/3,'r','LineWidth',3)
     
     title(var_ratio), axis equal
-    set(gca,'FontSize',18)
+    set(gca,'FontSize',15)
+    xlabel('\Delta F/F ROI 1')
+    ylabel('\Delta F/F ROI 2')
+    
+    figure(3), hold off, histogram(X*v,'Normalization','pdf','FaceColor',[.3,.3,.3]), hold on
+    plot(-.5:.01:.5,normpdf(-.5:.01:.5,mean_proj_baseline,sqrt(var_proj_baseline)),'k','LineWidth',2)
+    set(gca,'FontSize',15)
+    xlim([-.5,.5])
+    ylabel('PDF')
+    xlabel('Projected value')
 end
 
 

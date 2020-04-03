@@ -11,13 +11,7 @@
 %    acquisition_rate
 %    distances
 
-function [rho,distances,rho_ON,distances_ON,rho_OFF,distances_OFF] = get_corr_vs_dist_3D(dataset_ix,grouped,euclid_dist)
-
-    % If euclid_dist = 0, uses distance after projecting onto plane
-    % orthogonal to average fiber direction
-    if nargin < 3 || isempty(euclid_dist)
-        euclid_dist = 0;
-    end
+function [rho,distances,rho_ON,distances_ON,rho_OFF,distances_OFF] = get_corr_vs_dist_3D(dataset_ix,grouped)
     
     if nargin < 2 || isempty(grouped)
         grouped = 1;
