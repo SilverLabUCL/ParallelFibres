@@ -6,7 +6,8 @@ clear all; clc
 
 basedir = '~/Documents/ParallelFibres/Data/';
 %'~/Documents/FredPF/raw/offMC/';
-fname = 'FL76_170913_10_57_06';
+fname = 'Z_FL87_180419_13_25_45';
+%'FL76_170913_10_57_06';
 %'FL77_180113_10_58_50';
 %'FL75_170912_10_33_29';
 
@@ -38,7 +39,6 @@ disp([basedir,fname])
 
 %% Load data
 load([basedir,'Crus1_patches_',fname,'_driftcorrected.mat'])
-%load([basedir,'Crus1_patches_',fname,'_arousaldata.mat'])
 
 disp('Data has successfully been loaded.')
 

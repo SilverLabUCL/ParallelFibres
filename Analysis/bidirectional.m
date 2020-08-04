@@ -338,3 +338,22 @@ figure, plot(wsp_bin,tuningcurves(n,:),'-sk')
 for k = 1:size(wsp_bin,2)
     plot(wsp_bin(k)*[1,1],tuningcurves(n,k)+[-1,1]*tuningcurves_ste(n,k),'k')
 end
+%% Save avg of negatively modulated PFs
+
+figure,
+for dataset_ix = 1:15
+    [dFF,time,acquisition_rate] = load_data(dataset_ix);
+    
+    ix_NM = find(change_dFF{dataset_ix} < 0 & p_val{dataset_ix} < 0.05);
+    
+    dFF_NM = mean(dFF(ix_NM,:));
+    
+    plot(time,dFF_NM,'k','LineWidth',1.2)
+    
+    save(['../Data/',datasets{dataset_ix},'_avg_NM'],'time','dFF_NM')
+    clear time dFF_NM dFF
+end
+
+
+
+

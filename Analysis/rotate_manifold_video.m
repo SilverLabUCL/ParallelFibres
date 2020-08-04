@@ -36,7 +36,7 @@ caxis([.05,.2]); colormap('cool')
   
   
    v = VideoWriter([basedir,'manifold_rotate.avi']);
-   v.Quality = 100;
+   v.Quality = 20;
    v.FrameRate = 24;%n_cycles/duration;
    open(v);
 
@@ -67,9 +67,11 @@ caxis([.05,.2]); colormap('cool')
    for t = 60:270
        try
            view(t,15);axis([-3, 5, -3, 4, -2, 3]); 
-           drawnow;
-           frame = getframe(f);
-           writeVideo(v,frame);
+           if mod(t,2) == 0
+               drawnow;
+               frame = getframe(f);
+               writeVideo(v,frame);
+           end
        %catch
        %    error_box('video not exported, but data backed up',1)
        end

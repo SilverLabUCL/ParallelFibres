@@ -31,7 +31,7 @@ datasets = {'FL87_180501_11_03_09',...  1 - p 3
 		    % 'FL92_180228_11_18_24' Only behavioural data
 
 % Choose dataset
-dataset_ix = 14;
+dataset_ix = 1;
 fname = datasets{dataset_ix};
 disp(fname)
 

@@ -289,8 +289,8 @@ for dataset_ix = 1:15
 [N,T] = size(dFF);
 
 err_PF_min(dataset_ix) = min(err_PFs{dataset_ix});
-[err_lasso_min(dataset_ix),ix] = min(err_lasso{dataset_ix});
-num_PFs_lasso(dataset_ix) = N * frac_nonzero_b{dataset_ix}(ix);
+[err_lasso_min(dataset_ix),num_PFs_lasso(dataset_ix)] = min(err_lasso{dataset_ix});
+
 % figure, plot(lambda,err_lasso{dataset_ix},'o-r','LineWidth',2,'MarkerFaceColor','r')
 % hold on, plot([0,1], err_PF_min*[1,1],':k','LineWidth',2)
 % [~,ix] = min(err_lasso{dataset_ix});
@@ -300,11 +300,6 @@ num_PFs_lasso(dataset_ix) = N * frac_nonzero_b{dataset_ix}(ix);
 % ylabel('Unexplained variance')
 end
 %%
-
-num_PFs_lasso(8)=nan;
-err_PF_min(8)=nan;
-err_lasso_min(8)=nan;
-
 figure, hold on
 for dataset_ix = 1:15
 	plot([0,1], [err_PF_min,err_lasso_min],'o-','Color',[.5,.5,.5],'LineWidth',2)
@@ -313,10 +308,8 @@ xlim([-.5,1.5])
 set(gca,'FontSize',20,'XTick',[0,1],'XTickLabel',{'Best PF','LASSO'})
 ylabel('Unexplained Variance')
 
-figure, plot(num_PFs_lasso*0,num_PFs_lasso,'o','Color',[.5,.5,.5],'LineWidth',2)
-ylabel('Optimal #PFs')
-set(gca,'FontSize',20,'XTick',0,'XTickLabel',{''})
-
+figure, plot(zeros,
+ylabel('
 %% Calculate variance unexplained vs # PCs 
 % Takes forever
 

@@ -63,25 +63,25 @@ A_or_QW_EyeCamFreq(A_or_QW_EyeCamFreq<0) = 0;
 k_start = 150;
 
 v = VideoWriter([basedir,'behaviour_pca_corr_colour.avi']);
-v.Quality = 100;
+v.Quality = 20;
 v.FrameRate = 24;
 open(v);
 
 f = figure('Position',[0,0,800,400]);
 set(gcf,'color','w');
 
-subplot(4,6,[4:6,10:12,16:18])
+subtightplot(3,6,[4:6,10:12,16:18])
 
 set(gca,'FontSize',15)
 set(gca,'XTick',{})
 set(gca,'YTick',{})
 set(gca,'ZTick',{})
 hold on,
-s = scatter(pc_proj_x_EyeCamFreq(k_start),pc_proj_y_EyeCamFreq(k_start),50,MI_EyeCamFreq(k_start),'filled','MarkerEdgeColor','k'); caxis([0,1]); colormap('cool')
+s = scatter(pc_proj_x_EyeCamFreq(k_start),pc_proj_y_EyeCamFreq(k_start),50,A_or_QW_EyeCamFreq(k_start),'filled','MarkerEdgeColor','k'); caxis([0,1]); colormap('cool')
 axis([-1.5,1.5,-1.5,1])
 cb = colorbar('Location','northoutside','Position',[0.8 0.8349 0.1 0.0400],'Ticks',[0,1],'TickLabels',{'QW','AS'});
 
-subplot(4,6,[1:3,7:9,13:15])
+subtightplot(3,6,[1:3,7:9,13:15])
 image(all_frames(:,:,:,1))
 set(gca,'XTick',{})
 set(gca,'YTick',{})
@@ -90,23 +90,25 @@ set(gca,'YTick',{})
 %%
 for k = 250:size(TimeEyeCam,1)-1
     try   
-        subplot(4,6,[1:3,7:9,13:15])
+        subtightplot(3,6,[1:3,7:9,13:15])
         image(all_frames(:,:,:,k)) 
         set(gca,'XTick',{})
         set(gca,'YTick',{})
 
         col = A_or_QW_EyeCamFreq(k)*[1,0,1]+(1-A_or_QW_EyeCamFreq(k))*[0,1,1];
 
-        subplot(4,6,[4:6,10:12,16:18]), axis([-5,3,-3,4]), hold on
+        subtightplot(3,6,[4:6,10:12,16:18]), axis([-5,3,-3,4]), hold on
         plot(pc_proj_x_EyeCamFreq(k:k+1),pc_proj_y_EyeCamFreq(k:k+1),'Color',col,'LineWidth',1)
         s.XData = pc_proj_x_EyeCamFreq(k+1);
         s.YData = pc_proj_y_EyeCamFreq(k+1);
         s.CData = col;
         uistack(s,'top');
 
+        if mod(k,3)==0
         drawnow;
         frame = getframe(f);
         writeVideo(v,frame);
+        end
     end
 end
 

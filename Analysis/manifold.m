@@ -157,14 +157,37 @@ for dataset_ix = 1:15
 
         angle_shuff_dist = zeros(kmax,1);
         for k = 1:kmax
-            train_ixs = block_shuffle_time(T,acquisition_rate);%,.5);
-            test_ixs = train_ixs(1:round(T/2));
-            train_ixs = setdiff(train_ixs,test_ixs); 
-
-            coeff_1 = pca(dFF(:,test_ixs)');
-            coeff_2 = pca(dFF(:,train_ixs)');
+            
+            permute_ix = randsample(T,1);
+            ix_A = ix_A + permute_ix;
+            ix_QW = ix_QW + permute_ix;
+            
+            for kk = 1:length(ix_A)
+                if ix_A(kk)> T
+                    ix_A(kk) = ix_A(kk) - T;
+                end
+            end
+            for kk = 1:length(ix_QW)
+                if ix_QW(kk)> T
+                    ix_QW(kk) = ix_QW(kk) - T;
+                end
+            end
+           
+            coeff_1 = pca(dFF(:,ix_QW)');
+            coeff_2 = pca(dFF(:,ix_A)');
             angle_shuff_dist(k) = subspace(coeff_1(:,1:num_PCs),coeff_2(:,1:num_PCs));
         end
+        
+        %angle_shuff_dist = zeros(kmax,1);
+        %for k = 1:kmax
+        %    train_ixs = block_shuffle_time(T,acquisition_rate);
+        %    test_ixs = train_ixs(1:round(T/2));
+        %    train_ixs = setdiff(train_ixs,test_ixs); 
+
+        %    coeff_1 = pca(dFF(:,test_ixs)');
+        %    coeff_2 = pca(dFF(:,train_ixs)');
+        %    angle_shuff_dist(k) = subspace(coeff_1(:,1:num_PCs),coeff_2(:,1:num_PCs));
+        %end
 
         angle_shuff(dataset_ix) = mean(angle_shuff_dist);
         p_val(dataset_ix) = sum(angle_shuff_dist > angle_A_QW(dataset_ix)) / kmax;

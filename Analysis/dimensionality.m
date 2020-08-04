@@ -53,7 +53,7 @@ save([basedir,'Dimensionality/dimensionality_N',num2str(N_sub)],'varmax','dimmax
 
 N = 300;
 
-load([basedir,'Dimensionality/dimensionality_N',num2str(N)])
+load([basedir,'Processed/Dimensionality/dimensionality_N',num2str(N)])
 
 c_87=[.1,.5,.8];
 c_76=[1,.7,0];
@@ -79,7 +79,7 @@ ylim([0,.7])
 
 %% Extrapolate to maximum dimensionality
 % Figure 4B
-varmax_all = []; dimmax_all = [];
+varmax_all = []; dimmax_all = []; col_all = [];
 for dataset_ix = 1:15
     if ~isempty(varexp{dataset_ix})
     for k = 1:10
@@ -93,7 +93,12 @@ figure,
 ix = find(~isnan(varmax_all));
 plot(varmax_all,dimmax_all,'vk','MarkerFaceColor',[.6,.6,.6],'MarkerEdgeColor',[.6,.6,.6])
 hold on, plot([0,1],[0,1]*(varmax_all(ix)'*varmax_all(ix))\(varmax_all(ix)'*dimmax_all(ix)),'k')
-plot(varmax,dimmax,'vk','MarkerFaceColor','k')
+
+for dataset_ix = 1:15
+    if ~isnan(varmax(dataset_ix))
+        plot(varmax(dataset_ix),dimmax(dataset_ix),'vk','MarkerFaceColor',dataset_colors{dataset_ix},'MarkerEdgeColor',dataset_colors{dataset_ix})
+    end
+end
 xlabel('Max variance explained')
 ylabel('Number of components')
 set(gca,'FontSize',18)

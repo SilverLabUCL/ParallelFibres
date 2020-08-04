@@ -229,13 +229,10 @@ end
 for k = 1:length(A)
     rectangle('Position',[time(A(k,1)) -20 time(A(k,2))-time(A(k,1)) 80],'FaceColor',[1 .9 1],'EdgeColor','w')
 end
-%ix_display_fail = [4,13,65]; 
-%ix_display_on = [42,60,115,142,536];
-%ix_display_off = [9,149,226]; % dataset 6
 
-ix_display_fail = [10,17,32]; 
-ix_display_on = [86,33,52,338,326]; 
-ix_display_off = [445,375,407];
+ix_display_fail = [4,13,65];
+ix_display_on = [42,60,115,142,536];
+ix_display_off = [9,149,226]; % dataset 6
 
 for k = 1:5
     plot(time,dFF(ix_display_on(k),:)+k*3,'Color',[.3,.3,.3],'LineWidth',1)
@@ -341,3 +338,20 @@ figure, plot(wsp_bin,tuningcurves(n,:),'-sk')
 for k = 1:size(wsp_bin,2)
     plot(wsp_bin(k)*[1,1],tuningcurves(n,k)+[-1,1]*tuningcurves_ste(n,k),'k')
 end
+%% Save avg of negatively modulated PFs
+
+figure,
+for dataset_ix = 1:15
+    [dFF,time,acquisition_rate] = load_data(dataset_ix);
+    
+    ix_NM = find(change_dFF{dataset_ix} < 0 & p_val{dataset_ix} < 0.05);
+    
+    dFF_NM_avg = mean(
+    
+    plot(time_NM_avg,dFF_NM_avg,'k','LineWidth',1.2)
+    
+end
+
+
+
+
