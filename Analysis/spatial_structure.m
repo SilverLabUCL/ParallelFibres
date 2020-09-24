@@ -39,13 +39,13 @@ clear rho distances
 
 ranksum(rho_all(distances_all<2),rho_all(distances_all>=2))
 %%
-save([basedir,'spatial_corr_grouped'],'rho_all','distances_all',...
+save([basedir,'processed/spatial_corr_grouped'],'rho_all','distances_all',...
     'rho_ON_all','distances_ON_all','rho_OFF_all','distances_OFF_all')
 
 %% Plot correlation vs distance
 % Figure 1F
 
-load([basedir,'spatial_corr_3D_ungrouped'])
+load([basedir,'processed/spatial_corr_grouped'])
 
 dbin = 3;
 dist_bins_e = 0:dbin:60;

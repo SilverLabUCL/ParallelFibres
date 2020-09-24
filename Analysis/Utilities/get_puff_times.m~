@@ -1,0 +1,40 @@
+%  This function calculates the timestamps (all time in ms)
+%  Inputs:
+%    dataset_ix         Dataset_number
+%    plot_me            Boolean, if you want to plot dFF during puff (1) or not (0)
+%
+%  Ouput:
+%    time_ix                   Vector of time indices 
+
+function [time_ix,time_ix_shuff] = get_puff_times(dataset_ix,plot_me)
+    
+    if nargin < 2 || isempty(plot_me)
+        plot_me = 0;
+    end
+    
+    define_dirs;
+    fname = datasets{dataset_ix};
+    load([basedir,fname,'/',fname,'_time.mat'],'baseline')
+    load([basedir,fname,'/',fname,'.mat'],'acquisition_rate','Numb_trials');
+    load([basedir,fname,'/',fname,'_time.mat'],'Numb_cycle');
+
+    if plot_me
+        [dFF,~,~] = load_data(dataset_ix);
+        figure
+    end
+    
+    time_ix = [];
+    for tr = 1:Numb_trials
+        trial_start = Numb_cycle*(tr-1)+1;
+        puff_ix = round(trial_start + baseline / 1000 * acquisition_rate);
+        window_start = puff_ix - round(0.5 * acquisition_rate);
+        window_end = puff_ix + round(1 * acquisition_rate);
+        
+        time_ix = [time_ix, window_start:window_end];
+        
+        if plot_me
+            hold on, plot(mean(dFF(:,window_start:window_end),1),'LineWidth',2)
+        end
+
+    end
+    

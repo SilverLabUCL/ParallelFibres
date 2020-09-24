@@ -4,49 +4,24 @@
 
 clear all; clc
 
-basedir = '~/Documents/ParallelFibres/Data/';
+basedir = '~/Documents/ParallelFibres/Data_Puff/';
 %'~/Documents/FredPF/raw/offMC/';
-fname = 'Z_FL87_180419_13_25_45';
-%'FL76_170913_10_57_06';
-%'FL77_180113_10_58_50';
-%'FL75_170912_10_33_29';
-
-
-% Only arousal data
-%'FL92_180228_11_10_48'
-%'FL92_180228_11_18_24'
-
-% Data later added by Fred
-%'FL95_180425_10_53_40';
-%'FL87_180413_11_00_55';
-%'FL104_180725_10_42_37';
-%'FL87_180117_11_23_20';
-%'FL106_180807_10_52_25';
-%'FL_S_171109_14_54_34'; % check w fred if this has pupil !!!
-%'FL_S_171109_15_19_52'; % check w fred if this has pupil !!!
-
-% Original datasets
-%'FL87_180501_11_03_09';
-%'FL87_180501_10_47_25';
-%'FL87_180501_10_36_14';
-%'FL87_180220_10_38_55';
-%'FL77_180213_10_46_41';
-%'FL45_170125_14_47_04';
-%'FL_S_170906_11_26_25';
-%'FL_S_170905_10_40_52';
+fname = 'FL75_170822_11_39_40';
+% 
+% 
+% FL77_170920_10_50_24 file corrupt
 
 disp([basedir,fname])
 
 %% Load data
-load([basedir,'Crus1_patches_',fname,'_driftcorrected.mat'])
+%load([basedir,'Crus1_patches_',fname,'_driftcorrected.mat'])
+load([basedir,fname,'_puff.mat'])
 
 disp('Data has successfully been loaded.')
 
 %% Save metadata, behavioural data, etc.
 
-%save([basedir,fname,'/',fname,'.mat'],'acquisition_rate','Pixel_size','Axon_dFF','TimeAxon','Axons_coordinates','dlc_whisk_angle','dlc_whisk_time','MI_facepad','Numb_frames','Numb_patches','Numb_trials','Patch_coordinates','pia','SpeedDataMatrix','SpeedTimeMatrix');
 save([basedir,fname,'/',fname,'.mat'],'acquisition_rate','Pixel_size','dlc_whisk_angle','dlc_whisk_time','Numb_frames','Numb_patches','Numb_trials','Patch_coordinates','pia','SpeedDataMatrix','SpeedTimeMatrix');
-%save([basedir,fname,'/',fname,'.mat'],'dlc_whisk_angle','dlc_whisk_time','SpeedDataMatrix','SpeedTimeMatrix');
 
 if exist('Whiskers_time_0')
     save([basedir,fname,'/',fname,'.mat'],'Whiskers_angle_0','Whiskers_time_0','-append');
@@ -60,7 +35,7 @@ if exist('wheel_MI')
 end
 
 if exist('MatrixTime')
-    save([basedir,fname,'/',fname,'_time.mat'],'MatrixTime','MatrixTime_patch','Time_between_trial');
+    save([basedir,fname,'/',fname,'_time.mat'],'MatrixTime','MatrixTime_patch','Time_between_trial','Numb_cycle');
 end
 disp('Metadata has successfully been saved.')
 

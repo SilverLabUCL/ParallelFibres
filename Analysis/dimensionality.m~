@@ -231,8 +231,8 @@ for dataset_ix = 1:4
     if size(dFF,1) > N_sub
 
         % Calculate dimensionality for grouped axons
-        [varexp{dataset_ix},dimmax(dataset_ix),~] = get_dim(dFF(:,time_ix),N_sub,N_sub,acquisition_rate,[],[],100);
-        [varexp_shuff{dataset_ix},dimmax_shuff(dataset_ix),~] = get_dim(dFF(:,time_ix_shuff),N_sub,N_sub,acquisition_rate,[],[],100);
+        [varexp{dataset_ix},dimmax(dataset_ix),~] = get_dim(dFF,N_sub,N_sub,acquisition_rate);
+        [varexp_shuff{dataset_ix},dimmax_shuff(dataset_ix),~] = get_dim(dFF,N_sub,N_sub,acquisition_rate);
 
         %clear dFF
 
@@ -253,7 +253,9 @@ c_76=[1,.7,0];
 c_77=[.7,.1,.7];
 c_s=[1,.4,.4];
 
-dataset_colors = {c_87,c_77,c_s,c_76};
+ dataset_colors = {c_87,c_77,c_s,c_76,c_77};
+
+
 
 figure, hold on
 varmax = nan(4,1);
@@ -265,24 +267,8 @@ for dataset_ix = 1:4
         plot(dimmax(dataset_ix),varmax(dataset_ix)+.03,'v','MarkerFaceColor',dataset_colors{dataset_ix},'MarkerEdgeColor',dataset_colors{dataset_ix})
     end
 end
-% xlabel('Number of components')
-ylabel('Variance explained (cross-val)')
-ylim([0,.3])
-
-
-figure, hold on
-varmax = nan(4,1);
-dimmax = nan(4,1);
-for dataset_ix = 1:4
-    if ~isempty(varexp_shuff{dataset_ix})
-        plot_error_snake(1:80,varexp_shuff{dataset_ix},dataset_colors{dataset_ix})
-        [varmax(dataset_ix),dimmax(dataset_ix)] = max(nanmean(varexp_shuff{dataset_ix},1));
-        plot(dimmax(dataset_ix),varmax(dataset_ix)+.03,'v','MarkerFaceColor',dataset_colors{dataset_ix},'MarkerEdgeColor',dataset_colors{dataset_ix})
-    end
-end
 xlabel('Number of components')
 ylabel('Variance explained (cross-val)')
-title('Shuffled times')
-ylim([0,.3])
+ylim([0,.7])
 
 %save([basedir,'Dimensionality/dimensionality_N',num2str(N_sub)],'varmax','dimmax','varexp')

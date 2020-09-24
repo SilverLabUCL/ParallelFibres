@@ -11,10 +11,13 @@
 %    acquisition_rate
 %    distances
 
-function [rho_all,distances_all,rho_ON_all,distances_ON_all,rho_OFF_all,distances_OFF_all] = get_corr_vs_dist(dataset_ix,grouped)
+function [rho_all,distances_all,rho_ON_all,distances_ON_all,rho_OFF_all,distances_OFF_all] = get_corr_vs_dist(dataset_ix,grouped,time_ix)
     
     if nargin < 2 || isempty(grouped)
         grouped = 1;
+    end
+    if nargin < 3 || isempty(time_ix)
+        time_ix = [];
     end
 
     define_dirs;
@@ -95,8 +98,13 @@ function [rho_all,distances_all,rho_ON_all,distances_ON_all,rho_OFF_all,distance
                 distances(n1,n2) = sqrt((XYproj_um(n1)-XYproj_um(n2))^2);
             end
         end
-
-        rho = corrcoef(dFF{p}');
+        
+        if ~isempty(time_ix)
+            rho = corrcoef(dFF{p}(:,time_ix)');
+            disp('Calculating corr for post puff period')
+        else
+            rho = corrcoef(dFF{p}');
+        end
 
         % Remove doublecounting
         

@@ -16,7 +16,7 @@
 %    dimmax    Maximum inferred dimensionality (considering the SNR) 
 %    varmax    Maximum variance explained
 
-function [varexp,dimmax,varmax] = get_dim(dFF,N_sub,D_max,acquisition_rate,frac_T_train,frac_N_train)
+function [varexp,dimmax,varmax] = get_dim(dFF,N_sub,D_max,acquisition_rate,frac_T_train,frac_N_train,N_reps)
     
     if nargin < 4 
         acquisition_rate = [];
@@ -26,6 +26,11 @@ function [varexp,dimmax,varmax] = get_dim(dFF,N_sub,D_max,acquisition_rate,frac_
     end
     if nargin < 6 || isempty(frac_N_train)
         frac_N_train = 0.8;
+    end
+    % Number random repeats, including both subsampling population &
+    % subsampling time. 
+    if nargin < 7 || isempty(N_reps)
+        N_reps = 10;
     end
     
     %%
@@ -44,9 +49,6 @@ function [varexp,dimmax,varmax] = get_dim(dFF,N_sub,D_max,acquisition_rate,frac_
         error('Subpopulation size is too large.')
     end
     
-    % Number random repeats, including both subsampling population &
-    % subsampling time. 
-    N_reps = 10;
     
     if ~isempty(acquisition_rate)
         disp('Block shuffle')

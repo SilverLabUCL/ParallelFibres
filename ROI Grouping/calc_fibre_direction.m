@@ -6,6 +6,7 @@
 % File > Import > Image Sequence
 % Image > Adjust > Brightness/Contrast
 % Process > Smooth
+% Multi-point tool
 % Analyze > Measure
 
 % generated using multipoint tool. Generates the following variables:
@@ -15,29 +16,36 @@
 
 clear all; clc
 
-basedir = '~/Documents/ParallelFibres/Data/';
-datasets = {'FL87_180501_11_03_09',...  1
-            'FL87_180501_10_47_25',...  2
-            'FL87_180501_10_36_14',...  3 
-            'FL87_180220_10_38_55',...  4
-            'FL77_180213_10_46_41',...  5
-            'FL_S_170906_11_26_25',...  6
-            'FL_S_170905_10_40_52',...  7            
-            'FL45_170125_14_47_04',...  8
-             ...%%
-             'FL95_180425_10_53_40',...  9
-             'FL87_180413_11_00_55',...  10%'FL104_180725_10_42_37',... 11
-             'FL87_180117_11_23_20',...  12%'FL106_180807_10_52_25',... 13
-             'FL_S_171109_14_54_34',...  14
-             'FL_S_171109_15_19_52',...  15
-             ...%'FL75_170912_10_33_29',... 16
-             'FL76_170913_10_57_06',... 17
-             'FL77_180113_10_58_50'};  %18
-       		% 'FL92_180228_11_10_48'
-		    % 'FL92_180228_11_18_24'
+% basedir = '~/Documents/ParallelFibres/Data/';
+% datasets = {'FL87_180501_11_03_09',...  1
+%             'FL87_180501_10_47_25',...  2
+%             'FL87_180501_10_36_14',...  3 
+%             'FL87_180220_10_38_55',...  4
+%             'FL77_180213_10_46_41',...  5
+%             'FL_S_170906_11_26_25',...  6
+%             'FL_S_170905_10_40_52',...  7            
+%             'FL45_170125_14_47_04',...  8
+%              ...%%
+%              'FL95_180425_10_53_40',...  9
+%              'FL87_180413_11_00_55',...  10
+%              'FL87_180117_11_23_20',...  11
+%              'FL_S_171109_14_54_34',...  12
+%              'FL_S_171109_15_19_52',...  13
+%              'FL76_170913_10_57_06',... 14
+%              'FL77_180113_10_58_50'};  % 15
 
+% basedir = '~/Documents/ParallelFibres/Data_Puff/';         
+% datasets = {'FL41_161123_15_27_16',... 1
+%             'FL46_161109_11_43_30',... 2
+%             'FL46_170131_11_31_33',... 3
+%             'FL65_170426_11_56_56',... 4
+%             'FL65_170607_12_50_17',... 5
+%             'FL74_170822_10_38_13',... 6
+%             'FL75_170822_11_39_40',... 7
+%             'FL_S_170905_11_16_10'};  % 8
+         
 % Choose dataset
-dataset_ix = 17;
+dataset_ix = 8;
 
 % Choose patch number - just to plot Cn for reference
 patch_no = 1;
@@ -123,7 +131,7 @@ xlim([-180,180])
 
 x = -180:1:180;
 hold on, plot(x,normpdf(x,0,angle_std)*numel(angle)*10,'b','LineWidth',2)
-
+title(angle_std)
 %% Save data
 fmatname = strcat(basedir,fname,'/processed/fibre_direction.mat');
 
