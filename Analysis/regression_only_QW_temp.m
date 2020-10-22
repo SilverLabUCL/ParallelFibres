@@ -123,25 +123,6 @@ for dataset_ix = 1:15
     end
 end
 
-%% Plot example variance unexplained vs. #PCs
-% Figure 3E
-
-dataset_ix=2;
-figure, plot_error_snake(1:size(err_PCs{dataset_ix},1),err_PCs{dataset_ix}','k')
-
-set(gca,'XScale','log')
-set(gca,'FontSize',15)
-xlabel('Number of PCs')
-ylabel('Unexplained variance') 
-%%
-figure, hold on
-for dataset_ix = 1:15
-	plot([0,1], [err_PF_min,err_lasso_min],'o-','Color',[.5,.5,.5],'LineWidth',2)
-end
-xlim([-.5,1.5])
-set(gca,'FontSize',20,'XTick',[0,1],'XTickLabel',{'Best PF','LASSO'})
-ylabel('Unexplained Variance')
-
 
 %% Calculate variance unexplained vs # PCs 
 % SHUFFLE to compare to ONLY QW
@@ -180,7 +161,6 @@ for dataset_ix = 1:15
     err_PCs_shuff{dataset_ix} = nan(N,num_its);
     % Random iterations
     for it_ix = 1:num_its
-        it_ix
         
         train_ixs = block_shuffle_time(T,acquisition_rate);
         test_ixs = train_ixs(1:round(T * 0.2));
@@ -200,3 +180,39 @@ for dataset_ix = 1:15
         
     end
 end
+
+%% Plot example variance unexplained vs. #PCs
+% Figure 3E
+
+dataset_ix=11;
+figure, plot_error_snake(1:size(err_PCs{dataset_ix},1),err_PCs{dataset_ix}','k')
+hold on, plot_error_snake(1:size(err_PCs_shuff{dataset_ix},1),err_PCs_shuff{dataset_ix}','r')
+
+set(gca,'XScale','log')
+ylim([0,1])
+set(gca,'FontSize',15)
+xlabel('Number of PCs')
+ylabel('Unexplained variance') 
+
+%% Compare 10 PCs vs optimal vs best PF
+% Figure 3F
+err_PC_min = nan(15,1);
+err_shuff_min = nan(15,1);
+
+for dataset_ix = 1:15
+    err_PC_min(dataset_ix) = min(mean(err_PCs{dataset_ix},2));
+    err_shuff_min(dataset_ix) = min(mean(err_PCs_shuff{dataset_ix},2));
+end
+
+figure, hold on
+for dataset_ix = 1:15
+	plot([0,1], [err_PC_min,err_shuff_min],'o-','Color',[.7,.7,.7],'LineWidth',2)
+end
+
+plot([0,1], [nanmean(err_PC_min),nanmean(err_shuff_min)],'s','Color','k','MarkerSize',10,'MarkerFaceColor','k')
+
+xlim([-.5,1.5])
+set(gca,'FontSize',20,'XTick',[0,1],'XTickLabel',{'QW','Shuff'})
+ylabel('Unexplained Variance')
+
+

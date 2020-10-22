@@ -307,13 +307,13 @@ err_lasso_min(8)=nan;
 
 figure, hold on
 for dataset_ix = 1:15
-	plot([0,1], [err_PF_min,err_lasso_min],'o-','Color',[.5,.5,.5],'LineWidth',2)
+	plot([0,1], [err_PF_min,err_lasso_min],'o-','Color',[.7,.7,.7],'LineWidth',2)
 end
 xlim([-.5,1.5])
 set(gca,'FontSize',20,'XTick',[0,1],'XTickLabel',{'Best PF','LASSO'})
 ylabel('Unexplained Variance')
 
-figure, plot(num_PFs_lasso*0,num_PFs_lasso,'o','Color',[.5,.5,.5],'LineWidth',2)
+figure, plot(num_PFs_lasso*0,num_PFs_lasso,'o','Color',[.7,.7,.7],'LineWidth',2)
 ylabel('Optimal #PFs')
 set(gca,'FontSize',20,'XTick',0,'XTickLabel',{''})
 

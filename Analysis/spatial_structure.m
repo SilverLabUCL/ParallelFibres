@@ -9,11 +9,11 @@ define_dirs;
 rho_all = []; distances_all = []; %rho_shuff_all = [];
 rho_ON_all = []; distances_ON_all = []; 
 rho_OFF_all = []; distances_OFF_all = [];
-for dataset_ix = 1:15
+for dataset_ix = 1:13
 
     % Get A and QW states
     [dFF,time,acquisition_rate] = load_data(dataset_ix);
-    [~,~,whisk_amp,speed] = load_behav_data(dataset_ix,time);
+    [~,~,whisk_amp,loco,speed] = load_behav_data(dataset_ix,time);
     pupil = load_pupil(dataset_ix,time);
 
     % Choose between 2d (patch based) and 3d (all patches) versions

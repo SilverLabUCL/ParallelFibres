@@ -42,7 +42,7 @@ disp('Metadata has successfully been saved.')
 %% Covert patch data into uint16
 
 clearvars -except patches acquisition_rate Pixel_size fname basedir
-
+%%
 [d1,d2,T] = size(patches{1});
 
 darknoise = zeros(1,size(patches,2));

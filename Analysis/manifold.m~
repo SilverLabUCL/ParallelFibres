@@ -49,7 +49,7 @@ angle_shuff = nan(15,1);
 
 dist = @(x,y) sqrt(sum((x-y).^2));
 
-dist_in_A_all = nan(15,1);
+dist_in_A_all = nan(15,1);a
 dist_in_QW_all = nan(15,1);
 dist_A_QW_all = nan(15,1);
 
