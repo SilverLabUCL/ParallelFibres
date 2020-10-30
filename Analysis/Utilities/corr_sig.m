@@ -6,15 +6,15 @@ function [C_wsp,p_wsp,C_wamp,p_wamp,C_loco,p_loco,C_speed,p_speed,C_pupil,p_pupi
     num_reps = 1000;
 
     % True correlation
-    C_wsp = corr(dFF',whisk_set_point);
-    C_wamp = corr(dFF',whisk_amp);
-    C_loco = corr(dFF',loco);
-    C_speed = corr(dFF',speed);
+    C_wsp = corr(dFF',whisk_set_point,'rows','complete');
+    C_wamp = corr(dFF',whisk_amp,'rows','complete');
+    C_loco = corr(dFF',loco,'rows','complete');
+    C_speed = corr(dFF',speed,'rows','complete');
     if isempty(pupil)
         C_pupil = [];
         p_pupil = [];
     else
-        C_pupil = corr(dFF',pupil);
+        C_pupil = corr(dFF',pupil,'rows','complete');
         C_pupil_shuff = nan(num_reps,N);
         p_pupil = nan(N,1);
     end
@@ -28,12 +28,12 @@ function [C_wsp,p_wsp,C_wamp,p_wamp,C_loco,p_loco,C_speed,p_speed,C_pupil,p_pupi
         T_shuffled = block_shuffle_time(T,acquisition_rate);
         dFF_shuff = dFF(:,T_shuffled);
         % Correlations after shuffling timing
-        C_wsp_shuff(rep,:) = corr(dFF_shuff',whisk_set_point);
-        C_wamp_shuff(rep,:) = corr(dFF_shuff',whisk_amp);
-        C_loco_shuff(rep,:) = corr(dFF_shuff',loco);
-        C_speed_shuff(rep,:) = corr(dFF_shuff',speed);
+        C_wsp_shuff(rep,:) = corr(dFF_shuff',whisk_set_point,'rows','complete');
+        C_wamp_shuff(rep,:) = corr(dFF_shuff',whisk_amp,'rows','complete');
+        C_loco_shuff(rep,:) = corr(dFF_shuff',loco,'rows','complete');
+        C_speed_shuff(rep,:) = corr(dFF_shuff',speed,'rows','complete');
         if ~isempty(pupil)
-            C_pupil_shuff(rep,:) = corr(dFF_shuff',pupil);
+            C_pupil_shuff(rep,:) = corr(dFF_shuff',pupil,'rows','complete');
         end
     end
     

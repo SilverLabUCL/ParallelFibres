@@ -55,6 +55,44 @@ t = p(3); t.FaceColor = [.2,1,1]; t.EdgeColor = [.2,1,1];
 t = p(4); t.FontSize=20;
 t = p(5); t.FaceColor = [.7,.7,.7]; t.EdgeColor = [.7,.7,.7];
 t = p(6); t.FontSize=20;
+%% Plot distributions separately for all experiments
+% Supplementary figure SX
+
+for dataset_ix = 1:13
+    C_pass_shuff = change_dFF{dataset_ix}(p_val{dataset_ix} < 0.05);
+    C_fail_shuff = change_dFF{dataset_ix}(p_val{dataset_ix} >= 0.05);
+
+    C_up = C_pass_shuff(C_pass_shuff>0);
+    C_down = C_pass_shuff(C_pass_shuff<0);
+
+    h_up = histcounts(C_up,bins);
+    h_down = histcounts(C_down,bins);
+    h_fail = histcounts(C_fail_shuff,bins);
+
+    figure, bar(bins_c,h_fail,'FaceColor',[.7,.7,.7],'EdgeColor','k','BarWidth',1)
+    hold on, bar(bins_c,h_up,'FaceColor','r','EdgeColor','k','BarWidth',1)
+    hold on, bar(bins_c,h_down,'FaceColor','b','EdgeColor','k','BarWidth',1)
+    set(gca,'FontSize',18)
+    set(gca,'Box','off')
+    xlabel('Change in dFF')
+    ylabel('Number')
+    
+    title(datasets{dataset_ix},'Interpreter','None')
+
+    fracs = [sum(h_up), sum(h_down),sum(h_fail)];
+    fracs = fracs/sum(fracs);
+    figure, p = pie(fracs);
+    set(gca,'FontSize',18)
+    t = p(1); t.FaceColor = 'r'; t.EdgeColor = 'r';
+    t = p(2); t.FontSize=20;
+    t = p(3); t.FaceColor = 'b'; t.EdgeColor = 'b';
+    t = p(4); t.FontSize=20;
+    t = p(5); t.FaceColor = [.7,.7,.7]; t.EdgeColor = [.7,.7,.7];
+    t = p(6); t.FontSize=20;
+    
+    title(datasets{dataset_ix},'Interpreter','None')
+    
+end
 
 %% Histogram of GC corrs with different behaviours
 % Figure S3
@@ -130,6 +168,36 @@ t = p(4); t.FontSize=20;
 t = p(5); t.FaceColor = [.7,.7,.7]; t.EdgeColor = [.7,.7,.7];
 t = p(6); t.FontSize=20;
 
+%% Correlate behavioural data
+% Figure S3
+
+labels = {'wsp','wamp','loco','speed'};
+
+C_wsp_wamp = nan(13,1);
+C_wsp_loco = nan(13,1);
+C_wsp_speed = nan(13,1);
+C_wamp_loco = nan(13,1);
+C_wamp_speed = nan(13,1);
+C_loco_speed = nan(13,1);
+for dataset_ix = 1:13
+    [~,time,acsquisition_rate] = load_data(dataset_ix);
+    [~,whisk_set_point,whisk_amp,loco,speed] = load_behav_data(dataset_ix,time);
+    C_wsp_wamp(dataset_ix) = corr(whisk_set_point,whisk_amp,'rows','complete');
+    C_wsp_loco(dataset_ix) = corr(whisk_set_point,loco,'rows','complete');
+    C_wsp_speed(dataset_ix) = corr(whisk_set_point,abs(speed),'rows','complete');
+    C_wamp_loco(dataset_ix) = corr(whisk_amp,loco,'rows','complete');
+    C_wamp_speed(dataset_ix) = corr(whisk_amp,abs(speed),'rows','complete');
+    C_loco_speed(dataset_ix) = corr(loco,abs(speed),'rows','complete');
+end
+
+figure, plot(zeros,C_wsp_wamp,'ok')
+hold on, plot(ones,C_wsp_loco,'ok')
+plot(2*ones,C_wsp_speed,'ok')
+plot(3*ones,C_wamp_loco,'ok')
+plot(4*ones,C_wamp_speed,'ok')
+plot(5*ones,C_loco_speed,'ok')
+set(gca,'XTick',0:5);
+set(gca,'XTickLabel',{'wsp-wamp','wsp-loco','wsp-speed','wamp-loco','wamp-speed','loco-speed'});
 %% Plot examples of behavioural data
 % Figure S3
 

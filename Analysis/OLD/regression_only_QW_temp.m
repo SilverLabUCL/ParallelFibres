@@ -1,4 +1,4 @@
-
+% Can delete now
 dataset_ix = 2;
 
 [dFF,time,acquisition_rate] = load_data(dataset_ix);

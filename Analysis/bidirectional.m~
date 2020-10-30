@@ -89,7 +89,8 @@ for dataset_ix = 1:13
         = corr_sig(dFF,whisk_set_point,whisk_amp,loco,speed,pupil,acquisition_rate);
     
 end
-%% Generates figures for previous cell
+%% Generates figures for previous cell 
+% Figure S3
 
 % Replace below with whisker set point, amplitude, locomotion, or pupil
 C = C_speed; p_val = p_speed;
@@ -129,23 +130,55 @@ t = p(4); t.FontSize=20;
 t = p(5); t.FaceColor = [.7,.7,.7]; t.EdgeColor = [.7,.7,.7];
 t = p(6); t.FontSize=20;
 
-%% Plot examples
+%% Correlate behavioural data
+% Figure S3
+
+labels = {'wsp','wamp','loco','speed'};
+
+C_wsp_wamp = nan(13,1);
+C_wsp_loco = nan(13,1);
+C_wsp_speed = nan(13,1);
+C_wamp_loco = nan(13,1);
+C_wamp_speed = nan(13,1);
+C_loco_speed = nan(13,1);
+for dataset_ix = 1:13
+    [~,time,acsquisition_rate] = load_data(dataset_ix);
+    [~,whisk_set_point,whisk_amp,loco,speed] = load_behav_data(dataset_ix,time);
+    C_wsp_wamp(dataset_ix) = corr(whisk_set_point,whisk_amp,'rows','complete');
+    C_wsp_loco(dataset_ix) = corr(whisk_set_point,loco,'rows','complete');
+    C_wsp_speed(dataset_ix) = corr(whisk_set_point,speed,'rows','complete');
+    C_wamp_loco(dataset_ix) = corr(whisk_amp,loco,'rows','complete');
+    C_wamp_speed(dataset_ix) = corr(whisk_amp,speed,'rows','complete');
+    C_loco_speed(dataset_ix) = corr(loco,speed,'rows','complete');
+end
+
+%%
+
+figure, plot(zeros,C_wsp_wamp,'ok')
+hold on, plot(ones,C_wsp_loco,'ok')
+plot(2*ones,C_wsp_speed,'ok')
+plot(3*ones,
+,'ok')
+plot(4*ones,C_wamp_speed,'ok')
+plot(5*ones,C_loco_speed,'ok')
+%% Plot examples of behavioural data
+% Figure S3
 
 dataset_ix = 13;
 [dFF,time,acquisition_rate] = load_data(dataset_ix);
 [whisk_angle,whisk_set_point,whisk_amp,loco_smooth,speed_smooth] = load_behav_data(dataset_ix,time);
 
-figure, plot(time,rad2deg(whisk_angle),'k')
-xlabel('time (s)'), ylabel('whisk angle (deg.)')
+figure, plot(time,whisk_set_point,'k')
+xlabel('time (s)'), ylabel('whisk set point (deg.)')
 
-figure, plot(time,rad2deg(whisk_amp),'k')
-xlabel('time (s)'), ylabel('whisk angle (deg.)')
+figure, plot(time,whisk_amp,'k')
+xlabel('time (s)'), ylabel('whisk amplitude (deg.)')
 
-figure, plot(time,rad2deg(loco_smooth),'k')
-xlabel('time (s)'), ylabel('whisk angle (deg.)')
+figure, plot(time,loco_smooth,'k')
+xlabel('time (s)'), ylabel('locomotion')
 
-figure, plot(time,rad2deg(speed_smooth),'k')
-xlabel('time (s)'), ylabel('speed sm (deg.)')
+figure, plot(time,speed_smooth,'k')
+xlabel('time (s)'), ylabel('speed')
 
 %% Show example of population activity
 % Requires running previous cell 
@@ -173,8 +206,7 @@ figure, imagesc(time,1:N,-dFF([ix_up; ix_down; ix_fail],:))
 set(gca,'FontSize',15,'YTick',[1,700])
 xlabel('Time (s)'), ylabel('Axon number')
 
-[~,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
-[A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate); 
+[~,whisk_set_point,whisk_amp,loco,speed] = load_behav_data(dataset_ix,time);
 
 figure, plot(time, whisk_set_point,'k','LineWidth',1.5)
 set(gca,'FontSize',15,'Box','off')
@@ -184,14 +216,16 @@ xlabel('Time (s)'), ylabel('WSP (deg.)')
 figure, plot(time, speed,'k','LineWidth',1.5)
 set(gca,'FontSize',15,'Box','off')
 xlim([time(1),time(end)])
-xlabel('Time (s)'), ylabel('Loc. (std)')
+xlabel('Time (s)'), ylabel('Speed')
 
 %% Same example as previous cell, plot example of A / QW periods
 % All figure parameters optimized for given example dataset
-% Figure 1D
+% Figure 2A
 
+[A,QW] = define_behav_periods(whisk_amp,loco,acquisition_rate); 
+
+% Plot whisker set point
 figure, hold on
-
 plot(time, whisk_set_point,'k','LineWidth',1.5)
 for k = 1:length(QW)
     ix = QW(k,1):QW(k,2);
@@ -206,8 +240,8 @@ set(gca,'FontSize',15,'Box','off')
 axis([220,280,-20,60])
 xlabel('Time (s)'), ylabel('WSP (deg.)')
 
+% Plot speed
 figure, hold on
-
 plot(time, speed,'k','LineWidth',1.5)
 for k = 1:length(QW)
     ix = QW(k,1):QW(k,2);
@@ -219,9 +253,10 @@ for k = 1:length(A)
     plot(time(ix), speed(ix),'m','LineWidth',1.5)
 end
 set(gca,'FontSize',15,'Box','off')
-axis([220,280,-2,12])
-xlabel('Time (s)'), ylabel('Loc. (std)')
+axis([220,280,-5,20])
+xlabel('Time (s)'), ylabel('Speed')
 
+% Plot example dFF
 figure, hold on
 for k = 1:length(QW)
     rectangle('Position',[time(QW(k,1)) -20 time(QW(k,2))-time(QW(k,1)) 80],'FaceColor',[.75 1 1],'EdgeColor','w')
@@ -268,9 +303,32 @@ end
 set(gca,'FontSize',15,'Box','off','YTick',[0,2])
 axis([0,400,-13,31])
 xlabel('Time (s)'), ylabel('\Delta F/F')
+%% Save avg of negatively modulated PFs
+% Supplementary figure SX
+
+figure,
+for dataset_ix = 1:13
+    [dFF,time,acquisition_rate] = load_data(dataset_ix);
+    
+    ix_NM = find(change_dFF{dataset_ix} < 0 & p_val{dataset_ix} < 0.05);
+    
+    dFF_NM = mean(dFF(ix_NM,:));
+    
+    plot(time,dFF_NM,'k','LineWidth',1.2)
+    
+    save(['../Data/',datasets{dataset_ix},'_avg_NM'],'time','dFF_NM')
+    clear time dFF_NM dFF
+end
+
 
 %% Get distribution of SNRs of all axons comparing non modulated to others
 % Figure S5
+
+clear all
+clc
+
+define_dirs;
+
 addpath('../ROI Grouping/Utilities/')
 addpath('../ROI Grouping/From CNMF_E/')
 
@@ -278,7 +336,7 @@ SNR_up = [];
 SNR_down = [];
 SNR_fail = [];
 
-for dataset_ix = 1:15
+for dataset_ix = 1:13
     fname = datasets{dataset_ix};
     disp(fname)
 
@@ -328,53 +386,6 @@ figure, histogram(SNR_fail,1:35,'FaceColor','k')
 set(gca,'FontSize',15)
 xlabel('SNR')
 ylabel('Number')
-%% Show example of single PF tuning curves
-% Figure 1C
-
-dataset_ix = 6;
-[dFF,time,acquisition_rate] = load_data(dataset_ix);
-[~,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
-
-[N,~] = size(dFF);
-[A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,1);
-
-[change_dFF,p_val] = change_dFF_sig(dFF,A,QW,acquisition_rate);
-ix_fail = find(p_val >.05);
-ix_ON = find(p_val < .05 & change_dFF > 0);
-ix_OFF = find(p_val < .05 & change_dFF < 0);
-
-dwsp = 10;
-wsp_bin = -20:dwsp:60;
-tuningcurves = nan(N,size(wsp_bin,2));
-tuningcurves_ste = nan(N,size(wsp_bin,2));
-for k = 1:size(wsp_bin,2)
-    ix = find(whisk_set_point > wsp_bin(k) - dwsp/2 & whisk_set_point < wsp_bin(k) + dwsp/2);
-    tuningcurves(:,k) = mean(dFF(:,ix),2);
-    tuningcurves_ste(:,k) = std(dFF(:,ix),[],2) / sqrt(numel(ix));
-end
-
-%%
-n = 168;
-figure, plot(wsp_bin,tuningcurves(n,:),'-sk')
- hold on,
-for k = 1:size(wsp_bin,2)
-    plot(wsp_bin(k)*[1,1],tuningcurves(n,k)+[-1,1]*tuningcurves_ste(n,k),'k')
-end
-%% Save avg of negatively modulated PFs
-
-figure,
-for dataset_ix = 1:15
-    [dFF,time,acquisition_rate] = load_data(dataset_ix);
-    
-    ix_NM = find(change_dFF{dataset_ix} < 0 & p_val{dataset_ix} < 0.05);
-    
-    dFF_NM = mean(dFF(ix_NM,:));
-    
-    plot(time,dFF_NM,'k','LineWidth',1.2)
-    
-    save(['../Data/',datasets{dataset_ix},'_avg_NM'],'time','dFF_NM')
-    clear time dFF_NM dFF
-end
 
 
 

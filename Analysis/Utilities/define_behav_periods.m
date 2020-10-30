@@ -3,7 +3,7 @@
 %
 % Input:
 %    whisk_amp            Whisking amplitude
-%    speed                Wheel MI (locomotion)
+%    loco                Wheel MI (locomotion)
 %    acquisition_rate     Acquisition rate (Hz)
 %    plot_me              Optional flag to plot results from definition of A vs QW
 %
@@ -13,7 +13,7 @@
 %             real time)
 %    QW       Corresponding indices for QW periods
 
-function [A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,plot_me)
+function [A,QW] = define_behav_periods(whisk_amp,loco,acquisition_rate,plot_me)
     
     if nargin < 4 || isempty(plot_me)
         plot_me = 0;
@@ -31,12 +31,12 @@ function [A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,plot_me)
     x = x / nanstd(x);
 
     % Running information based on wheel MI
-    y = abs(diff(speed));
+    y = abs(diff(loco));
     y = smoothdata(y,'movmedian',smooth_win);
     y = y - mode(round(y,4));
     y = y / nanstd(y);
 
-    % Make vectors equal length since speed is based on diff
+    % Make vectors equal length since loco is based on diff
     x = x(1:end-1);
 
     % Find Active periods (R+W)
@@ -98,10 +98,10 @@ function [A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,plot_me)
         figure,
         subplot(2,1,1), plot((1:length(x))/acquisition_rate,x,'k','LineWidth',1.5), 
         hold on, ylabel('Whisk'), set(gca,'FontSize',15)
-        xlim([0,length(speed)/acquisition_rate])
+        xlim([0,length(loco)/acquisition_rate])
         subplot(2,1,2), plot((1:length(y))/acquisition_rate,y,'k','LineWidth',1.5), hold on
         hold on, ylabel('Loc'), set(gca,'FontSize',15)
-        xlim([0,length(speed)/acquisition_rate])
+        xlim([0,length(loco)/acquisition_rate])
         xlabel('Time (s)')
 
         for k = 1:size(A,1)

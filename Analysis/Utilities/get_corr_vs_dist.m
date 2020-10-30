@@ -101,7 +101,7 @@ function [rho_all,distances_all,rho_ON_all,distances_ON_all,rho_OFF_all,distance
         
         if ~isempty(time_ix)
             rho = corrcoef(dFF{p}(:,time_ix)');
-            disp('Calculating corr for post puff period')
+            disp('Calculating corr for specific period')
         else
             rho = corrcoef(dFF{p}');
         end
@@ -112,6 +112,7 @@ function [rho_all,distances_all,rho_ON_all,distances_ON_all,rho_OFF_all,distance
         rho_OFF = rho(triu(J_OFF,1)==1);
         rho = rho(triu(ones(size(rho)),1)==1);
         
+       
         distances_ON = distances(triu(J_ON,1)==1);
         distances_OFF = distances(triu(J_OFF,1)==1);
         distances = distances(triu(ones(size(distances)),1)==1);
@@ -124,7 +125,7 @@ function [rho_all,distances_all,rho_ON_all,distances_ON_all,rho_OFF_all,distance
         
         rho_OFF_all = [rho_OFF_all; rho_OFF];
         distances_OFF_all = [distances_OFF_all; distances_OFF];
-
+        
     end
         
     

@@ -393,25 +393,21 @@ end
 
 %%
 
-figure, histogram(rho_ON_all_sh,bins,'FaceColor','r','EdgeColor','r','Normalization','probability')
-hold on, histogram(rho_ON_all,bins,'FaceColor','w','EdgeColor','r','Normalization','probability')
+figure, histogram(rho_ON_all_sh,bins,'Normalization','probability')
+hold on, histogram(rho_ON_all,bins,'Normalization','probability')
 xlabel('Correlation'),ylabel('Probability'), title('PM axons')
 set(gca,'FontSize',15)
+legend({'Random times','Onsets'})
+legend({'Random times','Running onsets'})
 
-hold on, plot(mean(rho_ON_all),.034,'vr')
-hold on, plot(mean(rho_ON_all_sh),.034,'vr','MarkerFaceColor','r')
+hold on, pl
 
-legend({'Random times','Onsets','',''})
-
-figure, histogram(rho_OFF_all_sh,bins,'FaceColor','b','EdgeColor','b','Normalization','probability')
-hold on, histogram(rho_OFF_all,bins,'FaceColor','w','EdgeColor','b','Normalization','probability')
+figure, histogram(rho_OFF_all_sh,bins,'Normalization','probability')
+hold on, histogram(rho_OFF_all,bins,'Normalization','probability')
 xlabel('Correlation'),ylabel('Probability'), title('NM axons')
 set(gca,'FontSize',15)
-
-hold on, plot(mean(rho_OFF_all),.041,'vb')
-hold on, plot(mean(rho_OFF_all_sh),.041,'vb','MarkerFaceColor','b')
-
-legend({'Random times','Onsets','',''})
+legend({'Random times','Onsets'})
+legend({'Random times','Running onsets'})
 
 %% Plot example of speed onsets
 

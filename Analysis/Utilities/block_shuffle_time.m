@@ -1,7 +1,7 @@
 %
 % This function randomly shuffles timepoints in blocks
 % Input:
-%    T                    Fluorescence data
+%    T                    Number of time steps
 %    acquisition_rate     Population subsampling size
 %    frac_time            Fraction of time to take in random blocks
 %    block_s              Time of each block in s

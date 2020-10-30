@@ -40,7 +40,7 @@ num_PCs = 2;
 kmax = 1000;
 kmax_rand = 50;
 
-percentile = 100;
+percentile = 70;
 
 for dataset_ix = 1:13
     [dFF,time,acquisition_rate] = load_data(dataset_ix);
@@ -111,20 +111,21 @@ signrank(angle_A_QW,angle_shuff)
 
 save([basedir,'orthogonal_',num2str(percentile),'thprctile'],'angle_A_QW','angle_shuff','p_val','ix_ON','C_ON','ix_OFF','C_OFF','ix_fail','C_fail');
 
-%% Add random comparison - remove random neurons
+%%
 
-percentile = 100;
+
+percentile = 10;
 
 filename = [basedir,'orthogonal_',num2str(percentile),'thprctile'];
 
 load(filename)
 
-angle_rand = nan(13,1);
+angle_rand = nan(15,1);
 
 num_PCs = 2;
 kmax = 50;
 
-for dataset_ix = 1:13
+for dataset_ix = 1:15
     [dFF,time,acquisition_rate] = load_data(dataset_ix);
     [~,~,whisk_amp,speed] = load_behav_data(dataset_ix,time);
     
@@ -184,12 +185,8 @@ ylim([0,1.6])
 title(percentile)
 
 save(filename,'angle_rand','-append')
+%%
 
-%% Plot figure
-
-clear all; clc
-
-define_dirs;
 
 c = [.5,.5,.5];
 
@@ -227,8 +224,7 @@ for percentile = 0:10:100
     plot(percentile*[1,1],angle_rand_mean(k) + angle_rand_ste(k) * [-1,1],'k','LineWidth',1.5)
     plot(percentile*[1,1],angle_shuff_mean(k) + angle_shuff_ste(k) * [-1,1],'Color',[.6,.6,.6],'LineWidth',1.5)
 
-    find(isnan(angle_A_QW))
-    [percentile,signrank(angle_A_QW,angle_shuff),signrank(angle_A_QW,angle_rand)]
+    %[percentile,signrank(angle_A_QW,angle_shuff),signrank(angle_A_QW,angle_rand)]
 end
 
 plot(0:10:100, angle_A_QW_mean,'k','LineWidth',1.5)
@@ -238,4 +234,5 @@ plot(0:10:100, angle_shuff_mean,'Color',[.6,.6,.6],'LineWidth',1.5)
 set(gca,'FontSize',15)
 xlabel('Percentile')
 ylabel('Angle (rad.)')
-xlim([-10,110])
+xlim([-10,90])
+%ylim([0,1.6])

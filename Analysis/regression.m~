@@ -486,24 +486,24 @@ err_best_PCs_sh = nan(13,1);
 for dataset_ix = 1:13
 
     err_best_PCs(dataset_ix) = min(mean(err_PCs{dataset_ix},2));
-    err_best_PCs_sh(dataset_ix) = min(mean(err_PCs_sh{dataset_ix},2));
+    err_best_PCserr_PCs_sh(dataset_ix) = min(mean(err_PCs{dataset_ix},2));
 end
 
 c = [.5,.5,.5];
 
 figure,  hold on
 for dataset_ix = 1:13
-    plot(0:1,[err_best_PCs(dataset_ix),err_best_PCs_sh(dataset_ix)],'k','LineWidth',1)
+    plot(0:1,[err_best_PF(dataset_ix),err_lasso_min(dataset_ix)],'k','LineWidth',1)
 end
-plot(zeros,err_best_PCs,'o','MarkerFaceColor','w','Color',c,'MarkerSize',8)
-plot(ones,err_best_PCs_sh,'o','MarkerFaceColor','w','Color',c,'MarkerSize',8)
-plot(0+.2*[-1,1],nanmean(err_best_PCs)*[1,1],'k','LineWidth',3)
-plot(1+.2*[-1,1],nanmean(err_best_PCs_sh)*[1,1],'k','LineWidth',3)
+plot(zeros,err_best_PF,'o','MarkerFaceColor','w','Color',c,'MarkerSize',8)
+plot(ones,err_lasso_min,'o','MarkerFaceColor','w','Color',c,'MarkerSize',8)
+plot(0+.2*[-1,1],nanmean(err_best_PF)*[1,1],'k','LineWidth',3)
+plot(1+.2*[-1,1],nanmean(err_lasso_min)*[1,1],'k','LineWidth',3)
 set(gca,'Xtick',[0,1])
-set(gca,'XtickLabel',{'QW only','Shuffled times'})
+set(gca,'XtickLabel',{'Best PF','Optimal # PFs'})
 set(gca,'FontSize',15)
 set(ylabel('Unexplained variance'))
 xlim([-.5,1.5])
 ylim([0,1])
 
-signrank(err_best_PCs,err_best_PCs_sh)
+signrank(err_best_PF,err_lasso_min)
