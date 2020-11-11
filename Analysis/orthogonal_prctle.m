@@ -5,7 +5,6 @@ clear all; clc
 
 define_dirs;
 
-
 ix_ON = cell(13,1); C_ON = cell(13,1);
 ix_OFF = cell(13,1); C_OFF = cell(13,1);
 ix_fail = cell(13,1); C_fail = cell(13,1);
@@ -109,7 +108,7 @@ title(percentile)
 
 signrank(angle_A_QW,angle_shuff)
 
-save([basedir,'orthogonal_',num2str(percentile),'thprctile'],'angle_A_QW','angle_shuff','p_val','ix_ON','C_ON','ix_OFF','C_OFF','ix_fail','C_fail');
+save([basedir,'processed/orthogonal_',num2str(percentile),'thprctile'],'angle_A_QW','angle_shuff','p_val','ix_ON','C_ON','ix_OFF','C_OFF','ix_fail','C_fail');
 
 %% Add random comparison - remove random neurons
 

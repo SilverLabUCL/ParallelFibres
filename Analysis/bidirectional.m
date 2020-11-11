@@ -424,6 +424,65 @@ set(gca,'FontSize',15)
 xlabel('SNR')
 ylabel('Number')
 
+%%
 
+dataset_ix = 13;
 
+[dFF,time,acquisition_rate] = load_data(dataset_ix);
+[~,~,whisk_amp,loco,speed] = load_behav_data(dataset_ix,time);
 
+% Reorder according to PM / NM / nonM
+ix_up = find(p_val{dataset_ix} < 0.05 & change_dFF{dataset_ix}>0);
+ix_down = find(p_val{dataset_ix} < 0.05 & change_dFF{dataset_ix}<0);
+ix_fail = find(p_val{dataset_ix} > 0.05);
+dFF = dFF([ix_up;ix_down;ix_fail],:);
+
+[A,QW] = define_behav_periods(whisk_amp,loco,acquisition_rate);
+    
+dFF_A = [];
+for k = 1:length(A)
+    ix = A(k,1):A(k,2);
+    dFF_A = [dFF_A, dFF(:,ix)];
+end
+
+dFF_QW = [];
+for k = 1:length(QW)
+    ix = QW(k,1):QW(k,2);
+    dFF_QW = [dFF_QW, dFF(:,ix)];
+end
+
+C_A = corrcoef(dFF_A');
+C_QW = corrcoef(dFF_QW');
+
+N = size(dFF,1);
+C = nan(N,N);
+for n1 = 1:N
+    for n2 = 1:(n1-1)
+        C(n1,n2) = C_A(n1,n2);
+    end
+    for n2 = (n1+1):N
+        C(n1,n2) = C_QW(n1,n2);
+    end
+end
+
+figure, imagesc(C)
+%caxis([-1,1])
+colormap(bluewhitered)
+
+%%
+
+dataset_ix = 13;
+
+[dFF,time,acquisition_rate] = load_data(dataset_ix);
+[~,~,whisk_amp,loco,speed] = load_behav_data(dataset_ix,time);
+
+% Reorder according to PM / NM / nonM
+ix_up = find(p_val{dataset_ix} < 0.05 & change_dFF{dataset_ix}>0);
+ix_down = find(p_val{dataset_ix} < 0.05 & change_dFF{dataset_ix}<0);
+ix_fail = find(p_val{dataset_ix} > 0.05);
+dFF = dFF([ix_up;ix_down;ix_fail],:);
+
+C = corrcoef(dFF');
+
+figure, imagesc(C)
+colormap(bluewhitered)

@@ -5,7 +5,6 @@ clear all; clc
 
 define_dirs;
 %%
-
 is_3D = 0;
 grouped = 0;
 
@@ -14,9 +13,8 @@ rho_ON_all = []; distances_ON_all = [];
 rho_OFF_all = []; distances_OFF_all = [];
 for dataset_ix = 1:13
 
-    % Get A and QW states
     [dFF,time,acquisition_rate] = load_data(dataset_ix);
-    [~,~,~,~,speed] = load_behav_data(dataset_ix,time);
+    [~,~,~,loco,speed] = load_behav_data(dataset_ix,time);
     onset_indices = get_onsets(speed,acquisition_rate);
     
     % Choose between 2d (patch based) and 3d (all patches) versions
@@ -64,7 +62,7 @@ for dataset_ix = 1:13
 
     % Get A and QW states
     [dFF,time,acquisition_rate] = load_data(dataset_ix);
-    [~,~,~,~,speed] = load_behav_data(dataset_ix,time);
+    [~,~,~,loco,speed] = load_behav_data(dataset_ix,time);
     onset_indices = get_onsets(speed,acquisition_rate);
     
     time_ix = [];
@@ -107,9 +105,8 @@ rho_OFF_binned_sh = cell(size(dist_bins_c));
 
 for dataset_ix = 1:13
 
-    % Get A and QW states
     [dFF,time,acquisition_rate] = load_data(dataset_ix);
-    [~,~,~,~,speed] = load_behav_data(dataset_ix,time);
+    [~,~,~,loco,speed] = load_behav_data(dataset_ix,time);
     onset_indices = get_onsets(speed,acquisition_rate);
     
     time_ix = [];
@@ -149,6 +146,62 @@ clear rho distances rho_sh distances_sh
 
 save([basedir,'processed/spatial_corr_shuffle'],'rho_binned_sh','rho_ON_binned_sh','rho_OFF_binned_sh','dist_bins_c')
 
+%% Compare to random times in AS
+num_its = 20;
+
+dbin = 3;
+dist_bins_e = 0:dbin:60;
+dist_bins_c = dist_bins_e(2:end) - dbin/2;
+
+rho_binned_AS = cell(size(dist_bins_c)); 
+rho_ON_binned_AS = cell(size(dist_bins_c));
+rho_OFF_binned_AS = cell(size(dist_bins_c));
+
+for dataset_ix = 1:13
+
+    % Get A and QW states
+    [dFF,time,acquisition_rate] = load_data(dataset_ix);
+    [~,~,whisk_amp,loco,speed] = load_behav_data(dataset_ix,time);
+    onset_indices = get_onsets(speed,acquisition_rate);
+    
+    [A,~] = define_behav_periods(whisk_amp,loco,acquisition_rate);
+    ix_A = [];
+    for k = 1:length(A)
+        ix_A = [ix_A,A(k,1):A(k,2)];
+    end
+    
+    time_ix = [];
+    for k = 1:size(onset_indices,1)
+       time_ix = [time_ix, onset_indices(k,1):onset_indices(k,2)];
+    end
+    
+    if ~isempty(time_ix)
+        for it_ix = 1:num_its
+            % Take ranomd
+            time_ix_AS = randsample(ix_A,numel(time_ix));
+            
+            [rho_AS,distances_AS,rho_ON_AS,distances_ON_AS,rho_OFF_AS,distances_OFF_AS] = get_corr_vs_dist(dataset_ix,1,time_ix_AS);
+            
+            for k = 1:length(dist_bins_c)
+                ix = distances_AS <= dist_bins_e(k+1) & distances_AS > dist_bins_e(k);
+                rho_binned_AS{k} = [rho_binned_AS{k}; rho_AS(ix)];
+                
+                ix = distances_ON_AS <= dist_bins_e(k+1) & distances_ON_AS > dist_bins_e(k);
+                rho_ON_binned_AS{k} = [rho_ON_binned_AS{k}; rho_ON_AS(ix)];
+                
+                ix = distances_OFF_AS <= dist_bins_e(k+1) & distances_OFF_AS > dist_bins_e(k);
+                rho_OFF_binned_AS{k} = [rho_OFF_binned_AS{k}; rho_OFF_AS(ix)];
+                
+            end
+            
+        end
+    end
+        
+end
+
+clear rho distances rho_AS distances_AS
+
+save([basedir,'processed/spatial_corr_AS_random'],'rho_binned_AS','rho_ON_binned_AS','rho_OFF_binned_AS','dist_bins_c')
 
 %% Plot correlation vs distance
 % Figure 1F, S6
@@ -239,79 +292,6 @@ hold on, plot(dist_bins_c,y_OFF_mean,'c');
 hold on, plot(dist_bins_c,y_OFF_top,'c');
 hold on, plot(dist_bins_c,y_OFF_bot,'c');
 
-%% Compare correlation during onsets to shuffle , by experiment
-
-num_its = 20;
-
-rho_all = [];
-rho_ON_all = [];
-rho_OFF_all = [];
-
-for dataset_ix = 1:13
-
-    % Get A and QW states
-    [dFF,time,acquisition_rate] = load_data(dataset_ix);
-    [~,~,~,whisk_amp,speed] = load_behav_data(dataset_ix,time);
-    onset_indices = get_onsets(speed,acquisition_rate);
-    
-    N = size(dFF,1);
-        
-    % Find ON and OFF GCs in this patch
-    [A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,0);
-    [change_dFF,p_val] = change_dFF_sig(dFF,A,QW,acquisition_rate);
-    ix_ON = find(change_dFF > 0 & p_val < .05);
-    J_ON = zeros(N,N); J_ON(ix_ON,ix_ON) = 1;
-    ix_OFF = find(change_dFF < 0 & p_val < .05);
-    J_OFF = zeros(N,N); J_OFF(ix_OFF,ix_OFF) = 1;
-
-    % Time indices
-    time_ix = [];
-    for k = 1:size(onset_indices,1)
-       time_ix = [time_ix, onset_indices(k,1):onset_indices(k,2)];
-    end
-    
-    if ~isempty(time_ix)
-        rho = corrcoef(dFF(:,time_ix)');
-
-        % Remove doublecounting
-        rho_ON = rho(triu(J_ON,1)==1);
-        rho_OFF = rho(triu(J_OFF,1)==1);
-        rho = rho(triu(ones(size(rho)),1)==1);
-
-        rho_all(dataset_ix,1) = nanmean(rho);
-        rho_ON_all(dataset_ix,1) = nanmean(rho_ON);
-        rho_OFF_all(dataset_ix,1) = nanmean(rho_OFF);    
-    
-        rho_ON_sh = nan(size(rho_ON,1),num_its);
-        rho_OFF_sh = nan(size(rho_OFF,1),num_its);
-        rho_sh = nan(size(rho,1),num_its);
-        
-        for it_ix = 1:num_its
-            % Shuffle time_ixs
-            T = size(dFF,2);
-            for shuffle_ix = 1:10
-                time_ix_sh = time_ix + randsample(T,1);
-                time_ix_sh(time_ix_sh > T) = time_ix_sh(time_ix_sh > T) - T;
-            end
-            
-            rho_sh_ = corrcoef(dFF(:,time_ix_sh)');
-            
-            % Remove doublecounting
-            rho_ON_sh(:,it_ix) = rho_sh_(triu(J_ON,1)==1);
-            rho_OFF_sh(:,it_ix) = rho_sh_(triu(J_OFF,1)==1);
-            rho_sh(:,it_ix) = rho_sh_(triu(ones(size(rho_sh_)),1)==1);
-            
-        end
-        
-        rho_all(dataset_ix,2) = nanmean(nanmean(rho_sh,2));
-        rho_ON_all(dataset_ix,2) = nanmean(nanmean(rho_ON_sh,2));
-        rho_OFF_all(dataset_ix,2) = nanmean(nanmean(rho_OFF_sh,2));   
-        
-    else
-        disp('This mouse had no running periods.');
-    end
-        
-end
 
 %% Compare correlation during onsets to shuffle 
 
@@ -325,22 +305,31 @@ rho_all_sh = [];
 rho_ON_all_sh = [];
 rho_OFF_all_sh = [];
 
+rho_all_AS = [];
+rho_ON_all_AS = [];
+rho_OFF_all_AS = [];
+
 for dataset_ix = 1:13
 
     % Get A and QW states
     [dFF,time,acquisition_rate] = load_data(dataset_ix);
-    [~,~,~,whisk_amp,speed] = load_behav_data(dataset_ix,time);
+    [~,~,whisk_amp,loco,speed] = load_behav_data(dataset_ix,time);
     onset_indices = get_onsets(speed,acquisition_rate);
     
     N = size(dFF,1);
-        
+      
     % Find ON and OFF GCs in this patch
-    [A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,0);
+    [A,QW] = define_behav_periods(whisk_amp,loco,acquisition_rate,0);
     [change_dFF,p_val] = change_dFF_sig(dFF,A,QW,acquisition_rate);
     ix_ON = find(change_dFF > 0 & p_val < .05);
     J_ON = zeros(N,N); J_ON(ix_ON,ix_ON) = 1;
     ix_OFF = find(change_dFF < 0 & p_val < .05);
     J_OFF = zeros(N,N); J_OFF(ix_OFF,ix_OFF) = 1;
+    
+    ix_A = [];
+    for k = 1:length(A)
+        ix_A = [ix_A,A(k,1):A(k,2)];
+    end
 
     % Time indices
     time_ix = [];
@@ -364,13 +353,14 @@ for dataset_ix = 1:13
         rho_OFF_sh = nan(size(rho_OFF,1),num_its);
         rho_sh = nan(size(rho,1),num_its);
         
+        % Remove doublecounting
+        [rho_ON_sh,rho_OFF_sh,rho_sh,rho_ON_AS,rho_OFF_AS,rho_AS] = deal([]);
+
         for it_ix = 1:num_its
             % Shuffle time_ixs
             T = size(dFF,2);
-            for shuffle_ix = 1:10
-                time_ix_sh = time_ix + randsample(T,1);
-                time_ix_sh(time_ix_sh > T) = time_ix_sh(time_ix_sh > T) - T;
-            end
+            time_ix_sh = time_ix + randsample(T,1);
+            time_ix_sh(time_ix_sh > T) = time_ix_sh(time_ix_sh > T) - T;
             
             rho_sh_ = corrcoef(dFF(:,time_ix_sh)');
             
@@ -379,39 +369,54 @@ for dataset_ix = 1:13
             rho_OFF_sh(:,it_ix) = rho_sh_(triu(J_OFF,1)==1);
             rho_sh(:,it_ix) = rho_sh_(triu(ones(size(rho_sh_)),1)==1);
             
+            time_ix_AS = randsample(ix_A,numel(time_ix));
+            rho_AS_ = corrcoef(dFF(:,time_ix_AS)');
+            
+            % Remove doublecounting
+            rho_ON_AS(:,it_ix) = rho_AS_(triu(J_ON,1)==1);
+            rho_OFF_AS(:,it_ix) = rho_AS_(triu(J_OFF,1)==1);
+            rho_AS(:,it_ix) = rho_AS_(triu(ones(size(rho_AS_)),1)==1);
+            
         end
         
         rho_all_sh = [rho_all_sh; nanmean(rho_sh,2)];
         rho_ON_all_sh = [rho_ON_all_sh; nanmean(rho_ON_sh,2)];
         rho_OFF_all_sh = [rho_OFF_all_sh; nanmean(rho_OFF_sh,2)];   
         
+        rho_all_AS = [rho_all_AS; nanmean(rho_AS,2)];
+        rho_ON_all_AS = [rho_ON_all_AS; nanmean(rho_ON_AS,2)];
+        rho_OFF_all_AS = [rho_OFF_all_AS; nanmean(rho_OFF_AS,2)];  
     else
         disp('This mouse had no running periods.');
     end
         
 end
 
-%%
+save([basedir,'processed/pw_corr_onsets'],'rho_all','rho_ON_all','rho_OFF_all',...
+    'rho_all_sh','rho_ON_all_sh','rho_OFF_all_sh','rho_all_AS','rho_ON_all_AS','rho_OFF_all_AS');
 
-figure, histogram(rho_ON_all_sh,bins,'FaceColor','r','EdgeColor','r','Normalization','probability')
+%%
+bins = -1:.01:1;
+
+figure, histogram(rho_ON_all_AS,bins,'FaceColor','r','EdgeColor','r','Normalization','probability')
 hold on, histogram(rho_ON_all,bins,'FaceColor','w','EdgeColor','r','Normalization','probability')
 xlabel('Correlation'),ylabel('Probability'), title('PM axons')
 set(gca,'FontSize',15)
 
-hold on, plot(mean(rho_ON_all),.034,'vr')
-hold on, plot(mean(rho_ON_all_sh),.034,'vr','MarkerFaceColor','r')
+hold on, plot(mean(rho_ON_all),.03,'vr')
+hold on, plot(mean(rho_ON_all_AS),.03,'vr','MarkerFaceColor','r')
 
-legend({'Random times','Onsets','',''})
+legend({'Random times (AS)','Onsets','',''})
 
-figure, histogram(rho_OFF_all_sh,bins,'FaceColor','b','EdgeColor','b','Normalization','probability')
+figure, histogram(rho_OFF_all_AS,bins,'FaceColor','b','EdgeColor','b','Normalization','probability')
 hold on, histogram(rho_OFF_all,bins,'FaceColor','w','EdgeColor','b','Normalization','probability')
 xlabel('Correlation'),ylabel('Probability'), title('NM axons')
 set(gca,'FontSize',15)
 
-hold on, plot(mean(rho_OFF_all),.041,'vb')
-hold on, plot(mean(rho_OFF_all_sh),.041,'vb','MarkerFaceColor','b')
+hold on, plot(mean(rho_OFF_all),.045,'vb')
+hold on, plot(mean(rho_OFF_all_AS),.045,'vb','MarkerFaceColor','b')
 
-legend({'Random times','Onsets','',''})
+legend({'Random times (AS)','Onsets','',''})
 
 %% Plot example of speed onsets
 
@@ -481,4 +486,4 @@ set(gca,'FontSize',15)
 ylabel('NN distances')
 set(gca,'Box','off')
 xlim([0,5])
- ylim([0,6])
+ylim([0,6])
