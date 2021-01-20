@@ -239,11 +239,11 @@ err_PCs = cell(13,1);
 
 lambda = [0,logspace(-3,0,15)];
 
-for dataset_ix = 1:13
+for dataset_ix = 1:13   
 
     [dFF,time,acquisition_rate] = load_data(dataset_ix);
-    [~,whisk_set_point,~,~] = load_behav_data(dataset_ix,time);
-
+    [~,whisk_set_point,~,~,speed] = load_behav_data(dataset_ix,time);
+    
     [N,T] = size(dFF);
     
     [~, score] = pca(dFF');
@@ -291,10 +291,14 @@ for dataset_ix = 1:13
 end
 
 save([basedir,'processed/regression_results'],'err_PCs','err_PFs','err_lasso','frac_nonzero_b','lambda')
+%save([basedir,'processed/regression_results_speed'],'err_PCs','err_PFs','err_lasso','frac_nonzero_b','lambda')
 
 
 %% Plot example variance unexplained vs. #PCs
 % Figure 5B
+
+load([basedir,'processed/regression_results'])
+%load([basedir,'processed/regression_results_speed'])
 
 dataset_ix=2;
 figure, plot_error_snake(1:size(err_PCs{dataset_ix},1),err_PCs{dataset_ix}','k')
@@ -327,7 +331,7 @@ end
 plot(zeros,err_1PC,'o','MarkerFaceColor','w','Color',c,'MarkerSize',8)
 plot(ones,err_10PCs,'o','MarkerFaceColor','w','Color',c,'MarkerSize',8)
 plot(2*ones,err_best_PCs,'o','MarkerFaceColor','w','Color',c,'MarkerSize',8)
-plot(0+.2*[-1,1],nanmean(err_best_PF)*[1,1],'k','LineWidth',3)
+plot(0+.2*[-1,1],nanmean(err_1PC)*[1,1],'k','LineWidth',3)
 plot(1+.2*[-1,1],nanmean(err_10PCs)*[1,1],'k','LineWidth',3)
 plot(2+.2*[-1,1],nanmean(err_best_PCs)*[1,1],'k','LineWidth',3)
 set(gca,'Xtick',[0,1,2])
@@ -476,9 +480,9 @@ for dataset_ix = 1:13
     end
 end
 
-save([basedir,'processed/regression_results_QW_only'],'err_PCs','err_PCs_sh')
+%save([basedir,'processed/regression_results_QW_only'],'err_PCs','err_PCs_sh')
 
-%% Find minimum and plot lasso vs lambda
+%% Find minimum and plot vs shuffled
 
 err_best_PCs = nan(13,1);
 err_best_PCs_sh = nan(13,1);

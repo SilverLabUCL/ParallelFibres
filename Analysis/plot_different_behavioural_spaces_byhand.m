@@ -3,7 +3,7 @@
 % For this script, behavioural labels were chosen for 2 datasets by hand
 
 clear all; clc
-dataset_ix = 6; % set to either 5 or 6
+dataset_ix = 5; % set to either 5 or 6
 
 %% Hand-chose periods of A and SW from behavioral data for mouse F77 (dataset 5) and FL_S (dataset 6)
 if dataset_ix == 5

@@ -297,17 +297,17 @@ hold on, plot(dist_bins_c,y_OFF_bot,'c');
 
 num_its = 20;
 
-rho_all = [];
-rho_ON_all = [];
-rho_OFF_all = [];
+rho_all = cell(13,1);
+rho_ON_all = cell(13,1);
+rho_OFF_all = cell(13,1);
 
-rho_all_sh = [];
-rho_ON_all_sh = [];
-rho_OFF_all_sh = [];
+rho_all_sh = cell(13,1);
+rho_ON_all_sh = cell(13,1);
+rho_OFF_all_sh = cell(13,1);
 
-rho_all_AS = [];
-rho_ON_all_AS = [];
-rho_OFF_all_AS = [];
+rho_all_AS = cell(13,1);
+rho_ON_all_AS = cell(13,1);
+rho_OFF_all_AS = cell(13,1);
 
 for dataset_ix = 1:13
 
@@ -345,13 +345,9 @@ for dataset_ix = 1:13
         rho_OFF = rho(triu(J_OFF,1)==1);
         rho = rho(triu(ones(size(rho)),1)==1);
 
-        rho_all = [rho_all; rho];
-        rho_ON_all = [rho_ON_all; rho_ON];
-        rho_OFF_all = [rho_OFF_all; rho_OFF]; 
-    
-        rho_ON_sh = nan(size(rho_ON,1),num_its);
-        rho_OFF_sh = nan(size(rho_OFF,1),num_its);
-        rho_sh = nan(size(rho,1),num_its);
+        rho_all{dataset_ix} = rho;
+        rho_ON_all{dataset_ix} = rho_ON;
+        rho_OFF_all{dataset_ix} = rho_OFF; 
         
         % Remove doublecounting
         [rho_ON_sh,rho_OFF_sh,rho_sh,rho_ON_AS,rho_OFF_AS,rho_AS] = deal([]);
@@ -379,13 +375,13 @@ for dataset_ix = 1:13
             
         end
         
-        rho_all_sh = [rho_all_sh; nanmean(rho_sh,2)];
-        rho_ON_all_sh = [rho_ON_all_sh; nanmean(rho_ON_sh,2)];
-        rho_OFF_all_sh = [rho_OFF_all_sh; nanmean(rho_OFF_sh,2)];   
+        rho_all_sh{dataset_ix} = nanmean(rho_sh,2);
+        rho_ON_all_sh{dataset_ix} = nanmean(rho_ON_sh,2);
+        rho_OFF_all_sh{dataset_ix} = nanmean(rho_OFF_sh,2);
         
-        rho_all_AS = [rho_all_AS; nanmean(rho_AS,2)];
-        rho_ON_all_AS = [rho_ON_all_AS; nanmean(rho_ON_AS,2)];
-        rho_OFF_all_AS = [rho_OFF_all_AS; nanmean(rho_OFF_AS,2)];  
+        rho_all_AS{dataset_ix} = nanmean(rho_AS,2);
+        rho_ON_all_AS{dataset_ix} = nanmean(rho_ON_AS,2);
+        rho_OFF_all_AS{dataset_ix} = nanmean(rho_OFF_AS,2); 
     else
         disp('This mouse had no running periods.');
     end
@@ -398,25 +394,81 @@ save([basedir,'processed/pw_corr_onsets'],'rho_all','rho_ON_all','rho_OFF_all',.
 %%
 bins = -1:.01:1;
 
-figure, histogram(rho_ON_all_AS,bins,'FaceColor','r','EdgeColor','r','Normalization','probability')
-hold on, histogram(rho_ON_all,bins,'FaceColor','w','EdgeColor','r','Normalization','probability')
+figure, histogram(vertcat(rho_ON_all_AS{:}),bins,'FaceColor','r','EdgeColor','r','Normalization','probability')
+hold on, histogram(vertcat(rho_ON_all{:}),bins,'FaceColor','w','EdgeColor','r','Normalization','probability')
 xlabel('Correlation'),ylabel('Probability'), title('PM axons')
 set(gca,'FontSize',15)
 
-hold on, plot(mean(rho_ON_all),.03,'vr')
-hold on, plot(mean(rho_ON_all_AS),.03,'vr','MarkerFaceColor','r')
+hold on, plot(mean(vertcat(rho_ON_all{:})),.03,'vr')
+hold on, plot(mean(vertcat(rho_ON_all_AS{:})),.03,'vr','MarkerFaceColor','r')
 
 legend({'Random times (AS)','Onsets','',''})
 
-figure, histogram(rho_OFF_all_AS,bins,'FaceColor','b','EdgeColor','b','Normalization','probability')
-hold on, histogram(rho_OFF_all,bins,'FaceColor','w','EdgeColor','b','Normalization','probability')
+figure, histogram(vertcat(rho_OFF_all_AS{:}),bins,'FaceColor','b','EdgeColor','b','Normalization','probability')
+hold on, histogram(vertcat(rho_OFF_all{:}),bins,'FaceColor','w','EdgeColor','b','Normalization','probability')
 xlabel('Correlation'),ylabel('Probability'), title('NM axons')
 set(gca,'FontSize',15)
 
-hold on, plot(mean(rho_OFF_all),.045,'vb')
-hold on, plot(mean(rho_OFF_all_AS),.045,'vb','MarkerFaceColor','b')
+hold on, plot(mean(vertcat(rho_OFF_all{:})),.045,'vb')
+hold on, plot(mean(vertcat(rho_OFF_all_AS{:})),.045,'vb','MarkerFaceColor','b')
 
 legend({'Random times (AS)','Onsets','',''})
+
+figure, histogram(vertcat(rho_all_AS{:}),bins,'FaceColor','k','EdgeColor','k','Normalization','probability')
+hold on, histogram(vertcat(rho_all{:}),bins,'FaceColor','w','EdgeColor','k','Normalization','probability')
+xlabel('Correlation'),ylabel('Probability'), title('All axons')
+set(gca,'FontSize',15)
+
+hold on, plot(mean(vertcat(rho_all{:})),.045,'vk')
+hold on, plot(mean(vertcat(rho_all_AS{:})),.045,'vk','MarkerFaceColor','k')
+
+legend({'Random times (AS)','Onsets','',''})
+%%
+c = [.5,.5,.5];
+
+rho_all_mean = nan(13,1);
+rho_all_AS_mean = nan(13,1);
+
+rho_ON_all_mean = nan(13,1);
+rho_ON_all_AS_mean = nan(13,1);
+
+rho_OFF_all_mean = nan(13,1);
+rho_OFF_all_AS_mean = nan(13,1);
+
+figure,  hold on
+for dataset_ix = 1:13
+    rho_all_mean(dataset_ix) = mean(rho_all{dataset_ix});
+    rho_all_AS_mean(dataset_ix) = mean(rho_all_AS{dataset_ix});
+    plot([0,1],[rho_all_mean(dataset_ix),rho_all_AS_mean(dataset_ix)],'k')
+    
+    rho_ON_all_mean(dataset_ix) = mean(rho_ON_all{dataset_ix});
+    rho_ON_all_AS_mean(dataset_ix) = mean(rho_ON_all_AS{dataset_ix});
+    plot([2,3],[rho_ON_all_mean(dataset_ix),rho_ON_all_AS_mean(dataset_ix)],'k')
+    
+    rho_OFF_all_mean(dataset_ix) = mean(rho_OFF_all{dataset_ix});
+    rho_OFF_all_AS_mean(dataset_ix) = mean(rho_OFF_all_AS{dataset_ix});
+    plot([4,5],[rho_OFF_all_mean(dataset_ix),rho_OFF_all_AS_mean(dataset_ix)],'k')
+end
+plot(zeros,rho_all_mean,'o','MarkerFaceColor','w','Color',c,'MarkerSize',8)
+plot(ones,rho_all_AS_mean,'o','MarkerFaceColor','w','Color',c,'MarkerSize',8)
+plot(0+.2*[-1,1],nanmean(rho_all_mean)*[1,1],'k','LineWidth',3)
+plot(1+.2*[-1,1],nanmean(rho_all_AS_mean)*[1,1],'k','LineWidth',3)
+
+plot(2*ones,rho_ON_all_mean,'o','MarkerFaceColor','w','Color','m','MarkerSize',8)
+plot(3*ones,rho_ON_all_AS_mean,'o','MarkerFaceColor','w','Color','m','MarkerSize',8)
+plot(2+.2*[-1,1],nanmean(rho_ON_all_mean)*[1,1],'k','LineWidth',3)
+plot(3+.2*[-1,1],nanmean(rho_ON_all_AS_mean)*[1,1],'k','LineWidth',3)
+
+plot(4*ones,rho_OFF_all_mean,'o','MarkerFaceColor','w','Color','c','MarkerSize',8)
+plot(5*ones,rho_OFF_all_AS_mean,'o','MarkerFaceColor','w','Color','c','MarkerSize',8)
+plot(4+.2*[-1,1],nanmean(rho_OFF_all_mean)*[1,1],'k','LineWidth',3)
+plot(5+.2*[-1,1],nanmean(rho_OFF_all_AS_mean)*[1,1],'k','LineWidth',3)
+
+set(gca,'Xtick',[0,1])
+set(gca,'XtickLabel',{})
+set(gca,'FontSize',15)
+set(ylabel('Angle (rad.)'))
+xlim([-.5,5.5])
 
 %% Plot example of speed onsets
 

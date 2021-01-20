@@ -489,7 +489,7 @@ colormap(bluewhitered)
 
 %% Plot examples of arranged by delay
 
-dataset_ix = 2;
+dataset_ix = 1;
 
 [dFF,time,acquisition_rate] = load_data(dataset_ix);
 [~,~,~,loco,speed] = load_behav_data(dataset_ix,time);
@@ -541,11 +541,3 @@ ix_down_sorted = ix_down_sorted + numel(ix_up);
 ix_fail_sorted = ix_fail_sorted + numel(ix_up)+numel(ix_down);
 
 ix_sorting = [ix_up_sorted;ix_down_sorted;ix_fail_sorted];
-%%
-
-% CAREFUL : INVERTED COLOR SCALE HERE
-figure, imagesc(time,1:N,-dFF_train(:,:))
- colormap(gray), caxis([-1,0])
-set(gca,'FontSize',15,'YTick',[1,numel(ix_up),numel(ix_up)+numel(ix_down)])
-xlabel('Time (s)'), ylabel('Axon number')
-
