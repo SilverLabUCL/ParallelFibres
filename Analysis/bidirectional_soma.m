@@ -13,43 +13,6 @@ datasets = {'FL65_170628_12_13_56_soma',... 1
             'FL75_180112_10_45_22_soma',...	5
             'FL92_180228_10_26_01_soma'};  % 6
 
-         
-%% Histogram of ON/OFF GCs compared to shuffle test
-% Figure 2B
-
-change_dFF = cell(6,1);
-p_val = cell(6,1);
-
-for dataset_ix = 1:6
-    fname = datasets{dataset_ix};
-    load([basedir,fname,'.mat'])
-    
-    time = mean(timeseries,2)/1000;
-    
-    % Whisking variables
-    [whisk_time,whisk_angle,whisk_set_point,whisk_amp,whisk_phase] ...
-        = convert_dlc_to_whisk_vars(dlc_whisk_time,dlc_whisk_angle);
-    
-    % Convert to proper time
-    [~,~,whisk_amp,loco,speed] = ...
-        convert_behav_vars(time,0.2,whisk_time,whisk_angle,whisk_set_point,whisk_amp,wheel_MI,SpeedTimeMatrix,SpeedDataMatrix);
-    
-    %[dFF,time,acquisition_rate] = load_data(dataset_ix);
-    
-    % Get A and QW states
-    [A,QW] = define_behav_periods(whisk_amp,loco,acq_rate,1); 
-    pause
-    [change_dFF{dataset_ix},p_val{dataset_ix}] = change_dFF_sig(dFF_keep,A,QW,acq_rate);
-    
-end
-%%
-N = size(change_dFF{dataset_ix},1);
-ix_ON = find(change_dFF{dataset_ix} > 0 & p_val{dataset_ix} < .05);
-ix_OFF = find(change_dFF{dataset_ix} < 0 & p_val{dataset_ix} < .05);
-
-numel(ix_ON)/N
-numel(ix_OFF)/N
-
 %%
 
 C_wsp = cell(6,1);
@@ -102,8 +65,8 @@ end
 
 
 % Replace below with whisker set point, amplitude, locomotion, or pupil
-C = C_speed; p_val = p_speed;
-%C = C_loco; p_val = p_loco;
+%C = C_speed; p_val = p_speed;
+C = C_loco; p_val = p_loco;
 %C = C_wsp; p_val = p_wsp;
 %C = C_wamp; p_val = p_wamp;
 
@@ -141,3 +104,59 @@ t = p(3); t.FaceColor = [.2,1,1]; t.EdgeColor = [.2,1,1];
 t = p(4); t.FontSize=20;
 t = p(5); t.FaceColor = [.7,.7,.7]; t.EdgeColor = [.7,.7,.7];
 t = p(6); t.FontSize=20;
+%%
+
+figure, hold on
+
+frac_PM = nan(6,1);
+frac_NM = nan(6,1);
+frac_nonM = nan(6,1);
+
+for dataset_ix = 1:6
+    
+    frac_PM_temp = nan(1,4);
+    frac_PM_temp = nan(1,4);
+    
+    N = numel(C_speed{dataset_ix});
+    C_pass_shuff = C_speed{dataset_ix}(p_speed{dataset_ix} < 0.05);
+    C_up = C_pass_shuff(C_pass_shuff>0);
+    C_down = C_pass_shuff(C_pass_shuff<0);
+    frac_PM_temp(1) = numel(C_up) / N;
+    frac_NM_temp(1) = numel(C_down) / N;
+
+    C_loco_shuff = C_loco{dataset_ix}(p_loco{dataset_ix} < 0.05);
+    C_up = C_loco_shuff(C_loco_shuff>0);
+    C_down = C_loco_shuff(C_loco_shuff<0);
+    frac_PM_temp(2) = numel(C_up) / N;
+    frac_NM_temp(2) = numel(C_down) / N;
+    
+    C_wsp_shuff = C_wsp{dataset_ix}(p_wsp{dataset_ix} < 0.05);
+    C_up = C_wsp_shuff(C_wsp_shuff>0);
+    C_down = C_wsp_shuff(C_wsp_shuff<0);
+    frac_PM_temp(3) = numel(C_up) / N;
+    frac_NM_temp(3) = numel(C_down) / N;
+    
+    C_wamp_shuff = C_wamp{dataset_ix}(p_wamp{dataset_ix} < 0.05);
+    C_up = C_wamp_shuff(C_wamp_shuff>0);
+    C_down = C_wamp_shuff(C_wamp_shuff<0);
+    frac_PM_temp(4) = numel(C_up) / N;
+    frac_NM_temp(4) = numel(C_down) / N;
+    
+    dataset_ix
+    frac_PM_temp
+    frac_NM_temp
+    
+    frac_PM(dataset_ix) = frac_PM_temp(2); % mean(frac_PM_temp);
+    frac_NM(dataset_ix) = frac_NM_temp(2); % mean(frac_NM_temp);
+    frac_nonM(dataset_ix) = 1 - frac_PM(dataset_ix) - frac_NM(dataset_ix);
+    
+    plot(0:2,[frac_PM(dataset_ix),frac_NM(dataset_ix),frac_nonM(dataset_ix)],'o','Color',[.6,.6,.6],'LineWidth',1)
+    
+end
+bar(0:2,[mean(frac_PM),mean(frac_NM),mean(frac_nonM)],'FaceAlpha',0,'LineWidth',2)
+
+set(gca,'FontSize',15)
+set(gca,'XTick',0:2)
+set(gca,'XTickLabel',{'PM','NM','nonM'})
+ylabel('Percent')
+

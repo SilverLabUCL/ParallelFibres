@@ -66,7 +66,20 @@ xlabel('Number of components')
 ylabel('Variance explained (cross-val)')
 ylim([0,.7])
 
-
+% Inset plot
+varexp_1to5 = nan(13,5);
+figure, hold on
+for dataset_ix = 1:13
+    if ~isempty(varexp{dataset_ix})
+        varexp_1to5(dataset_ix,:) = mean(varexp{dataset_ix}(:,1:5),1);
+        plot(1:5,varexp_1to5(dataset_ix,:),'-o','Color',[.6,.6,.6],'LineWidth',1)
+    end
+end
+bar(1:5,nanmean(varexp_1to5),'FaceAlpha',0,'LineWidth',2)
+xlabel('Num. components')
+ylabel('Var. exp.')
+set(gca,'FontSize',15,'XTick',1:5)
+ylim([0,.7])
 %% Extrapolate to maximum dimensionality
 % Figure 6B
 

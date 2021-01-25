@@ -489,63 +489,98 @@ colormap(bluewhitered)
 
 %% Plot examples of arranged by delay
 
-dataset_ix = 2;
+dataset_ix = 3;
 
 [dFF,time,acquisition_rate] = load_data(dataset_ix);
 [~,~,~,loco,speed] = load_behav_data(dataset_ix,time);
 onset_indices = get_onsets(speed,acquisition_rate);
 bins_onset = onset_indices(1,2)-onset_indices(1,1);
 
+% zscore
+for k = 1:size(dFF,1)
+    dFF(k,:) = zscore(dFF(k,:));
+end
+
 % Reorder according to PM / NM / nonM
 ix_up = find(p_val{dataset_ix} < 0.05 & change_dFF{dataset_ix}>0);
 ix_down = find(p_val{dataset_ix} < 0.05 & change_dFF{dataset_ix}<0);
 ix_fail = find(p_val{dataset_ix} > 0.05);
-dFF = dFF([ix_up;ix_down;ix_fail],:);
+dFF_up = dFF(ix_up,:);
+dFF_down = dFF(ix_down,:);
 
 % Choose indices
 N_onsets = size(onset_indices,1);
 ix_train = sort(randsample(N_onsets,round(N_onsets/2)));
 ix_test = setdiff(1:N_onsets,ix_train)';
 
-% Get average activity 
-dFF_train = zeros(numel(ix_up)+numel(ix_down)+numel(ix_fail),bins_onset+1);
+% Get average activity during training onsets
+dFF_up_train = zeros(numel(ix_up),bins_onset+1);
+dFF_down_train = zeros(numel(ix_down),bins_onset+1);
 speed_train = zeros(1,bins_onset+1);
 for onset = 1:length(ix_train)
     ixs_onset = onset_indices(ix_train(onset),1):onset_indices(ix_train(onset),2);
-    dFF_train = dFF_train + dFF(:,ixs_onset');
+    dFF_up_train = dFF_up_train + dFF_up(:,ixs_onset');
+    dFF_down_train = dFF_down_train + dFF_down(:,ixs_onset');
     speed_train = speed_train + speed(ixs_onset')';
 end
-dFF_train = dFF_train/length(ix_train);
+dFF_up_train = dFF_up_train/length(ix_train);
+dFF_down_train = dFF_down_train/length(ix_train);
 speed_train = speed_train/length(ix_train);
 
-dFF_test = zeros(numel(ix_up)+numel(ix_down)+numel(ix_fail),bins_onset+1);
+% Get average activity during testing onsets
+dFF_up_test = zeros(numel(ix_up),bins_onset+1);
+dFF_down_test = zeros(numel(ix_down),bins_onset+1);
+speed_test = zeros(1,bins_onset+1);
 for onset = 1:length(ix_test)
     ixs_onset = onset_indices(ix_test(onset),1):onset_indices(ix_test(onset),2);
-    dFF_test = dFF_test + dFF(:,ixs_onset');
+    dFF_up_test = dFF_up_test + dFF_up(:,ixs_onset');
+    dFF_down_test = dFF_down_test + dFF_down(:,ixs_onset');
+    speed_test = speed_test + speed(ixs_onset')';
 end
-dFF_test = dFF_test/length(ix_test);
-%%
+dFF_up_test = dFF_up_test/length(ix_train);
+dFF_down_test = dFF_down_test/length(ix_train);
+speed_test = speed_test/length(ix_train);
+
 % Plot by correlation coefficient
-N = size(dFF,1);
-peaklag = zeros(N,1);
-for k = 1:N
-    [~,peaklag(k)] = max(xcorr(dFF_train(k,:),speed_train,'coeff'));
+peaklag_up = zeros(numel(ix_up),1);
+for k = 1:numel(ix_up)
+    [~,peaklag_up(k)] = max(xcorr(dFF_up_train(k,:)-mean(dFF_up_train(k,:)),speed_train-mean(speed_train)));
 end
 
-[~,ix_up_sorted] = sort(peaklag(1:numel(ix_up)));
+peaklag_down = zeros(numel(ix_down),1);
+for k = 1:numel(ix_down)
+    %[~,peaklag_down(k)] = min(xcorr(dFF_down(k,:)-mean(dFF_down(k,:)),speed-mean(speed)));
+    [~,peaklag_down(k)] = min(xcorr(dFF_down_train(k,:)-mean(dFF_down_train(k,:)),speed_train-mean(speed_train)));
+end
 
-[~,ix_down_sorted] = sort(peaklag((numel(ix_up)+1):(numel(ix_up)+numel(ix_down))));
-ix_down_sorted = ix_down_sorted + numel(ix_up);
-
-[~,ix_fail_sorted] = sort(peaklag((numel(ix_up)+numel(ix_down)+1):(numel(ix_up)+numel(ix_down)+numel(ix_fail))));
-ix_fail_sorted = ix_fail_sorted + numel(ix_up)+numel(ix_down);
-
-ix_sorting = [ix_up_sorted;ix_down_sorted;ix_fail_sorted];
-%%
+[~,ix_up_sorted] = sort(peaklag_up);
+[~,ix_down_sorted] = sort(peaklag_down);
 
 % CAREFUL : INVERTED COLOR SCALE HERE
-figure, imagesc(time,1:N,-dFF_train(:,:))
- colormap(gray), caxis([-1,0])
-set(gca,'FontSize',15,'YTick',[1,numel(ix_up),numel(ix_up)+numel(ix_down)])
+figure, imagesc((-bins_onset/2:bins_onset/2)/acquisition_rate,1:N,-dFF_up_train(ix_up_sorted,:))
+ colormap(gray), title('PM train'), caxis([-2.5,.5])
+set(gca,'FontSize',15)
 xlabel('Time (s)'), ylabel('Axon number')
 
+figure, imagesc((-bins_onset/2:bins_onset/2)/acquisition_rate,1:N,-dFF_down_train(ix_down_sorted,:))
+ colormap(gray), title('NM train'), caxis([-1.5,1])
+set(gca,'FontSize',15)
+xlabel('Time (s)'), ylabel('Axon number')
+
+figure, plot((-bins_onset/2:bins_onset/2)/acquisition_rate,speed_train,'k','LineWidth',1)
+title('speed train'), set(gca,'FontSize',15)
+xlabel('Time (s)'), ylabel('Speed')
+
+figure, imagesc((-bins_onset/2:bins_onset/2)/acquisition_rate,1:N,-dFF_up_test(ix_up_sorted,:))
+ colormap(gray), title('PM test'), caxis([-2.5,.5])
+set(gca,'FontSize',15)
+xlabel('Time (s)'), ylabel('Axon number')
+
+figure, imagesc((-bins_onset/2:bins_onset/2)/acquisition_rate,1:N,-dFF_down_test(ix_down_sorted,:))
+ colormap(gray), title('NM test'), caxis([-1.5,1])
+set(gca,'FontSize',15)
+xlabel('Time (s)'), ylabel('Axon number')
+
+figure, plot((-bins_onset/2:bins_onset/2)/acquisition_rate,speed_test,'k','LineWidth',1)
+title('speed test'), set(gca,'FontSize',15)
+xlabel('Time (s)'), ylabel('Speed')
