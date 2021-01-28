@@ -41,6 +41,41 @@ xlabel('PC 1')
 ylabel('PC 2')
 zlabel('PC 3')
 
+%% Plot 3d manifold response to refs- can delete
+% Figure 2B
+
+dataset_ix = 13;
+
+[dFF,time,acquisition_rate] = load_data(dataset_ix);
+[whisk_angle,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
+
+[A,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate,1);
+
+ix_A = [];
+for k = 1:length(A)
+    ix_A = [ix_A,A(k,1):A(k,2)];
+end
+
+ix_QW = [];
+for k = 1:length(A)
+    ix_QW = [ix_QW,QW(k,1):QW(k,2)];
+end
+
+ix_non = setdiff(1:size(dFF,2),ix_A);
+
+[coeff, score] = pca(dFF');
+
+
+figure, hold on
+plot3(score(ix_non,1),score(ix_non,2),score(:,3),'-k')
+plot3(score(ix_A,1),score(ix_A,2),score(ix_A,3),'-m')
+plot3(score(ix_QW,1),score(ix_QW,2),score(ix_QW,3),'-c')
+
+view(44,44)
+set(gca,'FontSize',15,'XTick',[],'YTick',[],'ZTick',[])
+xlabel('PC 1')
+ylabel('PC 2')
+zlabel('PC 3')
 
 %%  Distance between manifolds
 % Figure 3C

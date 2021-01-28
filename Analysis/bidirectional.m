@@ -198,6 +198,15 @@ plot(4*ones,C_wamp_speed,'ok')
 plot(5*ones,C_loco_speed,'ok')
 set(gca,'XTick',0:5);
 set(gca,'XTickLabel',{'wsp-wamp','wsp-loco','wsp-speed','wamp-loco','wamp-speed','loco-speed'});
+
+signrank(C_wsp_wamp)
+signrank(C_wsp_loco)
+signrank(C_wsp_speed)
+signrank(C_wamp_loco)
+signrank(C_wamp_speed)
+signrank(C_loco_speed)
+
+
 %% Plot examples of behavioural data
 % Figure S3
 

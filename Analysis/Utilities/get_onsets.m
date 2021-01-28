@@ -9,11 +9,11 @@ function onset_indices = get_onsets(speed,acquisition_rate,plot_me)
     
     buffer = round(acquisition_rate * .5);
     
-    % Find speed > 2
+    % Find speed > 1.5
     ix_running = find(speed > 1.5);
     
     if ~isempty(ix_running)
-        % Find indices that have a 1 s gap between running timepoints
+        % Find indices that have a 500 ms gap between running timepoints
         ix_start = ix_running(find(diff(ix_running) > acquisition_rate) + 1);
         if ix_running(1) > buffer
             ix_start = [ix_running(1);ix_start];

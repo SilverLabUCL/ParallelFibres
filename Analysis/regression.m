@@ -297,10 +297,11 @@ save([basedir,'processed/regression_results'],'err_PCs','err_PFs','err_lasso','f
 %% Plot example variance unexplained vs. #PCs
 % Figure 5B
 
-load([basedir,'processed/regression_results'])
-%load([basedir,'processed/regression_results_speed'])
+%load([basedir,'processed/regression_results'])
+load([basedir,'processed/regression_results_speed'])
 
-dataset_ix=2;
+%
+dataset_ix=13;
 figure, plot_error_snake(1:size(err_PCs{dataset_ix},1),err_PCs{dataset_ix}','k')
 
 set(gca,'XScale','log')

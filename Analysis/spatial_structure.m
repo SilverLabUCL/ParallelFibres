@@ -539,3 +539,54 @@ ylabel('NN distances')
 set(gca,'Box','off')
 xlim([0,5])
 ylim([0,6])
+
+%% box plot version
+
+bins_e = 0:5:70; bins_c = bins_e(1:end-1) + bins_e(2)/2;
+
+figure, hold on
+histogram(vertcat(NN_dist_ON_shuff{:}),bins_e,'EdgeColor','k','FaceAlpha',0,'LineWidth',1.5)
+histogram(vertcat(NN_dist_ON{:}),bins_e,'EdgeColor','r','FaceAlpha',0,'LineWidth',1.5)
+set(gca,'YScale','log')
+
+xlabel('NN Distances')
+ylabel('Count')
+set(gca,'FontSize',15)
+
+figure, hold on
+histogram(vertcat(NN_dist_OFF_shuff{:}),bins_e,'EdgeColor','k','FaceAlpha',0,'LineWidth',1.5)
+histogram(vertcat(NN_dist_OFF{:}),bins_e,'EdgeColor','b','FaceAlpha',0,'LineWidth',1.5)
+set(gca,'YScale','log')
+
+xlabel('NN Distances')
+ylabel('Count')
+set(gca,'FontSize',15)
+
+%%
+temp = vertcat(NN_dist_ON{:}); temp = temp(~isnan(temp));
+boxplot([1,1],mean(temp)+[-1,1]*std(temp),'r')
+plot(1,mean(temp),'sr','MarkerFaceColor','r')
+
+temp_shuff = vertcat(NN_dist_ON_shuff{:}); temp_shuff = temp_shuff(~isnan(temp_shuff));
+plot([2,2],mean(temp_shuff)+[-1,1]*std(temp_shuff),'r')
+plot(2,mean(temp_shuff),'sr')
+
+signrank(temp,temp_shuff)
+
+temp = vertcat(NN_dist_OFF{:}); temp = temp(~isnan(temp));
+plot([3,3],mean(temp)+[-1,1]*std(temp),'b')
+plot(3,mean(temp),'sb','MarkerFaceColor','b')
+
+temp_shuff = vertcat(NN_dist_OFF_shuff{:}); temp_shuff = temp_shuff(~isnan(temp_shuff));
+plot([4,4],mean(temp_shuff)+[-1,1]*std(temp_shuff),'b')
+plot(4,mean(temp_shuff),'sb')
+
+signrank(temp,temp_shuff)
+
+set(gca,'FontSize',15)
+ylabel('NN distances')
+set(gca,'Box','off')
+xlim([0,5])
+ylim([0,6])
+
+
