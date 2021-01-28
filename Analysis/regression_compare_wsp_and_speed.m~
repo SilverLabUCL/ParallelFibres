@@ -1,0 +1,82 @@
+clear all
+
+define_dirs
+
+load([basedir,'processed/regression_results'],'err_lasso','lambda')
+
+lambda_wsp = nan(13,1);
+for dataset_ix = 1:13
+    [err_lasso_min(dataset_ix),ix] = min(mean(err_lasso{dataset_ix},2));
+    lambda_wsp(dataset_ix) = lambda(ix);
+end
+
+clear err_lasso lambda
+load([basedir,'processed/regression_results_speed'],'err_lasso','lambda')
+
+lambda_speed = nan(13,1);
+for dataset_ix = 1:13
+    [err_lasso_min(dataset_ix),ix] = min(mean(err_lasso{dataset_ix},2));
+    lambda_speed(dataset_ix) = lambda(ix);
+end
+clear err_lasso lambda
+%%
+
+
+num_its = 10;
+err_lasso = cell(13,1);
+frac_nonzero_b = cell(13,1);
+err_PFs = cell(13,1);
+err_PCs = cell(13,1);
+
+lambda = [0,logspace(-3,0,15)];
+
+for dataset_ix = 1:13   
+
+    [dFF,time,acquisition_rate] = load_data(dataset_ix);
+    [~,whisk_set_point,~,~,speed] = load_behav_data(dataset_ix,time);
+    
+    [N,T] = size(dFF);
+    
+    [~, score] = pca(dFF');
+    
+    err_lasso{dataset_ix} = nan(length(lambda),num_its);
+    % Random iterations
+    for it_ix = 1:num_its
+        disp(it_ix)
+        
+        train_ixs = block_shuffle_time(T,acquisition_rate);
+        test_ixs = train_ixs(1:round(T * 0.2));
+        train_ixs = setdiff(train_ixs,test_ixs); 
+                
+        for lambda_ix = 1:length(lambda)
+    
+            reg = dFF';
+            
+            [b,fitinfo] = lasso(reg(train_ixs,:),whisk_set_point(train_ixs),'Lambda',lambda(lambda_ix));
+            mse = mean((whisk_set_point(test_ixs) - ( reg(test_ixs,:)*b+ fitinfo.Intercept ) ).^2);
+            
+            err_lasso{dataset_ix}(lambda_ix,it_ix) = mse / var(whisk_set_point(test_ixs));
+            frac_nonzero_b{dataset_ix}(lambda_ix,it_ix) = sum(b~=0) / N;
+        end
+        
+        mse_PFs = nan(N,1);
+        for n = 1:N
+            % different numbers of PCs
+            reg = [score(:,1:n),ones(T,1)];
+            
+            b = (reg(train_ixs,:)'*reg(train_ixs,:)) \ reg(train_ixs,:)' * whisk_set_point(train_ixs);
+
+            mse = mean((whisk_set_point(test_ixs) - reg(test_ixs,:)*b).^2);
+            err_PCs{dataset_ix}(n,it_ix) = mse / var(whisk_set_point(test_ixs));
+            
+            % each PF
+            reg = [dFF(n,:)',ones(T,1)];
+            
+            b = (reg(train_ixs,:)'*reg(train_ixs,:)) \ reg(train_ixs,:)' * whisk_set_point(train_ixs);
+
+            mse_PFs(n) = mean((whisk_set_point(test_ixs) - reg(test_ixs,:)*b).^2);
+            err_PFs{dataset_ix}(n,it_ix) = mse_PFs(n) / var(whisk_set_point(test_ixs));
+        end
+        
+    end
+end
