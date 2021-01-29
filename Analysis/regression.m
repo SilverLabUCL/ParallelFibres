@@ -483,13 +483,13 @@ for dataset_ix = 1:13
 end
 
 %save([basedir,'processed/regression_results_QW_only'],'err_PCs','err_PCs_sh')
-%%
+
 %% Calculate variance unexplained vs # PCs 
 % ONLY during QW
-% Takes forever
+% Takes forever 
 
 num_its = 10;
-err_PCs = cell(13,1);
+err_PCs_QW = cell(13,1);
 err_PCs_sh = cell(13,1);
 
 tic
@@ -510,55 +510,70 @@ for dataset_ix = 1:13
     whisk_set_point_QW = whisk_set_point(ix_QW);
     
     [N,T] = size(dFF_QW);
+    [~, score_QW] = pca(dFF_QW'); 
+    [~, score] = pca(dFF');   
     
-    err_PCs{dataset_ix} = nan(N,num_its);
+    err_PCs_QW{dataset_ix} = nan(N,num_its);
     err_PCs_sh{dataset_ix} = nan(N,num_its);
     % Random iterations
     for it_ix = 1:num_its
         disp(it_ix)
         
         % Get training and testing indices
+        % Indexed in terms of ix_QW
         train_ixs = block_shuffle_time(T,acquisition_rate);
         test_ixs = train_ixs(1:round(T * 0.2));
         train_ixs = setdiff(train_ixs,test_ixs); 
         
-        % Train decoder
-        [~, score] = pca(dFF_QW(:,train_ixs)');
+        % Testing data
+        whisk_set_point_QW_test = whisk_set_point_QW(test_ixs);
+        score_QW_test = score_QW(test_ixs,:);
+        score_test = score(ix_QW(test_ixs),:);
         
-        % Remove testing indices from the availble indices for 
-        % training shuffled data, remove this from dFF data
-        ixs_available_shuff = setdiff(1:size(dFF,2),ix_QW(test_ixs));
-        dFF_sh = dFF(:,ixs_available_shuff);
+        % Training data for QW-trained decoder
+        whisk_set_point_QW_train = whisk_set_point_QW(train_ixs);
+        score_QW_train = score_QW(train_ixs,:);
         
-        % Shuffle time points of leftover data for training
-        T_sh = block_shuffle_time(size(dFF_sh,2),acquisition_rate);
-        train_ixs_sh = T_sh(1:numel(train_ixs));
-        
-        % Train decoder
-        [~, score_sh] = pca(dFF_sh(:,train_ixs_sh)');
+        % To get available indices for training control decoder
+        % First remove all test indices
+        train_ixs_sh = setdiff(1:size(dFF,2),ix_QW(test_ixs));
+        % Then shuffle and take the same number as train_ixs
+        ix_sh = block_shuffle_time(numel(train_ixs_sh),acquisition_rate);
+        train_ixs_sh = train_ixs_sh(ix_sh);
+        % Finally take the same number as train_ixs
+        train_ixs_sh = train_ixs_sh(1:numel(train_ixs));
+
+        % Training data for QW-trained decoder
+        whisk_set_point_train = whisk_set_point(train_ixs_sh);
+        score_train = score(train_ixs_sh,:);
         
         for n = 1:N
 
             % different numbers of PCs
-            reg = [score(:,1:n),ones(T,1)];
+            reg_train = [score_QW_train(:,1:n),ones(numel(train_ixs),1)];
+            reg_test = [score_QW_test(:,1:n),ones(numel(test_ixs),1)];
             
-            b = (reg(train_ixs,:)'*reg(train_ixs,:)) \ reg(train_ixs,:)' * whisk_set_point_QW(train_ixs);
+            b = (reg_train'*reg_train) \ reg_train' * whisk_set_point_QW_train;
 
-            mse = mean((whisk_set_point_QW(test_ixs) - reg(test_ixs,:)*b).^2);
-            err_PCs{dataset_ix}(n,it_ix) = mse / var(whisk_set_point_QW(test_ixs));
+            mse = mean((whisk_set_point_QW_test - reg_test*b).^2);
+            err_PCs_QW{dataset_ix}(n,it_ix) = mse / var(whisk_set_point_QW_test);
             
             % Shuffled case
-            reg = [score_sh(:,1:n),ones(T,1)];
+            reg_train = [score_train(:,1:n),ones(numel(train_ixs),1)];
+            reg_test = [score_test(:,1:n),ones(numel(test_ixs),1)];
             
-            b = (reg(train_ixs,:)'*reg(train_ixs,:)) \ reg(train_ixs,:)' * whisk_set_point_QW(train_ixs_sh);
+            b = (reg_train'*reg_train) \ reg_train' * whisk_set_point_train;
 
-            mse = mean((whisk_set_point_QW(test_ixs) - reg(test_ixs,:)*b).^2);
-            err_PCs_sh{dataset_ix}(n,it_ix) = mse / var(whisk_set_point_QW(test_ixs));
+            mse = mean((whisk_set_point_QW_test - reg_test*b).^2);
+            err_PCs_sh{dataset_ix}(n,it_ix) = mse / var(whisk_set_point_QW_test);
             
         end        
         
     end
 end
+
+save([basedir,'processed/regression_results_state_dependent_decoding'],'err_PCs_QW','err_PCs_sh')
+
 %% Find minimum and plot vs shuffled
 
 err_best_PCs = nan(13,1);
@@ -566,8 +581,9 @@ err_best_PCs_sh = nan(13,1);
 
 for dataset_ix = 1:13
 
-    err_best_PCs(dataset_ix) = min(mean(err_PCs{dataset_ix},2));
+    err_best_PCs(dataset_ix) = min(mean(err_PCs_QW{dataset_ix},2));
     err_best_PCs_sh(dataset_ix) = min(mean(err_PCs_sh{dataset_ix},2));
+    
 end
 
 c = [.5,.5,.5];

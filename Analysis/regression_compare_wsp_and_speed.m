@@ -56,3 +56,7 @@ for dataset_ix = 1:13
         
     end
 end
+
+figure, plot(ones,nanmean(b_corr,2),'ok')
+signrank(nanmean(b_corr,2))
+
