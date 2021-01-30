@@ -435,7 +435,7 @@ ylabel('Number')
 
 %%
 
-dataset_ix = 13;
+dataset_ix = 3;
 
 [dFF,time,acquisition_rate] = load_data(dataset_ix);
 [~,~,whisk_amp,loco,speed] = load_behav_data(dataset_ix,time);

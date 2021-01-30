@@ -1,3 +1,5 @@
+% DEFUNCT
+
 clear all
 
 define_dirs
@@ -57,6 +59,8 @@ for dataset_ix = 1:13
     end
 end
 
+save([basedir,'processed/regression_results_compare_speed_wsp'],'b_wsp','b_speed','b_corr');
+%%
+
 figure, plot(ones,nanmean(b_corr,2),'ok')
 signrank(nanmean(b_corr,2))
-

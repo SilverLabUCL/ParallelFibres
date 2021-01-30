@@ -236,19 +236,47 @@ err_lasso = cell(13,1);
 frac_nonzero_b = cell(13,1);
 err_PFs = cell(13,1);
 err_PCs = cell(13,1);
+b_lasso = cell(13,1);
+b_PCs = cell(13,1);
 
 lambda = [0,logspace(-3,0,15)];
 
+% Set to 0 if regressing against WSP
+%        1 if regressing against speed
+regress_speed = 0;
+
+tic
 for dataset_ix = 1:13   
+    toc, tic
 
     [dFF,time,acquisition_rate] = load_data(dataset_ix);
     [~,whisk_set_point,~,~,speed] = load_behav_data(dataset_ix,time);
+    
+    % overwrite 
+    if regress_speed == 1
+        % remove nans if exist
+        if numel(isnan(speed))>0
+            ixnan = find(isnan(speed));
+            speed(ixnan)=[];
+            time(ixnan)=[];
+            dFF(:,ixnan)=[];
+        end
+        whisk_set_point = speed;
+    end
     
     [N,T] = size(dFF);
     
     [~, score] = pca(dFF');
     
     err_lasso{dataset_ix} = nan(length(lambda),num_its);
+    b_lasso{dataset_ix} = nan(length(lambda),num_its,N);
+    frac_nonzero_b{dataset_ix} = nan(length(lambda),num_its);
+    
+    err_PCs{dataset_ix} = nan(N,num_its);
+    b_PCs{dataset_ix} = nan(N,num_its);
+    
+    err_PFs{dataset_ix} = nan(N,num_its);
+    
     % Random iterations
     for it_ix = 1:num_its
         disp(it_ix)
@@ -265,6 +293,7 @@ for dataset_ix = 1:13
             mse = mean((whisk_set_point(test_ixs) - ( reg(test_ixs,:)*b+ fitinfo.Intercept ) ).^2);
             
             err_lasso{dataset_ix}(lambda_ix,it_ix) = mse / var(whisk_set_point(test_ixs));
+            b_lasso{dataset_ix}(lambda_ix,it_ix,:) = b;
             frac_nonzero_b{dataset_ix}(lambda_ix,it_ix) = sum(b~=0) / N;
         end
         
@@ -277,6 +306,7 @@ for dataset_ix = 1:13
 
             mse = mean((whisk_set_point(test_ixs) - reg(test_ixs,:)*b).^2);
             err_PCs{dataset_ix}(n,it_ix) = mse / var(whisk_set_point(test_ixs));
+            b_PCs{dataset_ix}(lambda_ix,it_ix,1:n) = b(1:end-1);
             
             % each PF
             reg = [dFF(n,:)',ones(T,1)];
@@ -290,18 +320,24 @@ for dataset_ix = 1:13
     end
 end
 
-save([basedir,'processed/regression_results'],'err_PCs','err_PFs','err_lasso','frac_nonzero_b','lambda')
-%save([basedir,'processed/regression_results_speed'],'err_PCs','err_PFs','err_lasso','frac_nonzero_b','lambda')
-
+if regress_speed == 0
+    filename = [basedir,'processed/regression_results_wsp'];
+    disp(filename)
+    save(filename,'err_PCs','err_PFs','err_lasso','frac_nonzero_b','lambda','b_PCs','b_lasso')
+elseif regress_speed == 1
+    filename = [basedir,'processed/regression_results_speed'];
+    disp(filename)
+    save(filename,'err_PCs','err_PFs','err_lasso','frac_nonzero_b','lambda','b_PCs','b_lasso')
+end
 
 %% Plot example variance unexplained vs. #PCs
 % Figure 5B
 
-%load([basedir,'processed/regression_results'])
-load([basedir,'processed/regression_results_speed'])
+load([basedir,'processed/regression_results_wsp'])
+%load([basedir,'processed/regression_results_speed'])
 
 %
-dataset_ix=13;
+dataset_ix=2;
 figure, plot_error_snake(1:size(err_PCs{dataset_ix},1),err_PCs{dataset_ix}','k')
 
 set(gca,'XScale','log')
@@ -324,6 +360,12 @@ for dataset_ix = 1:13
 end
 
 c = [.5,.5,.5];
+
+% Remove datasts 4 and 10 ONLY if doing analysis on speed!
+% err_1PC([4,10]) = nan;
+% err_10PCs([4,10]) = nan;
+% err_best_PCs([4,10]) = nan;
+% num_best_PCs([4,10]) = nan;
 
 figure,  hold on
 for dataset_ix = 1:13
@@ -381,6 +423,11 @@ for dataset_ix = 1:13
 
 end
 
+% Remove datasts 4 and 10 ONLY if doing analysis on speed!
+% err_best_PF([4,10]) = nan;
+% err_lasso_min([4,10]) = nan;
+% num_PFs_lasso([4,10]) = nan;
+
 c = [.5,.5,.5];
 
 figure,  hold on
@@ -409,6 +456,39 @@ set(gca,'FontSize',15)
 set(ylabel('Optimal # PFs'))
 ylim([0,500])
 
+%% Plot regression coefficients for speed vs wsp
+
+load([basedir,'processed/regression_results_wsp'])
+b_lasso_wsp = b_lasso;
+err_lasso_wsp = err_lasso;
+
+load([basedir,'processed/regression_results_speed'])
+b_lasso_speed = b_lasso;
+err_lasso_speed = err_lasso;
+
+b_corr = nan(13,1);
+err = nan(13,1);
+for dataset_ix = 1:13
+    if ~(dataset_ix == 4 || dataset_ix == 10)
+        
+        [err_wsp,ix] = min(mean(err_lasso_wsp{dataset_ix},2));
+        b_mean_wsp = (mean(b_lasso_wsp{dataset_ix}(ix,:,:),2));
+        
+        [err_speed,ix] = min(mean(err_lasso_speed{dataset_ix},2));
+        b_mean_speed = (mean(b_lasso_speed{dataset_ix}(ix,:,:),2));
+        
+        b_corr(dataset_ix) = corr(b_mean_wsp(:),b_mean_speed(:));
+        err(dataset_ix) = 1/2*(err_wsp + err_speed);
+    end
+end
+
+signrank(b_corr)
+
+figure, plot(err,b_corr,'ok','MarkerFaceColor','k')
+set(gca,'FontSize',15)
+xlabel('Regression error')
+ylabel('Correlation between coefficients')
+axis([0,.8,0,.5])
 
 %% OLD version
 % Calculate variance unexplained vs # PCs 
@@ -484,21 +564,30 @@ end
 
 %save([basedir,'processed/regression_results_QW_only'],'err_PCs','err_PCs_sh')
 
-%% Calculate variance unexplained vs # PCs 
+%% State-dependent regression
 % ONLY during QW
 % Takes forever 
 
 num_its = 10;
 err_PCs_QW = cell(13,1);
 err_PCs_sh = cell(13,1);
+b_QW = cell(13,1);
+
+% Set to 0 if regressing during QW
+%        1 if regressing during AS
+regress_AS = 1;
 
 tic
-for dataset_ix = 1:13
+for dataset_ix = [1:4,6:9,11:13]%1:13
     toc, tic
 
     [dFF,time,acquisition_rate] = load_data(dataset_ix);
     [~,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
-    [~,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate);
+    [AS,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate);
+    
+    if regress_AS == 1
+        QW = AS;
+    end
     
     % Only do regression on QW times
     ix_QW = [];
@@ -515,6 +604,7 @@ for dataset_ix = 1:13
     
     err_PCs_QW{dataset_ix} = nan(N,num_its);
     err_PCs_sh{dataset_ix} = nan(N,num_its);
+    b_QW{dataset_ix} = nan(N,num_its);
     % Random iterations
     for it_ix = 1:num_its
         disp(it_ix)
@@ -558,6 +648,8 @@ for dataset_ix = 1:13
             mse = mean((whisk_set_point_QW_test - reg_test*b).^2);
             err_PCs_QW{dataset_ix}(n,it_ix) = mse / var(whisk_set_point_QW_test);
             
+            b_QW{dataset_ix}(1:n,it_ix) = b(1:end-1);
+            
             % Shuffled case
             reg_train = [score_train(:,1:n),ones(numel(train_ixs),1)];
             reg_test = [score_test(:,1:n),ones(numel(test_ixs),1)];
@@ -572,7 +664,16 @@ for dataset_ix = 1:13
     end
 end
 
-save([basedir,'processed/regression_results_state_dependent_decoding'],'err_PCs_QW','err_PCs_sh')
+if regress_AS == 0
+    filename = [basedir,'processed/regression_results_state_dependent_decoding_QW'];
+    disp(filename);
+    save(filename,'err_PCs_QW','err_PCs_sh','b_QW')
+elseif regress_AS == 1
+    filename = [basedir,'processed/regression_results_state_dependent_decoding_AS'];
+    disp(filename);
+    err_PCs_AS=err_PCs_QW; b_AS = b_QW;
+    save(filename,'err_PCs_AS','err_PCs_sh','b_AS')
+end
 
 %% Find minimum and plot vs shuffled
 
