@@ -333,11 +333,11 @@ end
 %% Plot example variance unexplained vs. #PCs
 % Figure 5B
 
-load([basedir,'processed/regression_results_wsp'])
-%load([basedir,'processed/regression_results_speed'])
+%load([basedir,'processed/regression_results_wsp'])
+load([basedir,'processed/regression_results_speed'])
 
 %
-dataset_ix=2;
+dataset_ix=4;
 figure, plot_error_snake(1:size(err_PCs{dataset_ix},1),err_PCs{dataset_ix}','k')
 
 set(gca,'XScale','log')
@@ -354,7 +354,7 @@ err_best_PCs = nan(13,1);
 num_best_PCs = nan(13,1);
 
 for dataset_ix = 1:13
-    err_1PC(dataset_ix) = min(mean(err_PFs{dataset_ix},2));
+    err_1PC(dataset_ix) = mean(err_PCs{dataset_ix}(1,:)); %min(mean(err_PFs{dataset_ix},2));
     err_10PCs(dataset_ix) = mean(err_PCs{dataset_ix}(10,:));
     [err_best_PCs(dataset_ix), num_best_PCs(dataset_ix)] = min(mean(err_PCs{dataset_ix},2));
 end
@@ -362,10 +362,10 @@ end
 c = [.5,.5,.5];
 
 % Remove datasts 4 and 10 ONLY if doing analysis on speed!
-% err_1PC([4,10]) = nan;
-% err_10PCs([4,10]) = nan;
-% err_best_PCs([4,10]) = nan;
-% num_best_PCs([4,10]) = nan;
+err_1PC([4,10]) = nan;
+err_10PCs([4,10]) = nan;
+err_best_PCs([4,10]) = nan;
+num_best_PCs([4,10]) = nan;
 
 figure,  hold on
 for dataset_ix = 1:13
@@ -398,8 +398,8 @@ ylim([0,200])
 
 %% LASSO example
 
-dataset_ix = 1;
-figure, plot_error_snake(lambda,err_lasso{dataset_ix}','k')
+dataset_ix = 4;
+figure, plot_error_snake(lambda,err_lasso_QW{dataset_ix}','k')
 
 set(gca,'FontSize',15)
 xlabel('LASSO penalty')
@@ -490,81 +490,118 @@ xlabel('Regression error')
 ylabel('Correlation between coefficients')
 axis([0,.8,0,.5])
 
-%% OLD version
-% Calculate variance unexplained vs # PCs 
+%% State-dependent regression
 % ONLY during QW
-% Takes forever
+% Takes forever 
 
 num_its = 10;
-err_PCs = cell(13,1);
-err_PCs_sh = cell(13,1);
+err_lasso_QW = cell(13,1);
+err_lasso_QW_sh = cell(13,1);
+b_lasso_QW = cell(13,1);
+b_lasso_QW_sh = cell(13,1);
 
+lambda = [0,logspace(-3,0,15)];
+
+% Set to 0 if regressing during QW
+%        1 if regressing during AS
+regress_AS = 1;
+
+tic
 for dataset_ix = 1:13
+    toc, tic
 
     [dFF,time,acquisition_rate] = load_data(dataset_ix);
     [~,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
-    [~,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate);
+    [AS,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate);
     
-    % Shuffle time points
-    T_sh = block_shuffle_time(size(dFF,2),acquisition_rate);
-    dFF_sh = dFF(:,T_sh);
-    whisk_set_point_sh = whisk_set_point(T_sh);
-        
-    % Only do regression on QW times
-    dFF_QW = [];
-    dFF_QW_sh = [];
-    whisk_set_point_QW = [];
-    whisk_set_point_QW_sh = [];
-    for k = 1:length(QW)
-        ix = QW(k,1):QW(k,2);
-        dFF_QW = [dFF_QW, dFF(:,ix)];
-        dFF_QW_sh = [dFF_QW_sh, dFF_sh(:,ix)];
-        whisk_set_point_QW = [whisk_set_point_QW; whisk_set_point(ix)];
-        whisk_set_point_QW_sh = [whisk_set_point_QW_sh; whisk_set_point_sh(ix)];
+    if regress_AS == 1
+        QW = AS;
     end
     
-    clear dFF dFF_sh whisk_set_point whisk_set_point_sh
+    % Only do regression on QW times
+    ix_QW = [];
+    for k = 1:length(QW)
+        ix_QW = [ix_QW, QW(k,1):QW(k,2)];
+    end
+    
+    dFF_QW = dFF(:,ix_QW);
+    whisk_set_point_QW = whisk_set_point(ix_QW);
     
     [N,T] = size(dFF_QW);
-    [~, score] = pca(dFF_QW');
-    [~, score_sh] = pca(dFF_QW_sh');
     
-    err_PCs{dataset_ix} = nan(N,num_its);
-    err_PCs_sh{dataset_ix} = nan(N,num_its);
+    err_lasso_QW{dataset_ix} = nan(length(lambda),num_its);
+    err_lasso_QW_sh{dataset_ix} = nan(length(lambda),num_its);
+    b_lasso_QW{dataset_ix} = nan(length(lambda),num_its,N);
+    b_lasso_QW_sh{dataset_ix} = nan(length(lambda),num_its,N);
+    
     % Random iterations
     for it_ix = 1:num_its
         disp(it_ix)
         
+        % Get training and testing indices
+        % Indexed in terms of ix_QW
         train_ixs = block_shuffle_time(T,acquisition_rate);
         test_ixs = train_ixs(1:round(T * 0.2));
         train_ixs = setdiff(train_ixs,test_ixs); 
         
-        for n = 1:N
+        % Testing data
+        whisk_set_point_QW_test = whisk_set_point_QW(test_ixs);
+        
+        % Training data for QW-trained decoder
+        whisk_set_point_QW_train = whisk_set_point_QW(train_ixs);
+        
+        % To get available indices for training control decoder
+        % First remove all test indices
+        train_ixs_sh = setdiff(1:size(dFF,2),ix_QW(test_ixs));
+        % Then shuffle and take the same number as train_ixs
+        ix_sh = block_shuffle_time(numel(train_ixs_sh),acquisition_rate);
+        train_ixs_sh = train_ixs_sh(ix_sh);
+        % Finally take the same number as train_ixs
+        train_ixs_sh = train_ixs_sh(1:numel(train_ixs));
+
+        % Training data for QW-trained decoder
+        whisk_set_point_train = whisk_set_point(train_ixs_sh);
+        
+        for lambda_ix = 1:length(lambda)
 
             % different numbers of PCs
-            reg = [score(:,1:n),ones(T,1)];
+            reg_train = dFF_QW(:,train_ixs)';
+            reg_test =  dFF_QW(:,test_ixs)';
             
-            b = (reg(train_ixs,:)'*reg(train_ixs,:)) \ reg(train_ixs,:)' * whisk_set_point_QW(train_ixs);
+            [b,fitinfo] = lasso(reg_train,whisk_set_point_QW_train,'Lambda',lambda(lambda_ix));
 
-            mse = mean((whisk_set_point_QW(test_ixs) - reg(test_ixs,:)*b).^2);
-            err_PCs{dataset_ix}(n,it_ix) = mse / var(whisk_set_point_QW(test_ixs));
+            mse = mean((whisk_set_point_QW_test - ( reg_test*b+ fitinfo.Intercept ) ).^2);
+            err_lasso_QW{dataset_ix}(lambda_ix,it_ix) = mse / var(whisk_set_point_QW_test);
+            b_lasso_QW{dataset_ix}(lambda_ix,it_ix,:) = b;
             
             % Shuffled case
-            reg = [score_sh(:,1:n),ones(T,1)];
+            reg_train = dFF(:,train_ixs_sh)';
+            reg_test = dFF(:,ix_QW(test_ixs))';
             
-            b = (reg(train_ixs,:)'*reg(train_ixs,:)) \ reg(train_ixs,:)' * whisk_set_point_QW_sh(train_ixs);
+            [b,fitinfo] = lasso(reg_train,whisk_set_point_train,'Lambda',lambda(lambda_ix));
 
-            mse = mean((whisk_set_point_QW_sh(test_ixs) - reg(test_ixs,:)*b).^2);
-            err_PCs_sh{dataset_ix}(n,it_ix) = mse / var(whisk_set_point_QW_sh(test_ixs));
-            
+            mse = mean((whisk_set_point_QW_test - ( reg_test*b+ fitinfo.Intercept ) ).^2);
+            err_lasso_QW_sh{dataset_ix}(lambda_ix,it_ix) = mse / var(whisk_set_point_QW_test);
+            b_lasso_QW_sh{dataset_ix}(lambda_ix,it_ix,:) = b;
         end        
         
     end
 end
 
-%save([basedir,'processed/regression_results_QW_only'],'err_PCs','err_PCs_sh')
+if regress_AS == 0
+    filename = [basedir,'processed/regression_results_state_dependent_decoding_QW'];
+    disp(filename);
+    save(filename,'err_lasso_QW','b_lasso_QW','err_lasso_QW_sh','b_lasso_QW_sh')
+elseif regress_AS == 1
+    filename = [basedir,'processed/regression_results_state_dependent_decoding_AS'];
+    disp(filename);
+    err_lasso_AS = err_lasso_QW; b_lasso_AS = b_lasso_QW;
+    err_lasso_AS_sh = err_lasso_QW_sh; b_lasso_AS_sh = b_lasso_QW_sh;
+    save(filename,'err_lasso_AS','b_lasso_AS','err_lasso_AS_sh','b_lasso_AS_sh')
+end
 
-%% State-dependent regression
+
+%% State-dependent regression - back to PCR
 % ONLY during QW
 % Takes forever 
 
@@ -578,7 +615,7 @@ b_QW = cell(13,1);
 regress_AS = 1;
 
 tic
-for dataset_ix = [1:4,6:9,11:13]%1:13
+for dataset_ix = 1:13
     toc, tic
 
     [dFF,time,acquisition_rate] = load_data(dataset_ix);
@@ -675,6 +712,7 @@ elseif regress_AS == 1
     save(filename,'err_PCs_AS','err_PCs_sh','b_AS')
 end
 
+
 %% Find minimum and plot vs shuffled
 
 err_best_PCs = nan(13,1);
@@ -698,7 +736,7 @@ plot(ones,err_best_PCs_sh,'o','MarkerFaceColor','w','Color',c,'MarkerSize',8)
 plot(0+.2*[-1,1],nanmean(err_best_PCs)*[1,1],'k','LineWidth',3)
 plot(1+.2*[-1,1],nanmean(err_best_PCs_sh)*[1,1],'k','LineWidth',3)
 set(gca,'Xtick',[0,1])
-set(gca,'XtickLabel',{'QW only','Shuffled times'})
+set(gca,'XtickLabel',{'AS only','Shuffled times'})
 set(gca,'FontSize',15)
 set(ylabel('Unexplained variance'))
 xlim([-.5,1.5])

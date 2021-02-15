@@ -204,7 +204,7 @@ angle_shuff_ste = nan(1,8);
 for percentile = 0:10:100
 
     clear angle_rand angle_A_QW angle_shuff
-    load([basedir,'orthogonal_',num2str(percentile),'thprctile'])
+    load([basedir,'processed/orthogonal_',num2str(percentile),'thprctile'])
     
     k = 1+percentile/10;
     

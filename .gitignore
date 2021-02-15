@@ -7,5 +7,6 @@
 
 # Ignore anything in Data/ folder
 Data/
+Data_Puff/
 Paper/
 FIGS/
