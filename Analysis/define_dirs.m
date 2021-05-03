@@ -1,8 +1,7 @@
 
-basedir = '~/Documents/ParallelFibres/Data/';
+basedir = '/Users/caycogajic/Documents/Research/ParallelFibres/Data/';
 addpath('Utilities/')
 
-% Main datasets
 datasets = {'FL87_180501_11_03_09',...  1
             'FL87_180501_10_47_25',...  2
             'FL87_180501_10_36_14',...  3 
@@ -17,26 +16,3 @@ datasets = {'FL87_180501_11_03_09',...  1
              'FL_S_171109_15_19_52',... 12
              'FL76_170913_10_57_06'}; % 13
          
-         %            'FL45_170125_14_47_04',...  8
-         % 'FL77_180113_10_58_50'};  %15
-
-
-% basedir = '~/Documents/ParallelFibres/Data_Puff/';         
-% datasets = {'FL41_161123_15_27_16',... 1
-%             'FL46_161109_11_43_30',... 2
-%             'FL46_170131_11_31_33',... 3%'FL65_170426_11_56_56',... 4
-%             'FL65_170607_12_50_17',... 5
-%             'FL74_170822_10_38_13',... 6
-%             'FL75_170822_11_39_40',... 7
-%             'FL_S_170905_11_16_10'};  % 8
-% disp('Puff data')
-         
-% Data with no functional imaging (only behaviour)
-       		% 'FL92_180228_11_10_48'
-		    % 'FL92_180228_11_18_24'
-            
-% Excluded datasets (mice didn't run!)
-            %'FL104_180725_10_42_37'
-            %'FL106_180807_10_52_25'
-            %'FL75_170912_10_33_29'
-            

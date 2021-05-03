@@ -27,7 +27,6 @@ for dataset_ix = 1:13
         % Calculate dimensionality for grouped axons
         [varexp{dataset_ix},dimmax(dataset_ix),~] = get_dim(dFF,N_sub,N_sub,acquisition_rate);
 
-
     end
 
 
@@ -176,6 +175,9 @@ end
 save([basedir,'Processed/dimensionality_sim'],'varmax','dimmax','varexp','notes')
 
 %% Plot extrapolation with noise
+% Extended Data Figure 10 inset
+load([basedir,'Processed/dimensionality_sim'],'varmax','dimmax','varexp','notes')
+
 % Figure S6
 varmax = []; dimmax = [];
 for it = 1:25
@@ -195,12 +197,10 @@ xlabel('Variance explained')
 ylabel('Number of components')
 set(gca,'FontSize',18)
 
-%% Example dimensionality
-% Figure S6
+%% Example dimensionality for one example
+% Extended Data Figure 10
 
-it = 1
-varexp{it,noise_ix}(k,:)
-
+it = 1;
 
 figure, hold on
 varmax = nan(15,1);
@@ -211,7 +211,25 @@ end
 xlabel('Number of components')
 ylabel('Variance explained (cross-val)')
 ylim([0,.7])
+%%
 
+figure, hold on
+var_explained_sem = nan(8,300);
+var_explained_mean = nan(8,300);
+k = 1;
+for noise_ix = 8:15
+    var_explained_mean(k,:) = nanmean(varexp{it,noise_ix},1);
+    var_explained_sem(k,:) = nanstd(varexp{it,noise_ix},[],1)/sqrt(10);
+    
+    plot_error_snake(1:N,var_explained_mean(k,:),'k')
+    plot_error_snake(1:N,var_explained_mean(k,:)+var_explained_sem(k,:),'k')
+    plot_error_snake(1:N,var_explained_mean(k,:)-var_explained_sem(k,:),'k')
+    k = k+1;
+
+end
+xlabel('Number of components')
+ylabel('Variance explained (cross-val)')
+ylim([0,.7])
 
 %% Dimensionality for PUFF data !
 

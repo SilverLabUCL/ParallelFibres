@@ -27,18 +27,8 @@ datasets = {'FL87_180501_11_03_09',...  1
              'FL76_170913_10_57_06',... 17
              'FL77_180113_10_58_50'};  %18
 
-% basedir = '~/Documents/ParallelFibres/Data_Puff/';         
-% datasets = {'FL41_161123_15_27_16',... 1
-%             'FL46_161109_11_43_30',... 2
-%             'FL46_170131_11_31_33',... 3
-%             'FL65_170426_11_56_56',... 4
-%             'FL65_170607_12_50_17',... 5
-%             'FL74_170822_10_38_13',... 6
-%             'FL75_170822_11_39_40',... 7
-%             'FL_S_170905_11_16_10'};  %8
-
 % Choose dataset
-dataset_ix = 17;
+dataset_ix = 1;
 fname = datasets{dataset_ix};
 disp(fname)
 
@@ -83,7 +73,6 @@ for patch_no = 1:Numb_patches
     disp([num2str(patch_no),' / ',num2str(Numb_patches)])
      
     load([basedir,fname,'/raw/Patch',sprintf('%03d',patch_no),'.mat'])
-    %load([basedir,fname,'\raw\Patch',sprintf('%03d',patch_no),'.mat'])
     Y = double(Y);
     Cn = correlation_image(Y, [1,2], d1,d2);
 
