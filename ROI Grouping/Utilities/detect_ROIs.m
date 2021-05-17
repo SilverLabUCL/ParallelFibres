@@ -6,6 +6,8 @@
 %    filter_pix       Spatial scale (in pixels)
 %    win_pix          Size of square window (in pixels) to draw box around
 %                     each ROI (approx size of bouton or soma)
+%    thresh           threshold for filtering roi masks 
+%    manual           set to 1 if you want to select ROI seeds by hand
 % 
 % Output:
 %    Ain              *Thresholded* spatial filters matrix (num pixels x num ROIs)
@@ -86,7 +88,6 @@ function [Ain,Cn] = detect_ROIs(Y, dims, filter_pix, win_pix, thresh, manual)
     if manual
         figure, imagesc(v_search), colormap(gray)
         hold on, plot(c_peak,r_peak,'.r')
-    %    caxis(median(v_search(:))+[-1,2]*std(v_search(:)))
 
         set(gca, 'xtick', []);
         set(gca, 'ytick', []);

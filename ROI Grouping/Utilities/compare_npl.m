@@ -1,4 +1,5 @@
-% This function compares to neuropil
+% This function calculates fluorescence for each ROI and its corresponding
+% neuropil mask
 %
 % Input:
 %    Ain              *Thresholded* spatial filters matrix (num pixels x num ROIs)

@@ -1,6 +1,7 @@
-% This function makes fake ROIs to determine distribution of SNR in the
-% neuropil - NOT the filters used for neuropil subtraction,
-% for that function see get_neuropil_masks.m
+% This function makes spurious ROIs the size of detected varicosities in 
+% order to calculate distribution of SNR in the neuropil 
+% (NOT the filters used for Supp Figure 4, for that see
+% get_neuropil_masks.m)
 %
 % Input:
 %    Ain              Spatial filters

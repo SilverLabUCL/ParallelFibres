@@ -5,21 +5,16 @@
 clear all; clc
 
 basedir = '~/Documents/ParallelFibres/Data/';
-%'~/Documents/FredPF/raw/offMC/';
+
 fname = 'FL76_170913_10_57_06';
-% 
-% 
-% FL77_170920_10_50_24 file corrupt
 
 disp([basedir,fname])
 
 %% Load data
 load([basedir,'Crus1_patches_',fname,'_driftcorrected.mat'])
-%load([basedir,fname,'_puff.mat'])
-
 disp('Data has successfully been loaded.')
 
-%% Save metadata, behavioural data, etc.
+%% Save metadata, behavioural data, time in separate mat files
 
 save([basedir,fname,'/',fname,'.mat'],'acquisition_rate','Pixel_size','dlc_whisk_angle','dlc_whisk_time','Numb_frames','Numb_patches','Numb_trials','Patch_coordinates','pia','SpeedDataMatrix','SpeedTimeMatrix');
 
@@ -39,10 +34,11 @@ if exist('MatrixTime')
 end
 disp('Metadata has successfully been saved.')
 
-%% Covert patch data into uint16
+%% Covert patch data into uint16 to reduce size
 
 clearvars -except patches acquisition_rate Pixel_size fname basedir
 
+% Dimensions of each patch
 [d1,d2,T] = size(patches{1});
 
 darknoise = zeros(1,size(patches,2));
@@ -65,7 +61,7 @@ end
 
 disp('Conversion of patch data is complete.')
 
-%% Remove dark noise and save
+%% Remove dark noise and save data for each patch separately
 
 darknoise = uint16(min(darknoise));
 

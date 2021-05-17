@@ -7,7 +7,6 @@ addpath('From CNMF_E/')
 addpath('Utilities/')
 
 basedir = '~/Documents/ParallelFibres/Data/';
-%basedir = 'C:\Users\SilverLab\Documents\Alex\ParallelFibres\Data\';
 
 datasets = {'FL87_180501_11_03_09',...  1
             'FL87_180501_10_47_25',...  2
@@ -15,17 +14,17 @@ datasets = {'FL87_180501_11_03_09',...  1
             'FL87_180220_10_38_55',...  4
             'FL77_180213_10_46_41',...  5
             'FL_S_170906_11_26_25',...  6
-            'FL_S_170905_10_40_52',...  7   
-             'FL95_180425_10_53_40',...  8
-             'FL87_180413_11_00_55',...  9
-             'FL87_180117_11_23_20',...  10
-             'FL_S_171109_14_54_34',...  11
-             'FL_S_171109_15_19_52',...  12
+            'FL_S_170905_10_40_52',...  7            
+             'FL95_180425_10_53_40',... 8
+             'FL87_180413_11_00_55',... 9
+             'FL87_180117_11_23_20',... 10
+             'FL_S_171109_14_54_34',... 11
+             'FL_S_171109_15_19_52',... 12
              'FL76_170913_10_57_06'}; % 13
 
-%%
-d_all = cell(13,1);
+%% Calculate intervaricosity distances for all experiments, every patch
 
+d_all = cell(13,1);
 
 figure, hold on, plot(1:9,'k')
 for dataset_ix = 1:13
@@ -70,18 +69,8 @@ var_per_zone = std_per_zone.^2;
 var_all = sum((var_per_zone + mean_per_zone.^2).*estimates_per_zone) / num_estimates_all - mean_all^2
 sqrt(var_all)/sqrt(num_estimates_all)
 
-%% Comapare to Shepherd et al 
-
-x = 0:.01:12;
-d_temp = vertcat(d_all{:});
-for k = 1:length(x)
-    y(k) = sum(d_temp>x(k))/numel(d_temp);
-end
-
-figure, plot(x,y,'k','LineWidth',2);
-set(gca,'FontSize',18)
-xlabel('Distance (\mu m)')
-ylabel('Probability')
+%% Histogram of intervaricosity distances - compare to Pichitpornchai et al
+% Figure 1d
 
 figure, histogram(vertcat(d_all{:}),'FaceColor','r')
 hold on, plot(mean(vertcat(d_all{:})),260,'vr','MarkerFaceColor','r')
@@ -94,8 +83,20 @@ set(gca,'FontSize',15)
 xlabel('Distance (\mu m)')
 ylabel('Number')
 
+%% Cumulative distribution - compare to Shepherd et al 
 
-%% Number of ROIs per axon
+x = 0:.01:12;
+d_temp = vertcat(d_all{:});
+for k = 1:length(x)
+    y(k) = sum(d_temp>x(k))/numel(d_temp);
+end
+
+figure, plot(x,y,'k','LineWidth',2);
+set(gca,'FontSize',18)
+xlabel('Distance (\mu m)')
+ylabel('Probability')
+
+%% Calculate number of ROIs per axon
 
 N_ROIs = 0;
 N_axons = 0;

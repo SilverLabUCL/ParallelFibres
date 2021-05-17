@@ -21,7 +21,7 @@ A = reshape(A,d1,d2);
 p = polyfit(y,x,1);
 rmse = sqrt(sum((p(1)*y+p(2) - x).^2));
 
-% also try transposed version - this wors better when rois are horizontal
+% also try transposed version - this works better when rois are horizontal
 p2 = polyfit(x,y,1);
 rmse2 = sqrt(sum((p2(1)*x+p2(2) - y).^2));
 

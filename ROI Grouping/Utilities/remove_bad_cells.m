@@ -4,9 +4,9 @@
 %    Ain              *Thresholded* spatial filters matrix (num pixels x num ROIs)
 %    Y                Raw fluorescence matrix (num pixels x num timepoints)
 %    dims             Vector of pixel dims of patch: [d1, d2]
-%    min_pnr          Minimum SNR
-%    acq_rate         Acquisition rate (Hz) (for plotting /manual mode)
-%                     (optional - leave empty for fully automated mode)
+%    acq_rate         Acquisition rate (Hz)
+%    min_snr          Minimum SNR
+%    manual           set to 1 to manually check
 % 
 % Output:
 %    A_good           New spatial filters matrix of good ROIs
@@ -14,10 +14,10 @@
 %    A_bad            New spatial filters matrix of BAD ROIs
 %    SNR_bad          Vector of SNR for BAD ROIs
 
-function [A_good,SNR_good,A_bad,SNR_bad] = remove_bad_cells(Ain,Y,dims,acq_rate,min_pnr,manual)
+function [A_good,SNR_good,A_bad,SNR_bad] = remove_bad_cells(Ain,Y,dims,acq_rate,min_snr,manual)
 
-if nargin < 5 || isempty(min_pnr)
-    min_pnr = 6;
+if nargin < 5 || isempty(min_snr)
+    min_snr = 6;
 end
 if nargin < 6 || isempty(manual)
     manual = 0;
@@ -52,8 +52,8 @@ for k = 1:size(Ain,2)
     % Estimate SNR as peak dFF over noise measured from power spectrum
     SNR(k) = max(medfilt1(dFF_,round(.2*acq_rate)))/GetSn(dFF_);
     
-    % If SNR is less than min_pnr, default is to remove that ROI
-    if SNR(k) < min_pnr
+    % If SNR is less than min_snr, default is to remove that ROI
+    if SNR(k) < min_snr
         remove_me = 1;
         col_plot = 'r'; % plot in red if bad ROI
     else
@@ -102,8 +102,6 @@ for k = 1:size(Ain,2)
     % Keep list of bad ROIs
     if ~remove_me
         goodrois(k) = 1;
-        %A_new(:,k) = nan(d1*d2,1);
-        %SNR_good(k) = nan;
     end
 end
 
@@ -115,9 +113,3 @@ SNR_good = SNR(goodrois==1);
 A_bad = Ain(:,goodrois==0);
 SNR_bad = SNR(goodrois==0);
  
-% %% Plot results 
-% 
-% figure, imagesc(reshape(sum(A_good,2),d1,d2))
-% set(gca, 'xtick', []); set(gca, 'ytick', []); 
-% axis tight; axis equal;
-% caxis([0,3])

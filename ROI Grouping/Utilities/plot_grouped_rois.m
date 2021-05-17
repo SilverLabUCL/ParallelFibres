@@ -1,3 +1,4 @@
+% Plots ROIs that have been grouped into putative axons
 % Originally from CNMF_E code
 % Updated by NACG (2019) to add variable colours
 

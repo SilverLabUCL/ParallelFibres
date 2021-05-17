@@ -79,10 +79,4 @@ if size(Ain,2) ~= N_ROIs
     disp('Warning: some ROIs have been removed.')
 end
 
-% %% Plot results 
-% 
-% figure, imagesc(reshape(sum(Ain,2),d1,d2))
-% set(gca, 'xtick', []); set(gca, 'ytick', []); 
-% axis tight; axis equal;
-% caxis([0,3])
 

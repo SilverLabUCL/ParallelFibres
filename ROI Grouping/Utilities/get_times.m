@@ -1,4 +1,5 @@
 %  This function calculates the timestamps (all time in ms)
+%
 %  Inputs:
 %    offset_initial         Time it takes to reach that pixel in the cycle
 %                                   (usually, in MatrixTime_patch)
@@ -12,6 +13,7 @@
 %    time                   Vector of times
 
 function time = get_times(offset_initial,Cycle_time,Numb_cycles,Time_between_trial,Numb_trials)
+
     % Time it takes to finish the cycle from selected pixel to the last pixel
     end_of_cycle = Cycle_time - offset_initial;
 

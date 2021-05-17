@@ -1,4 +1,7 @@
-% This function makes filters for for neuropil subtraction
+% This function makes neuropil masks to compare signal in rois vs neuropil
+% fluorescence, i.e., for Supp figure 4
+% (NOT the filters used for grouping criterion - for that see
+% get_neuropil_filters.m)
 %
 % Input:
 %    Ain              Spatial filters

@@ -1,5 +1,6 @@
 %
 % This function calculates correlations for axon grouping
+% Any correlation less than a threshold (rho_min) is set to 0
 %
 % Input:
 %    dFF                Raw fluorescence matrix (num pixels x num timepoints)

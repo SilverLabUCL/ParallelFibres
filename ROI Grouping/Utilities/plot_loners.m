@@ -1,3 +1,7 @@
+% Plots ROIs that have NOT been grouped into axons
+% Originally from CNMF_E code
+% Updated by NACG (2019) to add variable colours
+
 function plot_loners(Aor,Cn,ix_axons_to_rois,thr,display_numbers)
 
     [d1,d2] = size(Cn);

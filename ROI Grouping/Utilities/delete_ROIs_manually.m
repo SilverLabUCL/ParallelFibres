@@ -1,5 +1,4 @@
-%
-% This function allows the user to delete ROIs by eye, specifically useful
+% This function allows the user to delete ROIs by eye, particularly useful
 % for bright debris that is mistakenly classified to an ROI because of
 % bleaching
 %

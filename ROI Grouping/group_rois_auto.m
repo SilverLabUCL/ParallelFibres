@@ -1,11 +1,15 @@
 % This script groups ROIs onto putative axons, separately for each patch in
 % each experiment
+% 
+% d1, d2     dimensions of each patch
+% Ain        matrix of (flattened) spatial filters (continuous version of a mask)
 
 clear all; clc; close all
 addpath('From CNMF_E/')
 addpath('Utilities/')
 
 basedir = '~/Documents/ParallelFibres/Data/';
+
 datasets = {'FL87_180501_11_03_09',...  1
             'FL87_180501_10_47_25',...  2
             'FL87_180501_10_36_14',...  3 
@@ -13,44 +17,42 @@ datasets = {'FL87_180501_11_03_09',...  1
             'FL77_180213_10_46_41',...  5
             'FL_S_170906_11_26_25',...  6
             'FL_S_170905_10_40_52',...  7            
-            'FL45_170w125_14_47_04',...  8
-             ...%%
-             'FL95_180425_10_53_40',...  9
-             'FL87_180413_11_00_55',...  10
-             'FL104_180725_10_42_37',... 11
-             'FL87_180117_11_23_20',...  12
-             'FL106_180807_10_52_25',... 13
-             'FL_S_171109_14_54_34',...  14
-             'FL_S_171109_15_19_52',...  15
-             ...%
-             'FL75_170912_10_33_29',... 16
-             'FL76_170913_10_57_06',... 17
-             'FL77_180113_10_58_50'};  %18
+             'FL95_180425_10_53_40',... 8
+             'FL87_180413_11_00_55',... 9
+             'FL87_180117_11_23_20',... 10
+             'FL_S_171109_14_54_34',... 11
+             'FL_S_171109_15_19_52',... 12
+             'FL76_170913_10_57_06'}; % 13
 
 % Choose dataset
 dataset_ix = 1;
 fname = datasets{dataset_ix};
 disp(fname)
 
+% Load average fibre direction (for Criterion 1)
 fname_fibreangles = [basedir,fname,'/processed/fibre_direction.mat'];
 load(fname_fibreangles,'vector_mean');
 
+% Load SNR threshold
 fname_SNR = [basedir,fname,'/processed/SNR.mat'];
 load(fname_SNR,'SNR_thresh');
 
+% Load correlations and define threshold correlation (for Criterion 2)
 fname_corr = [basedir,fname,'/processed/corr_histograms.mat'];
 load(fname_corr,'C_inter');
 rho_min = prctile(C_inter,95)
 
+% Load metadata
 load([basedir,fname,'/',fname,'.mat'],'Numb_patches','Numb_trials')
 
-% Get time information
+% Load time
 MatrixTime = [];
 load([basedir,fname,'/',fname,'_time.mat'])
 
-% Default smoothing window
+% Use default smoothing window
 smooth_win_s = [];
 
+% Initialize
 Cn_all = cell(Numb_patches,1);
 dFF_axons_all = cell(Numb_patches,1);
 Ain_axons_all = cell(Numb_patches,1);
@@ -69,17 +71,17 @@ end
 %% Choose patch number
 for patch_no = 1:Numb_patches
     
-    %
     disp([num2str(patch_no),' / ',num2str(Numb_patches)])
      
+    % Load data for this patch and get correlation image
     load([basedir,fname,'/raw/Patch',sprintf('%03d',patch_no),'.mat'])
     Y = double(Y);
     Cn = correlation_image(Y, [1,2], d1,d2);
 
     % Use CNMF initialization to estimate initial spatial filters
+    % with manual selection of additional seed pixels
     [Ain,~] = detect_ROIs(Y, [d1,d2], [],[],[],1);
     close all
-    
 
     % Remove low SNR ROIs
     [Ain,~,~,~] = remove_bad_cells(Ain,Y,[d1,d2],acquisition_rate,SNR_thresh); 
@@ -99,7 +101,7 @@ for patch_no = 1:Numb_patches
         plot((1:size(dFF,2))/acquisition_rate,dFF(k,:)+k)
     end
     
-    % Manually delete ROIs due to slow drift
+    % Manually delete ROIs (e.g., if drifting baseline)
     [Ain,dFF] = delete_ROIs_manually(Ain,dFF,acquisition_rate);
     
     % Calculate time for rois
@@ -114,6 +116,7 @@ for patch_no = 1:Numb_patches
     [Ain_axons,ix_axons_to_rois,axon_ids] = ...
         get_axon_grouping(Ain,Y,[d1,d2],acquisition_rate,smooth_win_s,Pixel_size,vector_mean,[],rho_min,[],[],1);
         
+    % Plot to check
     plot_grouped_rois(Ain_axons,Cn,dFF,ix_axons_to_rois,acquisition_rate);
     disp('Press enter to continue')
     pause

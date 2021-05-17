@@ -11,9 +11,9 @@
 % baseline activity.
 %
 % Input:
-%    xx                ROI 1 time series
-%    yy                ROI 2 time series
-%    manual            Set to 1 to plot, 0 otherwise
+%    dFF1                ROI 1 time series
+%    dFF2                ROI 2 time series
+%    manual              Set to 1 to plot, 0 otherwise
 %
 % Output:
 %    var_ratio         Ratio of variance of projected data, to variance of
@@ -123,85 +123,3 @@ if manual
     xlabel('Projected value')
 end
 
-
-%%
-% % Centre and rotate data 
-% Y = (X-m_bl) * R';
-% 
-% % Normalize lengths
-% Y(:,1) = Y(:,1) / a_bl;
-% Y(:,2) = Y(:,2) / b_bl;
-% 
-% % Points that are outside the confidence interval
-% ix = find( Y(:,1).^2 + Y(:,2).^2 > 1);
-% 
-% % Find scaling vector via regression coefficients
-% x = [xx(ix),ones(numel(ix),1)];
-% b = (x'*x)\(x'*yy(ix));
-
-%%
-% T  = size(xx,1);
-% X = [xx,yy];
-% 
-% % Fit 2 Gaussians to capture the baseline data + 
-% options = statset('MaxIter',1000); % Increase number of EM iterations
-% gmfit = fitgmdist(X,2,'CovarianceType','full','SharedCovariance',false,'Options',options);
-% 
-% % Get eigenvalues
-% test = (gmfit.mu(2,:) > gmfit.mu(1,:)) ;
-% if test(1) == 1 && test(2) == 1
-%     S_bl = gmfit.Sigma(:,:,1); % baseline Gaussian
-%     S_event = gmfit.Sigma(:,:,2); % large event Gaussian
-%     m_bl = gmfit.mu(1,:);
-%     m_event = gmfit.mu(2,:);
-% elseif test(1) == 0 & test(2) == 0
-%     S_event = gmfit.Sigma(:,:,1); % baseline Gaussian
-%     S_bl = gmfit.Sigma(:,:,2); % large event Gaussian
-%     m_event = gmfit.mu(1,:);
-%     m_bl = gmfit.mu(2,:);
-% else
-%     error
-% end
-% 
-% % Get eigenvectors & eigenvalues of the fitted distriutions
-% [V_bl, D_bl] = eig(S_bl);
-% [V_event, D_event] = eig(S_event);
-% 
-% % Sort eigenvalues in descending order
-% [D_bl,ind] = sort(diag(D_bl),'descend');
-% V_bl = V_bl(:,ind);
-% 
-% [D_event,ind] = sort(diag(D_event),'descend');
-% V_event = V_event(:,ind);
-% 
-% % Calculate the angle between the x-axis and the largest eigenvector
-% angle_bl = atan2(V_bl(2,1), V_bl(2,2));
-% angle_event = atan2(V_bl(2,1), V_bl(2,2));
-% 
-% % This angle is between -pi and pi.
-% % Let's shift it such that the angle is between 0 and 2pi
-% if(angle_bl < 0)
-%     angle_bl = angle_bl + 2*pi;
-% end
-% if(angle_event < 0)
-%     angle_event = angle_event + 2*pi;
-% end
-% 
-% % Get the 95% confidence interval error ellipse
-% chisquare_val = 2;
-% theta_grid = linspace(0,2*pi);
-% a_bl = chisquare_val*sqrt(D_bl(1));
-% b_bl = chisquare_val*sqrt(D_bl(2));
-% a_event = chisquare_val*sqrt(D_event(1));
-% b_event = chisquare_val*sqrt(D_event(2));
-% 
-% %let's rotate the ellipse to some angle phi
-% r_ellipse_bl = [a_bl*cos( theta_grid );b_bl*sin( theta_grid )]' *  [ cos(angle_bl) sin(angle_bl); -sin(angle_bl) cos(angle_bl) ];
-% r_ellipse_event = [a_event*cos( theta_grid );b_event*sin( theta_grid )]' *  [ cos(angle_event) sin(angle_event); -sin(angle_event) cos(angle_event) ];
-% 
-% % Draw the error ellipse
-% figure, hold on, plot(xx,yy,'.')
-% plot(r_ellipse_bl(:,1) + m_bl(1),r_ellipse_bl(:,2) + m_bl(2),'k','LineWidth',2)
-% plot(r_ellipse_event(:,1) + m_event(1),r_ellipse_event(:,2) + m_event(2),'k','LineWidth',2)
-% title(D_event(2)/mean(D_bl))
-% axis tight equal

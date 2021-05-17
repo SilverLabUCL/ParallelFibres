@@ -1,4 +1,5 @@
-% This function thresholds the spatial maps
+% This function thresholds the spatial filters
+% Default is to 80% of value
 %
 % Input:
 %    Ain              Spatial filters matrix (num pixels x num ROIs)
@@ -35,8 +36,3 @@ for i = 1:size(Ain,2)
     A_thresh(ix,i) = 1;
 end
 
-% %% Plot results
-% figure, imagesc(reshape(sum(A_thresh,2),d1,d2))
-% set(gca, 'xtick', []); set(gca, 'ytick', []); 
-% axis tight; axis equal;
-% caxis([0,3])

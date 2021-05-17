@@ -1,4 +1,4 @@
-% This function returns correlation image after light spatial filtering
+% This function returns data and correlation image after light spatial filtering
 % 
 % Input:
 %    Y                Raw fluorescence matrix (num pixels x num timepoints)

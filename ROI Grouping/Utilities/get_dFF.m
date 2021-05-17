@@ -1,4 +1,4 @@
-% This function removes detected ROIs with low SNR
+% This function calculates dFF of ROIs
 %
 % Input:
 %    Ain              *Thresholded* spatial filters matrix (num pixels x num ROIs)
@@ -8,11 +8,9 @@
 %
 % Output:
 %    dFF              Matrix of dFF (num ROIs x num timepoints)
-%    F_raw            Matrix of raw fluorescence (optional)
-%    F_npl            Matrix of neuropil fluorescence (optional)
 
 
-function [dFF,F_raw,F_npl] = get_dFF(Ain,Y,acq_rate,smooth_win_s)
+function dFF = get_dFF(Ain,Y,acq_rate,smooth_win_s)
 
 % Default smoothing for gcamp6f timescale
 if nargin < 5 || isempty(smooth_win_s)

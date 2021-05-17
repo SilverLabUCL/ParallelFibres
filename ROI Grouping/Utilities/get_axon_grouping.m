@@ -1,18 +1,12 @@
 %
-% This function performs the main axon regrouping based on:
-%   (1) Functional activity
-%        - cross correlation 
-%        - deviation of large events vs baseline activity
-%   (2) Spatial information
-%        - fibre direction
-%        - distance of boutons from putative axon
-%
+% This function performs the main axon grouping procedure
 %
 % Input:
 %    Ain              Spatial filters matrix (num pixels x num ROIs)
 %    Y                Raw fluorescence matrix (num pixels x num timepoints)
 %    dims             Vector of pixel dims of patch: [d1, d2]
 %    acq_rate         Acquisition rate (Hz)
+%    smooth_win_s     Temporal window for smoothing data
 %    um_per_pix       Microns per pixel
 %    fibre_vec        Vector of overall fibre direction (est. from z stack)
 %    angle_std        Standard deviation of angle from overall fibre direction (default 10 degrees)
@@ -24,7 +18,7 @@
 %                      e if want to check border cases within e% of rho_min and ang_max 
 % 
 % Output:
-%    Ain_new            Spatial filters matrix after ROI grouping 
+%    Ain_axons           Spatial filters matrix after ROI grouping 
 %                        (num pixels x num putative axons)
 %    ix_axons_to_rois   Cell (1 x num putative axons) in which each
 %                        element is the ROIs for that axon
@@ -90,7 +84,6 @@ function [Ain_axons,ix_axons_to_rois,axon_ids] = get_axon_grouping(Ain,Y,dims,ac
     %% Reorder rois so that loner axons are at the top
     temp = [ix_loners,ix_notloners];
     dFF_axons = dFF(temp,:);
-    %dFF_smooth_axons = dFF(temp,:);
     Ain_axons = Ain(:,temp);
 
     % indices for grouping
@@ -169,70 +162,6 @@ function [Ain_axons,ix_axons_to_rois,axon_ids] = get_axon_grouping(Ain,Y,dims,ac
                 disp(['Distance of ROI from axon: ',num2str(dist(ix)),' um.'])
             end
         end
-        
-%         % Calculate spatial information and use this to determine whether
-%         % to merge ROIs - this relies on assumption 
-%         if numel(ix_axons_to_rois{axon_1}) == 1 && numel(ix_axons_to_rois{axon_2}) == 1
-%             % Case 1: 2 ROIs
-%             % First infer putative axon if we merge the ROIs
-%             [vector_axon,~,pts] = get_axon_vector(A_merged,[d1,d2]);
-%             % Calculate angle between mean vector and vector for this axon
-%             ang = rad2deg(subspace(vector_axon',fibre_vec'));
-%             % Group if angle is within 95% of angle distribution
-%             if ang < 2*angle_std
-%                 merge_rois = 1;
-%             end
-%             if manual_check && merge_rois
-%                 disp(' ')
-%                 disp(['Angle between putative axon and overall axon: ',num2str(ang),' deg.'])
-%             end
-%         elseif numel(ix_axons_to_rois{axon_1}) == 1 && numel(ix_axons_to_rois{axon_2}) > 1
-%             % Case 2: 1 axon, 1 ROI (axon_2 has multiple ROIs)
-%             [vector_axon,x_int,pts] = get_axon_vector(Ain_axons(:,axon_2),[d1,d2]);
-%             vorth = [-vector_axon(2),vector_axon(1)];
-%             c = regionprops(reshape(Ain_axons(:,axon_1),d1,d2),'centroid'); 
-%             c = c.Centroid;
-%             dist = abs((c-[x_int,0])*vorth') * um_per_pix;
-%             % Consider grouping if roi is sufficiently close to putative fibre
-%             if dist < pix_defl_max
-%                 merge_rois = 1;
-%             end
-%             if manual_check && merge_rois
-%                 disp(' ')
-%                 disp(['Distance between axon and ROI: ',num2str(dist),' um.'])
-%             end
-%         elseif numel(ix_axons_to_rois{axon_1}) > 1 && numel(ix_axons_to_rois{axon_2}) == 1
-%             % Same as previous case (now axon_1 has multiple ROIs)
-%             [vector_axon,x_int,pts] = get_axon_vector(Ain_axons(:,axon_1),[d1,d2]);
-%             vorth = [-vector_axon(2),vector_axon(1)];
-%             c = regionprops(reshape(Ain_axons(:,axon_2),d1,d2),'centroid'); 
-%             c = c.Centroid;
-%             dist = abs((c-[x_int,0])*vorth') * um_per_pix;
-%             % Consider grouping if roi is sufficiently close to putative fibre
-%             if dist < pix_defl_max
-%                 merge_rois = 1;
-%             end
-%             if manual_check && merge_rois
-%                 disp(' ')
-%                 disp(['Distance between axon and ROI: ',num2str(dist),' um.'])
-%             end
-%         elseif numel(ix_axons_to_rois{axon_1}) > 1 && numel(ix_axons_to_rois{axon_2}) > 1
-%             % Case 3: 2 axons
-%             [vector_axon1,x_int1,pts] = get_axon_vector(Ain_axons(:,axon_1),[d1,d2]);
-%             [~,x_int2,~] = get_axon_vector(Ain_axons(:,axon_2),[d1,d2]);
-%             vorth1 = [-vector_axon1(2),vector_axon1(1)];
-%             dist = abs(([x_int2-x_int1,0])*vorth1') * um_per_pix;
-%             % Consider grouping if roi is sufficiently close to putative fibre
-%             if dist < pix_defl_max
-%                 merge_rois = 1;
-%             end
-%             if manual_check && merge_rois
-%                 disp(' ')
-%                 disp(['Distance between axon and ROI: ',num2str(dist),' um.'])
-%             end
-%         else
-%             error('Cannot have empty axons')
-%         end
 
         % If merge_rois = 1 based on correlations and spatial location,
         % check that error for large events is lower than baseline error 
@@ -315,20 +244,11 @@ function [Ain_axons,ix_axons_to_rois,axon_ids] = get_axon_grouping(Ain,Y,dims,ac
             ix_axons_to_rois_new(axon_2) = []; % delete that cell element
             num_axons = length(ix_axons_to_rois_new);
 
-            % update axon ids for the rois
-            %axon_ids_new = zeros(1,N_ROIs);
-            %for axon = 1:num_axons
-            %    rois = ix_axons_to_rois_new{axon};
-            %    axon_ids_new(rois) = axon;
-            %end
-
             % calculate dFF for new axons            
             dFF_axons_new = dFF_axons;
             dFF_axons_new(axon_1,:) = get_dFF(A_merged,Y,acq_rate,smooth_win_s);
             dFF_axons_new(axon_2,:) = [];
             
-            %dFF_smooth_axons_new = dFF_axons_new;
-
             % recompute correlations
             C = get_corrs(dFF_axons_new,rho_min);
 
@@ -337,7 +257,6 @@ function [Ain_axons,ix_axons_to_rois,axon_ids] = get_axon_grouping(Ain,Y,dims,ac
             ix_axons_to_rois = ix_axons_to_rois_new;
             %axon_ids = axon_ids_new;
             dFF_axons = dFF_axons_new;
-            %dFF_smooth_axons= dFF_smooth_axons_new;
         else
             % Merge has been rejected despite high correlations. This means the
             % rois or axons are too far apart. Flag that this has arleady been
@@ -406,7 +325,7 @@ function [Ain_axons,ix_axons_to_rois,axon_ids] = get_axon_grouping(Ain,Y,dims,ac
     disp(['Number of false alarms:',num2str(count_FA)])
     disp(['Number of misses:',num2str(count_MISS)])
 
-    %% Next ask for manual merges
+    %% Next ask for any possible manual merges
     
     if manual_check
         plot_grouped_rois(Ain_axons,Cn,dFF,ix_axons_to_rois,acq_rate);

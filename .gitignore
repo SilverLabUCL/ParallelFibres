@@ -8,5 +8,6 @@
 # Ignore anything in Data/ folder
 Data/
 Data*/
+SourceData/
 Paper/
 FIGS/

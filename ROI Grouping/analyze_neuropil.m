@@ -1,5 +1,5 @@
-%%%% This script removes neuropil from all varicosities
-% And resaves 
+%%%% This script compares neuropil to signal
+% Supplementary Figure 4
 
 clear all; clc; 
 addpath('From CNMF_E/')
@@ -14,22 +14,20 @@ datasets = {'FL87_180501_11_03_09',...  1
             'FL77_180213_10_46_41',...  5
             'FL_S_170906_11_26_25',...  6
             'FL_S_170905_10_40_52',...  7            
-            'FL45_170125_14_47_04',...  8
-             ...%%
-             'FL95_180425_10_53_40',...  9
-             'FL87_180413_11_00_55',...  10
-             'FL87_180117_11_23_20',...  12
-             'FL_S_171109_14_54_34',...  14
-             'FL_S_171109_15_19_52',...  15
-             ...%
-             'FL76_170913_10_57_06',... 17
-             'FL77_180113_10_58_50'};  %18
+             'FL95_180425_10_53_40',... 8
+             'FL87_180413_11_00_55',... 9
+             'FL87_180117_11_23_20',... 10
+             'FL_S_171109_14_54_34',... 11
+             'FL_S_171109_15_19_52',... 12
+             'FL76_170913_10_57_06'}; % 13
 
+% Choose an experiment
 dataset_ix = 6; 
 
 fname = datasets{dataset_ix};
 disp(fname)
 
+% Illustrate neuorpil mask in a single patch
 patch_no = 1;
 
 load([basedir,fname,'/',fname,'.mat'],'Numb_patches');
@@ -40,23 +38,27 @@ disp([num2str(patch_no),' / ',num2str(Numb_patches)])
 load([basedir,fname,'/raw/Patch',sprintf('%03d',patch_no),'.mat'])
 Y = double(Y); T = size(Y,2);
 
-% Plot mask for a particular neuropil
+% Plot correlation image for that patch
 figure, imagesc(Cn{patch_no})
 colormap(gray), axis equal, axis([0,d2,0,d1])
 set(gca,'XTick',[],'YTick',[])
 hold on, plot([20,20+5 / Pixel_size],[d1-5,d1-5],'w','LineWidth',2)
 
+% Calculate neuropil masks
 Ain_npl = get_neuropil_masks(Ain_rois{patch_no},Cn{patch_no},[d1,d2],Pixel_size);
 
+% Get raw F and neuropil F
 [~,F_raw,F_neuropil] = compare_npl(Ain_rois{patch_no},Ain_npl,Y,acquisition_rate);
 
-% Plot mask for a particular neuropil
+% Plot neuropil mask for a particular roi
 roi = 2;
 figure, imagesc(1-reshape(Ain_npl(:,roi),d1,d2))
 colormap(gray), axis equal, axis([0,d2,0,d1])
 set(gca,'XTick',[],'YTick',[])
 
-%% Plot transients
+%% Plot example transients
+% Supp Fig 4b
+
 N = size(F_raw,1);
 figure, hold on
 for k = 1:5
@@ -67,7 +69,9 @@ set(gca,'FontSize',15)
 xlabel('Time (s)'), xlim([-20,430])
 ylabel('Fluorescence')
 
-%%
+%% Plot raw vs corrected fluorescence
+% Supp Fib 4c
+
 figure, plot(F_raw(:),F_raw(:)-F_neuropil(:),'.k')
 xlabel('Raw fluorescence')
 ylabel('Raw fluorescence - Neuropil')
@@ -75,7 +79,8 @@ set(gca,'FontSize',15)
 
 corr(F_raw(:),F_raw(:)-F_neuropil(:))
 
-%%
+%% Calculate correlation of neuropil and signal, and variance of neuropil
+% Supp Fig 4d,e
 
 C = [];
 V_raw = [];
