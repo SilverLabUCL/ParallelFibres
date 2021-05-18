@@ -1,14 +1,15 @@
-% Load DLC whisking angle and extract whisking variables
+% Extract and filter whisking variables from DeepLabCut extracted tracking
 %
-% Required input:
-%    dataset_ix   Dataset number (1-8)
+% Input:
+%    dlc_whisk_time      Time returned from DLC (in ms)
+%    dlc_whisk_angle     Whisker position/angle from DLC
 % 
 % Output:
-%    dlc_whisk_time      time for whisking data
-%    whisk_angle_filt    filtered whisking angle
-%    whisk_set_point     whisker set point
+%    dlc_whisk_time      Time returned from DLC (in s)
+%    whisk_angle_filt    Filtered whisking angle
+%    whisk_set_point     Whisker set point
 %    whisk_amp           Whisking amplitude
-%    whisk_phase  
+%    whisk_phase         Whisking phase (not used)
 
 function [dlc_whisk_time,whisk_angle_filt,whisk_set_point,whisk_amp,whisk_phase]  = convert_dlc_to_whisk_vars(dlc_whisk_time,dlc_whisk_angle)
 
@@ -32,9 +33,7 @@ function [dlc_whisk_time,whisk_angle_filt,whisk_set_point,whisk_amp,whisk_phase]
     whisk_angle_filt = whisk_angle_filt(end:-1:1);
 
     % To get set point, median filter by 500 ms
-    %whisk_set_point = smoothdata(whisk_angle_filt,'movmedian',round(0.5* fs));
     whisk_set_point = smoothdata(whisk_angle_filt,'gaussian',round(0.5* fs));
-    %smoothdata(whisk_angle_filt,'gaussian',[round(0.5* fs) 0] *2);
 
     % To get whisking amplitude and phase,
     fc2 = 30; fc1 = 8;

@@ -4,23 +4,27 @@ clear all; clc
 
 define_dirs;
 
-%% Histogram of ON/OFF GCs compared to shuffle test
+%% Histogram of positively / negatively / non modulated GCs compared to shuffle test
 % Figure 2B
 
 change_dFF = cell(13,1);
 p_val = cell(13,1);
 
 for dataset_ix = 1:13
+    % Get data
     [dFF,time,acquisition_rate] = load_data(dataset_ix);
     [~,~,whisk_amp,loco] = load_behav_data(dataset_ix,time);
     pupil = load_pupil(dataset_ix,time);
 
     % Get A and QW states
     [A,QW] = define_behav_periods(whisk_amp,loco,acquisition_rate); 
+
+    % Calculate change in dFF and p val from shuffle
     [change_dFF{dataset_ix},p_val{dataset_ix}] = change_dFF_sig(dFF,A,QW,acquisition_rate);
     
 end
 
+% Bin and plot
 bins = linspace(-1.,1.,60);
 bins_c = bins(2:end)-mean(diff(bins))/2;
 
@@ -45,6 +49,7 @@ set(gca,'Box','off')
 xlabel('Change in dFF')
 ylabel('Number')
 
+% Plot pie chart
 fracs = [sum(h_up), sum(h_down),sum(h_fail)];
 fracs = fracs/sum(fracs);
 figure, p = pie(fracs);
@@ -55,10 +60,12 @@ t = p(3); t.FaceColor = [.2,1,1]; t.EdgeColor = [.2,1,1];
 t = p(4); t.FontSize=20;
 t = p(5); t.FaceColor = [.7,.7,.7]; t.EdgeColor = [.7,.7,.7];
 t = p(6); t.FontSize=20;
+
 %% Plot distributions separately for all experiments
-% Supplementary figure SX
+% Extended Data Figure 6
 
 for dataset_ix = 1:13
+    
     C_pass_shuff = change_dFF{dataset_ix}(p_val{dataset_ix} < 0.05);
     C_fail_shuff = change_dFF{dataset_ix}(p_val{dataset_ix} >= 0.05);
 
@@ -95,7 +102,8 @@ for dataset_ix = 1:13
 end
 
 %% Histogram of GC corrs with different behaviours
-% Figure S3
+% Extended Data Figure 3a
+% This cell calculates corrs for each PF with a different behaviour
 % Warning - slow
 
 C_wsp = cell(13,1);
@@ -128,11 +136,12 @@ for dataset_ix = 1:13
     
 end
 %% Generates figures for previous cell 
-% Figure S3
+% Extended Data Figure 3a
 
 % Replace below with whisker set point, amplitude, locomotion, or pupil
 C = C_speed; p_val = p_speed;
 
+% Histogram
 bins = linspace(-1,1,50);
 bins_c = bins(2:end)-mean(diff(bins))/2;
 
@@ -157,6 +166,7 @@ set(gca,'Box','off')
 xlabel('Correlation')
 ylabel('Number')
 
+% Pie chart
 fracs = [sum(h_up), sum(h_down),sum(h_fail)];
 fracs = fracs/sum(fracs);
 figure, p = pie(fracs);
@@ -168,8 +178,8 @@ t = p(4); t.FontSize=20;
 t = p(5); t.FaceColor = [.7,.7,.7]; t.EdgeColor = [.7,.7,.7];
 t = p(6); t.FontSize=20;
 
-%% Correlate behavioural data
-% Figure S3
+%% Correlate behavioural variables to each other
+% Extended Data Figure 3b
 
 labels = {'wsp','wamp','loco','speed'};
 
@@ -206,9 +216,8 @@ signrank(C_wamp_loco)
 signrank(C_wamp_speed)
 signrank(C_loco_speed)
 
-
 %% Plot examples of behavioural data
-% Figure S3
+% Extended Data Figure 3a
 
 dataset_ix = 13;
 [dFF,time,acquisition_rate] = load_data(dataset_ix);
@@ -228,7 +237,7 @@ xlabel('time (s)'), ylabel('speed')
 
 %% Show example of population activity
 % Requires running previous cell 
-% Figure 1C
+% Figure 1e
 
 dataset_ix = 6;
 [dFF,time,acquisition_rate] = load_data(dataset_ix);
@@ -266,8 +275,9 @@ xlabel('Time (s)'), ylabel('Speed')
 
 %% Same example as previous cell, plot example of A / QW periods
 % All figure parameters optimized for given example dataset
-% Figure 2A
+% Figure 2a
 
+% Get A, QW periods
 [A,QW] = define_behav_periods(whisk_amp,loco,acquisition_rate); 
 
 % Plot whisker set point
@@ -323,7 +333,7 @@ axis([220,280,-10,20])
 xlabel('Time (s)'), ylabel('\Delta F/F')
 
 %% Show full example of up / down /non mod 
-% Figure S5
+% Extended Data Figure 5a
 
 figure, hold on
 for k = 1:length(QW)
@@ -350,7 +360,7 @@ set(gca,'FontSize',15,'Box','off','YTick',[0,2])
 axis([0,400,-13,31])
 xlabel('Time (s)'), ylabel('\Delta F/F')
 %% Save avg of negatively modulated PFs
-% Supplementary figure SX
+% for Supplementary figure 1
 
 figure,
 for dataset_ix = 1:13
@@ -368,7 +378,7 @@ end
 
 
 %% Get distribution of SNRs of all axons comparing non modulated to others
-% Figure S5
+% Extended Data Figure 5b
 
 clear all
 clc
@@ -433,70 +443,9 @@ set(gca,'FontSize',15)
 xlabel('SNR')
 ylabel('Number')
 
-%%
 
-dataset_ix = 3;
-
-[dFF,time,acquisition_rate] = load_data(dataset_ix);
-[~,~,whisk_amp,loco,speed] = load_behav_data(dataset_ix,time);
-
-% Reorder according to PM / NM / nonM
-ix_up = find(p_val{dataset_ix} < 0.05 & change_dFF{dataset_ix}>0);
-ix_down = find(p_val{dataset_ix} < 0.05 & change_dFF{dataset_ix}<0);
-ix_fail = find(p_val{dataset_ix} > 0.05);
-dFF = dFF([ix_up;ix_down;ix_fail],:);
-
-[A,QW] = define_behav_periods(whisk_amp,loco,acquisition_rate);
-    
-dFF_A = [];
-for k = 1:length(A)
-    ix = A(k,1):A(k,2);
-    dFF_A = [dFF_A, dFF(:,ix)];
-end
-
-dFF_QW = [];
-for k = 1:length(QW)
-    ix = QW(k,1):QW(k,2);
-    dFF_QW = [dFF_QW, dFF(:,ix)];
-end
-
-C_A = corrcoef(dFF_A');
-C_QW = corrcoef(dFF_QW');
-
-N = size(dFF,1);
-C = nan(N,N);
-for n1 = 1:N
-    for n2 = 1:(n1-1)
-        C(n1,n2) = C_A(n1,n2);
-    end
-    for n2 = (n1+1):N
-        C(n1,n2) = C_QW(n1,n2);
-    end
-end
-
-figure, imagesc(C)
-%caxis([-1,1])
-colormap(bluewhitered)
-
-%% Plot matrix of correlations 
-
-dataset_ix = 13;
-
-[dFF,time,acquisition_rate] = load_data(dataset_ix);
-[~,~,whisk_amp,loco,speed] = load_behav_data(dataset_ix,time);
-
-% Reorder according to PM / NM / nonM
-ix_up = find(p_val{dataset_ix} < 0.05 & change_dFF{dataset_ix}>0);
-ix_down = find(p_val{dataset_ix} < 0.05 & change_dFF{dataset_ix}<0);
-ix_fail = find(p_val{dataset_ix} > 0.05);
-dFF = dFF([ix_up;ix_down;ix_fail],:);
-
-C = corrcoef(dFF');
-
-figure, imagesc(C)
-colormap(bluewhitered)
-
-%% Plot examples of arranged by delay
+%% Plot example of PF temporal diversity ordered by delay
+% Extended Data Figure 4b
 
 dataset_ix = 3;
 
@@ -558,7 +507,6 @@ end
 
 peaklag_down = zeros(numel(ix_down),1);
 for k = 1:numel(ix_down)
-    %[~,peaklag_down(k)] = min(xcorr(dFF_down(k,:)-mean(dFF_down(k,:)),speed-mean(speed)));
     [~,peaklag_down(k)] = min(xcorr(dFF_down_train(k,:)-mean(dFF_down_train(k,:)),speed_train-mean(speed_train)));
 end
 

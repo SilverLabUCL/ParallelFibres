@@ -1,8 +1,8 @@
-% Load DLC whisking angle and extract whisking variables
-%
+% Load pupil data - not really used in the manuscript because didn't have
+% it for all mice
 %
 % Required input:
-%    dataset_ix     Dataset number (1-8)
+%    dataset_ix     Dataset number (1-13)
 %    time           Time for interpolation (leave blank if just want to load)
 %    smooth_win_s   Smoothing window
 % 

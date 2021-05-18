@@ -1,4 +1,5 @@
 % Bidirectional for somatic data 
+% Supplementary Figure 2c
 
 clear all; clc
 
@@ -61,15 +62,12 @@ for dataset_ix = 1:6
         C_pupil{dataset_ix},p_pupil{dataset_ix}] ...
         = corr_sig(dFF,whisk_set_point,whisk_amp,loco,speed,[],acq_rate);
 end
-%%
-
+%% Plot
 
 % Replace below with whisker set point, amplitude, locomotion, or pupil
-%C = C_speed; p_val = p_speed;
 C = C_loco; p_val = p_loco;
-%C = C_wsp; p_val = p_wsp;
-%C = C_wamp; p_val = p_wamp;
 
+% Histogram
 bins = linspace(-1,1,50);
 bins_c = bins(2:end)-mean(diff(bins))/2;
 
@@ -94,6 +92,7 @@ set(gca,'Box','off')
 xlabel('Correlation')
 ylabel('Number')
 
+% Pie chart
 fracs = [sum(h_up), sum(h_down),sum(h_fail)];
 fracs = fracs/sum(fracs);
 figure, p = pie(fracs);
@@ -104,59 +103,3 @@ t = p(3); t.FaceColor = [.2,1,1]; t.EdgeColor = [.2,1,1];
 t = p(4); t.FontSize=20;
 t = p(5); t.FaceColor = [.7,.7,.7]; t.EdgeColor = [.7,.7,.7];
 t = p(6); t.FontSize=20;
-%%
-
-figure, hold on
-
-frac_PM = nan(6,1);
-frac_NM = nan(6,1);
-frac_nonM = nan(6,1);
-
-for dataset_ix = 1:6
-    
-    frac_PM_temp = nan(1,4);
-    frac_PM_temp = nan(1,4);
-    
-    N = numel(C_speed{dataset_ix});
-    C_pass_shuff = C_speed{dataset_ix}(p_speed{dataset_ix} < 0.05);
-    C_up = C_pass_shuff(C_pass_shuff>0);
-    C_down = C_pass_shuff(C_pass_shuff<0);
-    frac_PM_temp(1) = numel(C_up) / N;
-    frac_NM_temp(1) = numel(C_down) / N;
-
-    C_loco_shuff = C_loco{dataset_ix}(p_loco{dataset_ix} < 0.05);
-    C_up = C_loco_shuff(C_loco_shuff>0);
-    C_down = C_loco_shuff(C_loco_shuff<0);
-    frac_PM_temp(2) = numel(C_up) / N;
-    frac_NM_temp(2) = numel(C_down) / N;
-    
-    C_wsp_shuff = C_wsp{dataset_ix}(p_wsp{dataset_ix} < 0.05);
-    C_up = C_wsp_shuff(C_wsp_shuff>0);
-    C_down = C_wsp_shuff(C_wsp_shuff<0);
-    frac_PM_temp(3) = numel(C_up) / N;
-    frac_NM_temp(3) = numel(C_down) / N;
-    
-    C_wamp_shuff = C_wamp{dataset_ix}(p_wamp{dataset_ix} < 0.05);
-    C_up = C_wamp_shuff(C_wamp_shuff>0);
-    C_down = C_wamp_shuff(C_wamp_shuff<0);
-    frac_PM_temp(4) = numel(C_up) / N;
-    frac_NM_temp(4) = numel(C_down) / N;
-    
-    dataset_ix
-    frac_PM_temp
-    frac_NM_temp
-    
-    frac_PM(dataset_ix) = frac_PM_temp(2); % mean(frac_PM_temp);
-    frac_NM(dataset_ix) = frac_NM_temp(2); % mean(frac_NM_temp);
-    frac_nonM(dataset_ix) = 1 - frac_PM(dataset_ix) - frac_NM(dataset_ix);
-    
-    plot(0:2,[frac_PM(dataset_ix),frac_NM(dataset_ix),frac_nonM(dataset_ix)],'o','Color',[.6,.6,.6],'LineWidth',1)
-    
-end
-bar(0:2,[mean(frac_PM),mean(frac_NM),mean(frac_nonM)],'FaceAlpha',0,'LineWidth',2)
-
-set(gca,'FontSize',15)
-set(gca,'XTick',0:2)
-set(gca,'XTickLabel',{'PM','NM','nonM'})
-ylabel('Percent')
-

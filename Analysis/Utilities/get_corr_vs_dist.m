@@ -1,15 +1,20 @@
 %
-% This function loads data from all patches of a given experiment
-% and concatenates it 
+% This function gets correlations and distances between PFs 
 %
 % Input:
-%    dataset_ix       Dataset number
-% 
+%    dataset_ix       Dataset number (1-13)
+%    grouped          Flag, set to 1 for fibers, 0 for ungrouped ROIs
+%    time_ix          Indices if calculating for specific time period (e.g.
+%                       during locomotion onsets - default leave blank to
+%                       calculate over entire experiment)
+%
 % Output:       
-%    dFF_all
-%    time
-%    acquisition_rate
-%    distances
+%    rho_all            Vector of correlations between pairs of PFs
+%    distances_all      Vector of distances between pairs of PFs
+%    rho_ON_all         Vector of correlations between pairs of positively modulated PFs
+%    distances_ON_all   Vector of distances between pairs of positively modulated PFs
+%    rho_OFF_all        Vector of correlations between pairs of negatively modulated PFs
+%    distances_OFF_all  Vector of distances between pairs of positively modulated PFs
 
 function [rho_all,distances_all,rho_ON_all,distances_ON_all,rho_OFF_all,distances_OFF_all] = get_corr_vs_dist(dataset_ix,grouped,time_ix)
     

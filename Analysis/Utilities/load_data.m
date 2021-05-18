@@ -1,15 +1,17 @@
 %
-% This function loads data from all patches of a given experiment
+% This function loads functional data from all patches of a given experiment
 % and concatenates it 
 %
 % Input:
-%    dataset_ix       Dataset number
+%    dataset_ix             Dataset number (1-13)
+%    grouped                Set to 1 to get fibre activity, 0 for ungrouped ROIs
+%    get_dists              Set to 1 to get matrix of distances between ROIs
 % 
-% Output:       
-%    dFF_all
-%    time
-%    acquisition_rate
-%    distances
+% Output:        
+%    dFF_all                Matrix of dFF of all ROIs/fibres
+%    time                   Vector of times
+%    acquisition_rate       Acquisition rate
+%    distances              Matrix of distances between ROIs
 
 function [dFF_all,time,acquisition_rate,distances] = load_data(dataset_ix,grouped,get_dists)
 
@@ -36,10 +38,6 @@ function [dFF_all,time,acquisition_rate,distances] = load_data(dataset_ix,groupe
         dFF_all = vertcat(dFF_rois{:});
         time = mean(vertcat(time_rois{:}))'/1000;
     end
-    
-    % Old time code - delete
-    %load([basedir,fname,'/',fname,'.mat'],'TimeAxon');
-    %time = mean(TimeAxon,2) / 1000;
     
     % Calculate distances
     distances = [];

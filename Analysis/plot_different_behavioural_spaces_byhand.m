@@ -1,6 +1,6 @@
-% This script needs to be cleaned up
-% This script reproduces Supplementary Figure X
+% This script reproduces Supplementary Figure 3
 % For this script, behavioural labels were chosen for 2 datasets by hand
+% and plotted to show representation of isolated whisks present in experiments 5 and 6
 
 clear all; clc
 dataset_ix = 5; % set to either 5 or 6

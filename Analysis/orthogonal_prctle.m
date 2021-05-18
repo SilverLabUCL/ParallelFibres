@@ -1,5 +1,5 @@
-%% Angle between subspaces
-% Figure 2E,F
+% Angle between subspaces as PM / NM PFs are removed
+% This script generates Figure 3g
 
 clear all; clc
 
@@ -29,7 +29,7 @@ for dataset_ix = 1:13
     C_OFF{dataset_ix} = change_dFF(ix_OFF{dataset_ix});
 end
 
-%%
+%% Remove different percentiles of PM / NM PFs
 
 angle_A_QW = nan(13,1);
 angle_shuff = nan(13,1);
@@ -110,7 +110,8 @@ signrank(angle_A_QW,angle_shuff)
 
 save([basedir,'processed/orthogonal_',num2str(percentile),'thprctile'],'angle_A_QW','angle_shuff','p_val','ix_ON','C_ON','ix_OFF','C_OFF','ix_fail','C_fail');
 
-%% Add random comparison - remove random neurons
+%% Add random control
+% remove percentiles of randomly selected neurons
 
 percentile = 100;
 

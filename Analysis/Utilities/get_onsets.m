@@ -1,5 +1,12 @@
-
-
+% Get onsets of running/ locomotion periods
+%
+% Input:
+%    speed               Locomotion speed
+%    acquisition_rate    Acquisition rate
+%    plot_me             Set to 1 to visualize selected periods
+% 
+% Output:
+%    onset_indices      Matrix corresponding to locomotion onset times
 
 function onset_indices = get_onsets(speed,acquisition_rate,plot_me)
 

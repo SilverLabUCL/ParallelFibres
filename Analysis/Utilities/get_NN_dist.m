@@ -1,15 +1,22 @@
 %
-% This function loads data from all patches of a given experiment
-% and concatenates it 
+% This function calculates nearest neighbour distances to look for spatial
+% structure of PF activity
 %
 % Input:
-%    dataset_ix       Dataset number
+%    dataset_ix             Dataset number
+%    grouped                Flag, set to 1 for fibers, 0 for ungrouped ROIs
+%    euclid_dist            Flag, set to 1 for Euclidean distance, default
+%                            is 0 (this indicates distance between fibers
+%                            rather than between fiber centres)
 % 
 % Output:       
-%    dFF_all
-%    time
-%    acquisition_rate
-%    distances
+%    NN_dist                Vector of all nearest neighbour distances
+%    NN_dist_ON             Vector of NN distances of positively modulated PFs
+%    NN_dist_OFF            Vector of NN distances of negatively modulated PFs 
+%    NN_dist_ON_shuff       Vector of NN distances of positively modulated PFs
+%                            after shuffling
+%    NN_dist_OFF_shuff      Vector of NN distances of negatively modulated PFs
+%                            after shuffling
 
 function [NN_dist,NN_dist_ON,NN_dist_OFF,NN_dist_ON_shuff,NN_dist_OFF_shuff] = get_NN_dist(dataset_ix,grouped,euclid_dist)
 

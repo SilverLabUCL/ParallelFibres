@@ -3,7 +3,7 @@
 %
 % Input:
 %    whisk_amp            Whisking amplitude
-%    loco                Wheel MI (locomotion)
+%    loco                 Wheel MI
 %    acquisition_rate     Acquisition rate (Hz)
 %    plot_me              Optional flag to plot results from definition of A vs QW
 %

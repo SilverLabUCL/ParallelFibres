@@ -1,5 +1,4 @@
-% Load DLC whisking angle and extract whisking variables
-% Version for original data without loading datasets
+% Load behavioural variables then smooths and interpolates to same rate
 %
 % Required input:
 %    dataset_ix     Dataset number (1-8)
@@ -11,8 +10,10 @@
 %    whisk_angle         whisking angle
 %    whisk_set_point     whisker set point
 %    whisk_amp           Whisking amplitude
+%    loco_smooth         Smoothed wheel motion index
 %    Speed_smooth        Smoothed wheel MI
 %    whisk_time          Native (non-interp) time of whisking
+%    loco_time           Native (non_interp) time of WMI  
 %    Speed_time          Native (non_interp) time of speed 
 
 function [whisk_angle,whisk_set_point,whisk_amp,loco_smooth,speed_smooth,whisk_time,loco_time,speed_time] = load_behav_data(dataset_ix,time,smooth_win_s)

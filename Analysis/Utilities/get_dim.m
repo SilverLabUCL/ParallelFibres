@@ -1,17 +1,18 @@
 %
-% This function calculates the dimensionality
+% This function calculates the cross-val variance explained as a function
+% of number of PCs, used to infer lower bound of dimensionality
 %
-% Required input:
-%    dFF       Fluorescence data
-%    N_sub     Population subsampling size
-%    D_max     Maximum number of dimensions to test
-%
-% Optional input:
-%    frac_T_train   Fraction of timepoints to use for training
-%    frac_N_train   Fraction of neurons to use for training
+% Input:
+%    dFF                Fluorescence data
+%    N_sub              Population subsampling size
+%    D_max              Maximum number of dimensions to test
+%    acquisition_rate   Acquisition rate
+%    frac_T_train       Fraction of timepoints to use for training
+%    frac_N_train       Fraction of neurons to use for training
+%    N_reps             Number of repetitions
 % 
 % Output:
-%    varexp    Matrix of fraction variance explained, size 50 x D_max 
+%    varexp    Matrix of fraction variance explained, size N_reps x D_max 
 %              (each row is a different random sample)
 %    dimmax    Maximum inferred dimensionality (considering the SNR) 
 %    varmax    Maximum variance explained

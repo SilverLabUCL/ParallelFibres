@@ -1,4 +1,27 @@
-% Correlation with significance test (two tailed)
+
+% This function calculates correlations between activity and behavioural
+% variables with a two-tailed shuffle test
+%
+% Input:
+%    dFF                Fluorescence data
+%    whisk_set_point    Whisker set point
+%    whisk_amp          Whisker amplitude
+%    loco               Wheel motion index (WMI)
+%    speed              Locomotion speed
+%    pupil              Pupil 
+%    acquisition_rate   Acquisition rate
+% 
+% Output:       
+%    C_wsp              Correlation between rois and whisker set point
+%    p_wsp              p-values for Correlation between rois and whisker set point
+%    C_wamp             Correlation between rois and whisker amplitude
+%    p_wamp             p-values for Correlation between rois and whisker amplitude
+%    C_loco             Correlation between rois and WMI
+%    p_loco             p-values for Correlation between rois and WMI
+%    C_speed            Correlation between rois and locomotion speed
+%    p_speed            p-values for Correlation between rois and locomotion speed
+%    C_pupil            Correlation between rois and pupil
+%    p_pupil            p-values for Correlation between rois and pupil
 
 function [C_wsp,p_wsp,C_wamp,p_wamp,C_loco,p_loco,C_speed,p_speed,C_pupil,p_pupil] = corr_sig(dFF,whisk_set_point,whisk_amp,loco,speed,pupil,acquisition_rate)
 

@@ -1,4 +1,18 @@
-% Compare A vs QW activity with significance test (two tailed)
+
+% This function determines whether dFF is higher for A or QW state
+%
+% with two tailed significance test
+% Input:
+%    dFF                  Population activity
+%    A                    Active state periods
+%    QW                   Quiet wakefulness periods
+%    acquisition_rate     Acquisition rate
+% 
+% Output:
+%    change_dFF           Vector of difference between dFF during A vs QW
+%                           for each ROI
+%    p                    Vector of p-values for each ROI
+
 
 function [change_dFF,p] = change_dFF_sig(dFF,A,QW,acquisition_rate)
 

@@ -1,6 +1,10 @@
-
-
-
+%
+% This function plots an error snake (SEM) around mean values
+% Input:
+%    x                    vector of x values
+%    y                    matrix of y values 
+%    face_color           colour of error snake
+% 
 
 function plot_error_snake(x,y,face_color)
 

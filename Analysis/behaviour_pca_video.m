@@ -1,3 +1,7 @@
+% Makes video of mouse running with population activity
+% Supplementary video S2
+
+
 clear all, clc, close all
 
 

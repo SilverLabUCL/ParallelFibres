@@ -1,13 +1,11 @@
-% This script plots the correlations of individual PFs with behaviour to
-% show bidirectionality of responses
+% This script used for manifold based analyses
 
 clear all; clc
 
 define_dirs;
 
-
 %% Plot 3d manifold
-% Figure 2B
+% Figure 3B
 
 dataset_ix = 13;
 
@@ -42,7 +40,7 @@ ylabel('PC 2')
 zlabel('PC 3')
 
 
-%%  Distance between manifolds
+%%  Euclidean distance between manifolds
 % Figure 3C
 
 angle_A_QW = nan(13,1);
@@ -123,7 +121,7 @@ signrank(dist_A_QW_all,dist_in_QW_all)
 
 %% Angle between subspaces
 % takes forever
-% Figure 3E
+% Figure 3e,f
 
 angle_A_QW = nan(13,1);
 angle_shuff = nan(13,1);
@@ -155,33 +153,10 @@ for dataset_ix = 1:13
     coeff_QW = pca(dFF_QW');
 
     angle_A_QW(dataset_ix) = subspace(coeff_QW(:,1:num_PCs),coeff_A(:,1:num_PCs));
-
-%     angle_shuff_dist = zeros(kmax,1);
-%     for k = 1:kmax
-% 
-%         permute_ix = randsample(T,1);
-%         ix_A = ix_A + permute_ix;
-%         ix_QW = ix_QW + permute_ix;
-% 
-%         for kk = 1:length(ix_A)
-%             if ix_A(kk)> T
-%                 ix_A(kk) = ix_A(kk) - T;
-%             end
-%         end
-%         for kk = 1:length(ix_QW)
-%             if ix_QW(kk)> T
-%                 ix_QW(kk) = ix_QW(kk) - T;
-%             end
-%         end
-% 
-%         coeff_1 = pca(dFF(:,ix_QW)');
-%         coeff_2 = pca(dFF(:,ix_A)');
-%         angle_shuff_dist(k) = subspace(coeff_1(:,1:num_PCs),coeff_2(:,1:num_PCs));
-%     end
-%     
+    
     angle_shuff_dist = zeros(kmax,1);
     for k = 1:kmax
-        train_ixs = block_shuffle_time(T,acquisition_rate);%,.5);
+        train_ixs = block_shuffle_time(T,acquisition_rate);
         test_ixs = train_ixs(1:round(T/2));
         train_ixs = setdiff(train_ixs,test_ixs); 
 
@@ -222,7 +197,4 @@ xlim([-.5,1.5])
 ylim([0,1.6])
 
 signrank(angle_A_QW,angle_shuff)
-
-
-% save([basedir,'processed/angle_subspaces'],'angle_A_QW','angle_shuff','p_val')
 

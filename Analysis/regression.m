@@ -1,12 +1,12 @@
-% This script plots the correlations of individual PFs with behaviour to
-% show bidirectionality of responses
+% This script regresses neural activity against behavioural data
+% For Figures 4,5 
 
 clear all; clc
 
 define_dirs;
 
 %% Example PC1 vs WSP
-% Figure 4A,B
+% Figure 4a,b
 
 dataset_ix = 2;
 
@@ -228,7 +228,8 @@ title(['Best PF, MSE = ',num2str(mse(n_min))])
 set(gca,'FontSize',15)
 ylim([-40,50])
 
-%% Regression - lasso, PCR, individual PFs
+%% Regression on WSP or locomotion speed
+% does lasso, PCR, individual PFs
 % takes forever
 
 num_its = 10;
@@ -320,6 +321,7 @@ for dataset_ix = 1:13
     end
 end
 
+% save data
 if regress_speed == 0
     filename = [basedir,'processed/regression_results_wsp'];
     disp(filename)
@@ -333,10 +335,8 @@ end
 %% Plot example variance unexplained vs. #PCs
 % Figure 5B
 
-%load([basedir,'processed/regression_results_wsp'])
-load([basedir,'processed/regression_results_speed'])
+load([basedir,'processed/regression_results_wsp'])
 
-%
 dataset_ix=4;
 figure, plot_error_snake(1:size(err_PCs{dataset_ix},1),err_PCs{dataset_ix}','k')
 
@@ -345,8 +345,9 @@ set(gca,'FontSize',15)
 xlabel('Number of PCs')
 ylabel('Unexplained variance')
 
-%% Compare 10 PCs vs optimal vs best PF
+%% Compare different numbers of PCs
 % Figure 5C
+% Extended Data Figure 9a
 
 err_1PC = nan(13,1);
 err_10PCs = nan(13,1);
@@ -354,18 +355,19 @@ err_best_PCs = nan(13,1);
 num_best_PCs = nan(13,1);
 
 for dataset_ix = 1:13
-    err_1PC(dataset_ix) = mean(err_PCs{dataset_ix}(1,:)); %min(mean(err_PFs{dataset_ix},2));
+    err_1PC(dataset_ix) = mean(err_PCs{dataset_ix}(1,:)); 
     err_10PCs(dataset_ix) = mean(err_PCs{dataset_ix}(10,:));
     [err_best_PCs(dataset_ix), num_best_PCs(dataset_ix)] = min(mean(err_PCs{dataset_ix},2));
 end
 
 c = [.5,.5,.5];
 
-% Remove datasts 4 and 10 ONLY if doing analysis on speed!
-err_1PC([4,10]) = nan;
-err_10PCs([4,10]) = nan;
-err_best_PCs([4,10]) = nan;
-num_best_PCs([4,10]) = nan;
+% WARNING Uncomment to remove datasts 4 and 10 ONLY if doing analysis on speed!
+% (regression failed on these datasets for speed as explained in manuscript)
+% err_1PC([4,10]) = nan;
+% err_10PCs([4,10]) = nan;
+% err_best_PCs([4,10]) = nan;
+% num_best_PCs([4,10]) = nan;
 
 figure,  hold on
 for dataset_ix = 1:13
@@ -387,8 +389,7 @@ ylim([0,1])
 signrank(err_best_PCs,err_10PCs)
 signrank(err_best_PCs,err_1PC)
 
-%% Plot number of PCs in optimal case
-% Figure 5D
+%% Plot number of PCs that give optimal performance
 
 figure,  hold on
 plot(zeros,num_best_PCs,'o','MarkerFaceColor','w','Color',c,'MarkerSize',8)
@@ -407,6 +408,7 @@ ylabel('Unexplained variance')
 
 %% Find minimum and plot lasso vs lambda
 % Figure 5E
+% Extended Data Figure 9b
 
 err_best_PF = nan(13,1);
 err_lasso_min = nan(13,1);
@@ -423,7 +425,8 @@ for dataset_ix = 1:13
 
 end
 
-% Remove datasts 4 and 10 ONLY if doing analysis on speed!
+% WARNING Uncomment to remove datasts 4 and 10 ONLY if doing analysis on speed!
+% (regression failed on these datasets for speed as explained in manuscript)
 % err_best_PF([4,10]) = nan;
 % err_lasso_min([4,10]) = nan;
 % num_PFs_lasso([4,10]) = nan;
@@ -449,6 +452,7 @@ signrank(err_best_PF,err_lasso_min)
 
 %% Plot optimal number PFs in LASSO regression
 % Figure 5F
+% Extended Data Figure 9c
 
 figure,  hold on
 plot(zeros,num_PFs_lasso,'o','MarkerFaceColor','w','Color',c,'MarkerSize',8)
@@ -456,7 +460,8 @@ set(gca,'FontSize',15)
 set(ylabel('Optimal # PFs'))
 ylim([0,500])
 
-%% Plot regression coefficients for speed vs wsp
+%% Plot correlation between regression coefficients for speed vs wsp
+% Extended Data Figure 9d
 
 load([basedir,'processed/regression_results_wsp'])
 b_lasso_wsp = b_lasso;
@@ -491,118 +496,7 @@ ylabel('Correlation between coefficients')
 axis([0,.8,0,.5])
 
 %% State-dependent regression
-% ONLY during QW
-% Takes forever 
-
-num_its = 10;
-err_lasso_QW = cell(13,1);
-err_lasso_QW_sh = cell(13,1);
-b_lasso_QW = cell(13,1);
-b_lasso_QW_sh = cell(13,1);
-
-lambda = [0,logspace(-3,0,15)];
-
-% Set to 0 if regressing during QW
-%        1 if regressing during AS
-regress_AS = 1;
-
-tic
-for dataset_ix = 1:13
-    toc, tic
-
-    [dFF,time,acquisition_rate] = load_data(dataset_ix);
-    [~,whisk_set_point,whisk_amp,speed] = load_behav_data(dataset_ix,time);
-    [AS,QW] = define_behav_periods(whisk_amp,speed,acquisition_rate);
-    
-    if regress_AS == 1
-        QW = AS;
-    end
-    
-    % Only do regression on QW times
-    ix_QW = [];
-    for k = 1:length(QW)
-        ix_QW = [ix_QW, QW(k,1):QW(k,2)];
-    end
-    
-    dFF_QW = dFF(:,ix_QW);
-    whisk_set_point_QW = whisk_set_point(ix_QW);
-    
-    [N,T] = size(dFF_QW);
-    
-    err_lasso_QW{dataset_ix} = nan(length(lambda),num_its);
-    err_lasso_QW_sh{dataset_ix} = nan(length(lambda),num_its);
-    b_lasso_QW{dataset_ix} = nan(length(lambda),num_its,N);
-    b_lasso_QW_sh{dataset_ix} = nan(length(lambda),num_its,N);
-    
-    % Random iterations
-    for it_ix = 1:num_its
-        disp(it_ix)
-        
-        % Get training and testing indices
-        % Indexed in terms of ix_QW
-        train_ixs = block_shuffle_time(T,acquisition_rate);
-        test_ixs = train_ixs(1:round(T * 0.2));
-        train_ixs = setdiff(train_ixs,test_ixs); 
-        
-        % Testing data
-        whisk_set_point_QW_test = whisk_set_point_QW(test_ixs);
-        
-        % Training data for QW-trained decoder
-        whisk_set_point_QW_train = whisk_set_point_QW(train_ixs);
-        
-        % To get available indices for training control decoder
-        % First remove all test indices
-        train_ixs_sh = setdiff(1:size(dFF,2),ix_QW(test_ixs));
-        % Then shuffle and take the same number as train_ixs
-        ix_sh = block_shuffle_time(numel(train_ixs_sh),acquisition_rate);
-        train_ixs_sh = train_ixs_sh(ix_sh);
-        % Finally take the same number as train_ixs
-        train_ixs_sh = train_ixs_sh(1:numel(train_ixs));
-
-        % Training data for QW-trained decoder
-        whisk_set_point_train = whisk_set_point(train_ixs_sh);
-        
-        for lambda_ix = 1:length(lambda)
-
-            % different numbers of PCs
-            reg_train = dFF_QW(:,train_ixs)';
-            reg_test =  dFF_QW(:,test_ixs)';
-            
-            [b,fitinfo] = lasso(reg_train,whisk_set_point_QW_train,'Lambda',lambda(lambda_ix));
-
-            mse = mean((whisk_set_point_QW_test - ( reg_test*b+ fitinfo.Intercept ) ).^2);
-            err_lasso_QW{dataset_ix}(lambda_ix,it_ix) = mse / var(whisk_set_point_QW_test);
-            b_lasso_QW{dataset_ix}(lambda_ix,it_ix,:) = b;
-            
-            % Shuffled case
-            reg_train = dFF(:,train_ixs_sh)';
-            reg_test = dFF(:,ix_QW(test_ixs))';
-            
-            [b,fitinfo] = lasso(reg_train,whisk_set_point_train,'Lambda',lambda(lambda_ix));
-
-            mse = mean((whisk_set_point_QW_test - ( reg_test*b+ fitinfo.Intercept ) ).^2);
-            err_lasso_QW_sh{dataset_ix}(lambda_ix,it_ix) = mse / var(whisk_set_point_QW_test);
-            b_lasso_QW_sh{dataset_ix}(lambda_ix,it_ix,:) = b;
-        end        
-        
-    end
-end
-
-if regress_AS == 0
-    filename = [basedir,'processed/regression_results_state_dependent_decoding_QW'];
-    disp(filename);
-    save(filename,'err_lasso_QW','b_lasso_QW','err_lasso_QW_sh','b_lasso_QW_sh')
-elseif regress_AS == 1
-    filename = [basedir,'processed/regression_results_state_dependent_decoding_AS'];
-    disp(filename);
-    err_lasso_AS = err_lasso_QW; b_lasso_AS = b_lasso_QW;
-    err_lasso_AS_sh = err_lasso_QW_sh; b_lasso_AS_sh = b_lasso_QW_sh;
-    save(filename,'err_lasso_AS','b_lasso_AS','err_lasso_AS_sh','b_lasso_AS_sh')
-end
-
-
-%% State-dependent regression - back to PCR
-% ONLY during QW
+% PC regression, ONLY during QW
 % Takes forever 
 
 num_its = 10;
@@ -712,8 +606,8 @@ elseif regress_AS == 1
     save(filename,'err_PCs_AS','err_PCs_sh','b_AS')
 end
 
-
-%% Find minimum and plot vs shuffled
+%% Find minimum and plot vs shuffled 
+% Figure 5d 
 
 err_best_PCs = nan(13,1);
 err_best_PCs_sh = nan(13,1);

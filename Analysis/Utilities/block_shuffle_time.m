@@ -2,8 +2,7 @@
 % This function randomly shuffles timepoints in blocks
 % Input:
 %    T                    Number of time steps
-%    acquisition_rate     Population subsampling size
-%    frac_time            Fraction of time to take in random blocks
+%    acquisition_rate     Acquisition rate
 %    block_s              Time of each block in s
 % 
 % Output:
@@ -12,7 +11,7 @@
 function T_shuffled = block_shuffle_time(T,acquisition_rate,block_s)
 
     if nargin < 3 || isempty(block_s)
-        block_s = 1;
+        block_s = 1; % default 1 s blocks
     end
 
     % Length of blocks in bins

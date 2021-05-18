@@ -1,3 +1,6 @@
+% Makes video of rotating manifolds to show orthogonality
+% Supplementary video S3
+
 clear all; clc; close all
 define_dirs;
 dataset_ix=1;

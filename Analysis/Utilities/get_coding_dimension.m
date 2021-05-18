@@ -1,6 +1,7 @@
 
 % This function calculates the vector separating QW and A periods/manifolds
 % aka the coding dimension (following Li et al 2016)
+% Used for coloring plots since A/QW segmentation doesn't label all timepts
 %
 % Input:
 %    dFF      Population activity

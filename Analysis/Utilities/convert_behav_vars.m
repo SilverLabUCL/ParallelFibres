@@ -1,19 +1,27 @@
-% Load DLC whisking angle and extract whisking variables
-%
+% Smooth and interpolate behavioural variables
+% Also corrects double frame issue from videos (ie wheel and whisker pad)
 %
 % Required input:
-%    dataset_ix     Dataset number (1-8)
-%    time           Interpolation time - if empty, just loads values w/out
-%                     interpolation
-%    smooth_win_s   Smoothing window for speed/loco
-% 
+%    time               Interpolation time - if empty, just loads values w/out
+%                         interpolation
+%    smooth_win_s       Smoothing window for speed/loco
+%    whisk_time         Time for whisker variables
+%    whisk_angle        Whisker angle
+%    whisk_set_point    Whisker set point
+%    whisk_amp          Whisker amplitude
+%    wheel_MI           Wheel motion index
+%    SpeedTimeMatrix    Encoder time 
+%    SpeedDataMatrix    Encoder Speed
+%   
 % Output:
-%    whisk_angle         whisking angle
-%    whisk_set_point     whisker set point
-%    whisk_amp           Whisking amplitude
-%    loco_smooth        Smoothed wheel MI (locomotion)
-%    whisk_time          Native (non-interp) time of whisking
-%    loco_time          Native (non_interp) time of locomotion 
+%    whisk_angle        whisking angle
+%    whisk_set_point    whisker set point
+%    whisk_amp          Whisking amplitude
+%    loco_smooth    	Smoothed wheel motion index
+%    speed_smooth       Smoothed locomotion speed
+%    whisk_time     	Native (non-interp) time of whisking
+%    loco_time          Native (non_interp) time of WMI 
+%    speed_time         Native (non-interp) time of locomotion speed speed
 
 
 function [whisk_angle,whisk_set_point,whisk_amp,loco_smooth,speed_smooth,whisk_time,loco_time,speed_time] = convert_behav_vars(time,smooth_win_s,whisk_time,whisk_angle,whisk_set_point,whisk_amp,wheel_MI,SpeedTimeMatrix,SpeedDataMatrix)
