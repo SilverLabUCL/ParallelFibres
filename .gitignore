@@ -4,10 +4,11 @@
 *.tif
 *.jpg
 *.fig
+*.DS_Store
 
 # Ignore anything in Data/ folder
 Data/
 Data*/
-SourceData/*
+SourceData/
 Paper/
 FIGS/
