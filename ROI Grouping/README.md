@@ -3,9 +3,31 @@
 ## Summary
 This folder contains scripts used for signal extraction and grouping varicosities into putative axons. Light data preprocessing (e.g., offline movement correction) was performed prior to the scripts here. The folder `Utilities/` includes additional helper functions.
 
+## Data requirements
+This code requires, for each experiment, a file containing the following variables:
+
+* `aquisition_rate` is a scalar describing the acquisition rate in Hz.
+* `Pixel_size` is a scalar describing the size of each pixel in microns.
+* `Numb_frames` is a scalar describing the number of timepoints in the experiment.
+* `Numb_patches` is a scalar describing the number of patches in the experiment.
+* `Numb_trials` is a scalar describing the number of trials.
+* `Numb_cycle` is the number of cycles.
+* `Time_between_trial` is a vector of intertrial times.
+* `MatrixTime` is a matrix containing the time it takes to reach the corresponding pixel in a cycle.
+* `MatrixTime_patch` contains the same information as `MatrixTime` in a cell organized by patch.
+* `patches` is a cell of length `Numb_patches` containing the fluorescence data for each patch. Each element of the cell contains a 3-dimensional data array of size d1 x d2 x `Numb_frames`, where d1 and d2 are the dimensions of each patch.
+* `dlc_whisk_angle` and `dlc_whisk_time` are vectors containing the whisking angle time series and times as determined via DeepLabCut.
+* `Patch_coordinates` is a structure containing coordinate information about each patch. `Patch_coordinates.data` is a matrix in which each row represents a patch, and columns 5, 6, and 7 represent the X, Y, and Z positions (respectively) of that patch.
+* `SpeedDataMatrix` and `SpeedTimeMatrix` are vectors containing the wheel speed time series and times from the wheel encoder.
+* `wheel_MI` is a matrix whose second column contains the wheel motion index time series as determined from the wheel cameras and whose second column contains the corresponding times.
+
+The function `convert_data_format.m` converts the data in this file into separate files used throughout the analysis.
+
+An additional csv file is required for grouping (`Axon_IDs.csv`). This is a file generated from ImageJ when tracing small axon segments in the structural data (Z stacks) using the multipoint tool. The 6th and 7th columns contain the X and Y position of each point. Each pair of rows gives the start point and end point of the traced axon segment, and columns 5 and 6 give x and y. See `calc_fibre_direction.m` for more details.
+
 ## Overview of scripts
 
-`convert_data_format.m` converts original .mat file of a particular experiment into separate files for behavioural data, metadata, and functional data (separate file per patch).
+`convert_data_format.m` converts original .mat file of a particular experiment (described above) into separate files for behavioural data, metadata, and functional data (separate file per patch).
 
 `calc_fibre_direction.m` calculates the average fiber direction in each patch. Requires individual small parallel fibre segments to have been hand-traced from Z stacks in ImageJ. This information is used for Criterion 1 of the grouping procedure.
 
