@@ -3,8 +3,8 @@
 ## Summary
 This repo contains code to data processing and analysis code for the following publication:
 
-Lanore, F., Cayco-Gajic, N.A., Gurnani, H., Coyle, C., Silver, R.A. (2021). Cerebellar granule cell axons support high dimensional representations. Nature Neuroscience (accepted).
-DOI: XXX
+Lanore, F., Cayco-Gajic, N.A., Gurnani, H., Coyle, C., Silver, R.A. (2021). Cerebellar granule cell axons support high dimensional representations. Nature Neuroscience.
+DOI: 10.1038/s41593-021-00873-x
 
 We used an AOL microscope to image granule cell axons in a 3D imaging volume in the cerebellar cortex of spontaneously behaving mice to examine how granule cell populations represent different behavioural states and sensorimotor variables. We also characterized the manifold structure and dimensionality of these representations. Please cite our paper above if you use this code in your research. 
 
